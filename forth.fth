@@ -993,6 +993,71 @@ done:
     jmp next
 end-code
 
+( n -- ) ( R: x*i current limit -- x*i current limit | x*i )
+code (+loop)
+    .virtual $0101,x
+limit       .word ?
+current     .word ?
+    .endv
+
+    lda pstack+3,x
+    sta tmp+1
+    lda pstack+2,x
+    sta tmp
+
+    stx savex           ; Point X to the return stack temporarily
+    tsx
+    
+    clc                 ; Increment current by n
+    lda current
+    adc tmp
+    sta current
+    lda current+1
+    adc tmp+1
+    sta current+1
+
+    inc savex           ; Remove n from the stack
+    inc savex
+
+chk_current:
+    lda current+1       ; Is current < limit
+    cmp limit+1
+    bne chk_ne
+    lda current
+    cmp limit
+chk_ne:
+    bcc dobranch        ; Yes: take the branch
+
+nobranch:
+    txa                 ; Yes: Remove the context from the return stack
+    clc
+    adc #4
+    tax
+    txs
+
+    clc                 ; And skip over the branch address
+    lda ip
+    adc #2
+    sta ip
+    lda ip+1
+    adc #0
+    sta ip+1
+    bra done
+
+dobranch:
+    ldy #1              ; No: ip := branch address
+    lda (ip)
+    sta tmp
+    lda (ip),y
+    sta ip+1
+    lda tmp
+    sta ip
+
+done:
+    ldx savex           ; Restore the parameter stack pointer
+    jmp next
+end-code
+
 ( -- current ) ( R: x*i current limit -- x*i current limit )
 code i
     .virtual $0101,x
@@ -1214,21 +1279,13 @@ end-code
     current @ @
 ;
 
-: foobar
-    begin
-        c" Hello,  world!" type cr 
-        exit
-        0
-    until
-;
-
 \\
 \\ Boot strapping word...
 \\
 
 : cold
     c" Welcome to MetaForth v00.00.00" type cr
-    5 0 do c" Hello, MetaForth!" type cr i loop
-\\ unittest
+    10 0 do c" Hello, MetaForth!" type cr 2 +loop
+    unittest
     c" All unit tests PASSED!" type cr
 ;

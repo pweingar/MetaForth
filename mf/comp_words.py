@@ -22,6 +22,19 @@ def exec_do(c):
     current_word.compile(compiler.LabelReference("xt_(do)"))
     current_word.compile(compiler.LabelDeclaration(jump_label))
 
+def exec_plusloop(c):
+    """Compile the word +LOOP"""
+    current_word = c.get_current_word()
+    loop_type = c.pop_label()
+    jump_label = c.pop_label()
+    exit_label = c.pop_label()
+    c.push_label(jump_label)
+    c.push_label(exit_label)
+    c.push_label(loop_type)
+    current_word.compile(compiler.LabelReference("xt_(+loop)"))
+    current_word.compile(compiler.LabelReference(jump_label))
+    current_word.compile(compiler.LabelDeclaration(exit_label))
+
 def exec_loop(c):
     """Compile the word LOOP"""
     current_word = c.get_current_word()
@@ -299,6 +312,7 @@ def register_all(c):
     c.register(compiler.CompilerWord("exit", exec_exit, True))
     c.register(compiler.CompilerWord("do", exec_do, True))
     c.register(compiler.CompilerWord("loop", exec_loop, True))
-    exec_begin
+    c.register(compiler.CompilerWord("+loop", exec_plusloop, True))
+
     
 

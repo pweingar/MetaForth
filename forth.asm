@@ -2607,13 +2607,77 @@ xt_x28loopx29:
 	.bend
 ; END (loop)
 
+; ( n -- )
+; ( R: x*i current limit -- x*i current limit | x*i )
+; BEGIN (+loop)
+w_x28x2bloopx29:
+	.byte $07
+	.text '(+loop)'
+	.word w_x28loopx29
+xt_x28x2bloopx29:
+	.block
+	.virtual $0101,x
+	limit       .word ?
+	current     .word ?
+	.endv
+	lda pstack+3,x
+	sta tmp+1
+	lda pstack+2,x
+	sta tmp
+	stx savex           ; Point X to the return stack temporarily
+	tsx
+	clc                 ; Increment current by n
+	lda current
+	adc tmp
+	sta current
+	lda current+1
+	adc tmp+1
+	sta current+1
+	inc savex           ; Remove n from the stack
+	inc savex
+	chk_current:
+	lda current+1       ; Is current < limit
+	cmp limit+1
+	bne chk_ne
+	lda current
+	cmp limit
+	chk_ne:
+	bcc dobranch        ; Yes: take the branch
+	nobranch:
+	txa                 ; Yes: Remove the context from the return stack
+	clc
+	adc #4
+	tax
+	txs
+	clc                 ; And skip over the branch address
+	lda ip
+	adc #2
+	sta ip
+	lda ip+1
+	adc #0
+	sta ip+1
+	bra done
+	dobranch:
+	ldy #1              ; No: ip := branch address
+	lda (ip)
+	sta tmp
+	lda (ip),y
+	sta ip+1
+	lda tmp
+	sta ip
+	done:
+	ldx savex           ; Restore the parameter stack pointer
+	jmp next
+	.bend
+; END (+loop)
+
 ; ( -- current )
 ; ( R: x*i current limit -- x*i current limit )
 ; BEGIN i
 w_i:
 	.byte $01
 	.text 'i'
-	.word w_x28loopx29
+	.word w_x28x2bloopx29
 xt_i:
 	.block
 	.virtual $0101,x
@@ -3057,78 +3121,50 @@ xt_latest:
 	.bend
 ; END latest
 
-; BEGIN foobar
-w_foobar:
-	.byte $06
-	.text 'foobar'
-	.fill 10
-	.word w_latest
-xt_foobar:
-	.block
-	jmp i_enter
-l_182:
-	.word xt_x28literalx29
-	.word l_184
-	.word xt_x28branchx29
-	.word l_185
-l_184:
-	.null "Hello,  world!"
-l_185:
-	.word xt_type
-	.word xt_cr
-	.word xt_x28branchx29
-	.word l_183
-	.word xt_0
-	.word xt_x28branch0x29
-	.word l_182
-l_183:
-	.word i_exit
-	.bend
-; END foobar
-
 ; BEGIN cold
 w_cold:
 	.byte $04
 	.text 'cold'
 	.fill 12
-	.word w_foobar
+	.word w_latest
 xt_cold:
 	.block
 	jmp i_enter
+	.word xt_x28literalx29
+	.word l_182
+	.word xt_x28branchx29
+	.word l_183
+l_182:
+	.null "Welcome to MetaForth v00.00.00"
+l_183:
+	.word xt_type
+	.word xt_cr
+	.word xt_x28literalx29
+	.word 10
+	.word xt_0
+	.word xt_x28dox29
+l_184:
 	.word xt_x28literalx29
 	.word l_186
 	.word xt_x28branchx29
 	.word l_187
 l_186:
-	.null "Welcome to MetaForth v00.00.00"
+	.null "Hello, MetaForth!"
 l_187:
 	.word xt_type
 	.word xt_cr
+	.word xt_2
+	.word xt_x28x2bloopx29
+	.word l_184
+l_185:
+	.word xt_unittest
 	.word xt_x28literalx29
-	.word 5
-	.word xt_0
-	.word xt_x28dox29
-l_188:
-	.word xt_x28literalx29
-	.word l_190
-	.word xt_x28branchx29
-	.word l_191
-l_190:
-	.null "Hello, MetaForth!"
-l_191:
-	.word xt_type
-	.word xt_cr
-	.word xt_i
-	.word xt_x28loopx29
 	.word l_188
-l_189:
-	.word xt_x28literalx29
-	.word l_192
 	.word xt_x28branchx29
-	.word l_193
-l_192:
+	.word l_189
+l_188:
 	.null "All unit tests PASSED!"
-l_193:
+l_189:
 	.word xt_type
 	.word xt_cr
 	.word i_exit
