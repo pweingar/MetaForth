@@ -52,6 +52,15 @@ class LiteralString:
         """Write the literal"""
         emitter.emit_literal_string(self._value)
 
+class LiteralPascalString:
+    """Represent a literal Pascal style string in a bytecode stream"""
+
+    def __init__(self, value):
+        self._value = value
+
+    def emit(self, emitter):
+        """Write the literal"""
+        emitter.emit_literal_pascal_string(self._value)
 
 class TargetObject:
     """Represent an object that gets written to the target assembly file."""

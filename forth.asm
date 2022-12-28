@@ -100,14 +100,12 @@ w_emit:
 	.word w_halt
 xt_emit:
 	.block
-	phx
-	phy
 	lda pstack+2,x
+	phx
 	jsr conout
 	plx
 	inx
 	inx
-	ply
 	jmp next
 	.bend
 ; END emit
@@ -128,35 +126,12 @@ xt_cr:
 	.bend
 ; END cr
 
-; ( a-addr -- )
-; BEGIN type
-w_type:
-	.byte $04
-	.text 'type'
-	.word w_cr
-xt_type:
-	.block
-	lda pstack+2,x
-	sta src_ptr
-	lda pstack+3,x
-	sta src_ptr+1
-	phx
-	phy
-	jsr prints
-	ply
-	plx
-	inx
-	inx
-	jmp next
-	.bend
-; END type
-
 ; ( -- 0 )
 ; BEGIN 0
 w_0:
 	.byte $01
 	.text '0'
-	.word w_type
+	.word w_cr
 xt_0:
 	.block
 	stz pstack+1,x
@@ -3121,50 +3096,147 @@ xt_latest:
 	.bend
 ; END latest
 
+; ( c-addr1 -- c-addr2 n )
+; BEGIN count
+w_count:
+	.byte $05
+	.text 'count'
+	.fill 11
+	.word w_latest
+xt_count:
+	.block
+	jmp i_enter
+	.word xt_dup
+	.word xt_1x2b
+	.word xt_swap
+	.word xt_cx40
+	.word i_exit
+	.bend
+; END count
+
+; ( addr2 := addr1 + 1 )
+; ( stack now addr2 addr1 )
+; ( stack now addr2 n )
+; ( c-addr n -- )
+; BEGIN type
+w_type:
+	.byte $04
+	.text 'type'
+	.fill 12
+	.word w_count
+xt_type:
+	.block
+	jmp i_enter
+	.word xt_x3fdup
+	.word xt_x28branch0x29
+	.word l_182
+	.word xt_over
+	.word xt_x2b
+	.word xt_swap
+	.word xt_x28dox29
+l_183:
+	.word xt_i
+	.word xt_cx40
+	.word xt_emit
+	.word xt_x28loopx29
+	.word l_183
+l_184:
+	.word xt_x28branchx29
+	.word l_185
+l_182:
+	.word xt_drop
+l_185:
+	.word i_exit
+	.bend
+; END type
+
+; ( -- )
+; BEGIN space
+w_space:
+	.byte $05
+	.text 'space'
+	.fill 11
+	.word w_type
+xt_space:
+	.block
+	jmp i_enter
+	.word xt_x28literalx29
+	.word 32
+	.word xt_emit
+	.word i_exit
+	.bend
+; END space
+
+; ( n -- )
+; BEGIN spaces
+w_spaces:
+	.byte $06
+	.text 'spaces'
+	.fill 10
+	.word w_space
+xt_spaces:
+	.block
+	jmp i_enter
+	.word xt_0
+	.word xt_x28dox29
+l_186:
+	.word xt_space
+	.word xt_x28loopx29
+	.word l_186
+l_187:
+	.word i_exit
+	.bend
+; END spaces
+
 ; BEGIN cold
 w_cold:
 	.byte $04
 	.text 'cold'
 	.fill 12
-	.word w_latest
+	.word w_spaces
 xt_cold:
 	.block
 	jmp i_enter
-	.word xt_x28literalx29
-	.word l_182
-	.word xt_x28branchx29
-	.word l_183
-l_182:
-	.null "Welcome to MetaForth v00.00.00"
-l_183:
-	.word xt_type
-	.word xt_cr
-	.word xt_x28literalx29
-	.word 10
-	.word xt_0
-	.word xt_x28dox29
-l_184:
-	.word xt_x28literalx29
-	.word l_186
-	.word xt_x28branchx29
-	.word l_187
-l_186:
-	.null "Hello, MetaForth!"
-l_187:
-	.word xt_type
-	.word xt_cr
-	.word xt_2
-	.word xt_x28x2bloopx29
-	.word l_184
-l_185:
-	.word xt_unittest
 	.word xt_x28literalx29
 	.word l_188
 	.word xt_x28branchx29
 	.word l_189
 l_188:
-	.null "All unit tests PASSED!"
+	.ptext "Welcome to MetaForth v00.00.00"
 l_189:
+	.word xt_count
+	.word xt_type
+	.word xt_cr
+	.word xt_x28literalx29
+	.word 5
+	.word xt_spaces
+	.word xt_x28literalx29
+	.word 10
+	.word xt_0
+	.word xt_x28dox29
+l_190:
+	.word xt_x28literalx29
+	.word l_192
+	.word xt_x28branchx29
+	.word l_193
+l_192:
+	.ptext "Hello, MetaForth!"
+l_193:
+	.word xt_count
+	.word xt_type
+	.word xt_cr
+	.word xt_x28loopx29
+	.word l_190
+l_191:
+	.word xt_unittest
+	.word xt_x28literalx29
+	.word l_194
+	.word xt_x28branchx29
+	.word l_195
+l_194:
+	.ptext "All unit tests PASSED!"
+l_195:
+	.word xt_count
 	.word xt_type
 	.word xt_cr
 	.word i_exit

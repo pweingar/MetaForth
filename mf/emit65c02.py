@@ -41,6 +41,10 @@ class EmitterC02:
         """Emit a literal string value."""
         self._out.write("\t.null \"{}\"\n".format(value))
 
+    def emit_literal_pascal_string(self, value):
+        """Emit a literal string value."""
+        self._out.write("\t.ptext \"{}\"\n".format(value))
+
     def emit_label_declaration(self, label):
         """Emit the declaration of a label."""
         self._out.write("{}:\n".format(clean_label(label)))

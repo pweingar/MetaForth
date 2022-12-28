@@ -89,17 +89,14 @@ end-code
 
 ( c -- )
 code emit
-    phx
-    phy
-
     lda pstack+2,x
+    phx
     jsr conout
-
     plx
+
     inx
     inx
 
-    ply
     jmp next
 end-code
 
@@ -109,24 +106,6 @@ code cr
     lda #$0d
     jsr conout
     plx
-    jmp next
-end-code
-
-( a-addr -- )
-code type
-    lda pstack+2,x
-    sta src_ptr
-    lda pstack+3,x
-    sta src_ptr+1
-
-    phx
-    phy
-    jsr prints
-    ply
-    plx
-
-    inx
-    inx
     jmp next
 end-code
 
@@ -1130,7 +1109,6 @@ end-code
 \\ Common words
 \\
 
-
 ( x -- 0 | x x )
 : ?dup
     dup if
@@ -1280,12 +1258,56 @@ end-code
 ;
 
 \\
+\\ String Related Words
+\\
+
+( c-addr1 -- c-addr2 n )
+: count
+    dup 1+      ( addr2 := addr1 + 1 )
+    swap        ( stack now addr2 addr1 )
+    c@          ( stack now addr2 n )
+;
+
+( c-addr n -- )
+: type
+    ?dup                \ copy n if it's not zero 
+    if
+        over +          \ start-addr end-addr 
+        swap            \ end-addr start-addr
+        do
+            i c@ emit   \ get char at current address and print it
+        loop
+    else
+        drop            \ if zero, clean c-addr off the stack
+    then
+;
+
+\\
+\\ I/O words
+\\
+
+( -- )
+: space
+    32 emit
+;
+
+( n -- )
+: spaces
+    0 do
+        space
+    loop
+;
+
+\\
 \\ Boot strapping word...
 \\
 
 : cold
-    c" Welcome to MetaForth v00.00.00" type cr
-    10 0 do c" Hello, MetaForth!" type cr 2 +loop
+    c" Welcome to MetaForth v00.00.00" count type cr
+    5 spaces
+    10 0 do
+        c" Hello, MetaForth!" count type cr
+    loop
     unittest
-    c" All unit tests PASSED!" type cr
+    c" All unit tests PASSED!" count type cr
 ;

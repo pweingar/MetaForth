@@ -28,9 +28,6 @@ def exec_plusloop(c):
     loop_type = c.pop_label()
     jump_label = c.pop_label()
     exit_label = c.pop_label()
-    c.push_label(jump_label)
-    c.push_label(exit_label)
-    c.push_label(loop_type)
     current_word.compile(compiler.LabelReference("xt_(+loop)"))
     current_word.compile(compiler.LabelReference(jump_label))
     current_word.compile(compiler.LabelDeclaration(exit_label))
@@ -41,9 +38,6 @@ def exec_loop(c):
     loop_type = c.pop_label()
     jump_label = c.pop_label()
     exit_label = c.pop_label()
-    c.push_label(jump_label)
-    c.push_label(exit_label)
-    c.push_label(loop_type)
     current_word.compile(compiler.LabelReference("xt_(loop)"))
     current_word.compile(compiler.LabelReference(jump_label))
     current_word.compile(compiler.LabelDeclaration(exit_label))
@@ -119,7 +113,7 @@ def exec_cstr(c):
     current_word.compile(compiler.LabelReference("xt_(branch)"))
     current_word.compile(compiler.LabelReference(jump_label))
     current_word.compile(compiler.LabelDeclaration(text_label))
-    current_word.compile(compiler.LiteralString(data))
+    current_word.compile(compiler.LiteralPascalString(data))
     current_word.compile(compiler.LabelDeclaration(jump_label))
 
 def exec_user(c):
