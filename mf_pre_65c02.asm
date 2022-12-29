@@ -23,6 +23,8 @@ donep   .word ?         ; Pointer to the code to take over when the interpreter 
 test    .word ?         ; Pointer to the current test name
 tmp     .word ?
 savex   .byte ?
+counter .byte ?         ; A counter used for some code
+sign    .byte ?         ; A scratch byte to keep track of the sign of a number
 .send
 
 .section code

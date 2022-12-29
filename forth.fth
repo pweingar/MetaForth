@@ -558,6 +558,38 @@ end-code
 
 ( n1 n2 -- n3 )
 code *
+    stz sign     
+    lda pstack+5,x  ; Check to see if n1 is negative
+    bpl chk_n2
+
+    lda #$80        ; Yes: record the sign
+    sta sign
+
+    sec             ; Negate n1
+    lda #0
+    sbc pstack+4,x
+    sta pstack+4,x
+    lda #0
+    sbc pstack+5,x
+    sta pstack+5,x
+
+chk_n2:
+    lda pstack+3,x  ; Check to see if n2 is negative
+    bpl init_tmp
+
+    lda sign        ; Flip the sign bit, if so
+    eor #$80        ; And set the bit for the remainder
+    sta sign
+
+    sec             ; Negate n2
+    lda #0
+    sbc pstack+2,x
+    sta pstack+2,x
+    lda #0
+    sbc pstack+3,x
+    sta pstack+3,x
+
+init_tmp:
     lda #0          ; Initialize RESULT to 0
     sta tmp+2
     ldx #16         ; There are 16 bits in n2
@@ -589,8 +621,110 @@ l2:
     inx             ; Clean up parameter stack
     inx
 
+    lda sign        ; Check the sign
+    bpl done
+
+    sec             ; If negative, negate result
+    lda #0
+    sbc pstack+2,x
+    sta pstack+2,x
+    lda #0
+    sbc pstack+3,x
+    sta pstack+3,x
+
+done:
     jmp next
 end-code
+
+( n1 n2 -- n3 n4 )
+( code adapted from https://llx.com/Neil/a2/mult.html )
+code /mod  
+    stz sign     
+    lda pstack+5,x  ; Check to see if n1 is negative
+    bpl chk_n2
+
+    lda #$80        ; Yes: record the sign
+    sta sign
+
+    sec             ; Negate n1
+    lda #0
+    sbc pstack+4,x
+    sta pstack+4,x
+    lda #0
+    sbc pstack+5,x
+    sta pstack+5,x
+
+chk_n2:
+    lda pstack+3,x  ; Check to see if n2 is negative
+    bpl init_tmp
+
+    lda sign        ; Flip the sign bit, if so
+    eor #$80        ; And set the bit for the remainder
+    sta sign
+
+    sec             ; Negate n2
+    lda #0
+    sbc pstack+2,x
+    sta pstack+2,x
+    lda #0
+    sbc pstack+3,x
+    sta pstack+3,x
+
+init_tmp:
+    stz tmp         ; Initialize tmp (remainder) to 0
+    stz tmp+1
+
+    lda #16         ; There are 16 bits in NUM1
+    sta counter
+    
+l1:
+    asl pstack+4,x  ; Shift hi bit of NUM1 into REM
+    rol pstack+5,x  ; (vacating the lo bit, which will be used for the quotient)
+    rol tmp
+    rol tmp+1
+    lda tmp
+    sec             ; Trial subtraction
+    sbc pstack+2,x
+    tay
+    lda tmp+1,x
+    sbc pstack+3,x
+    bcc l2          ; Did subtraction succeed?
+    sta tmp+1       ; If yes, save it
+    sty tmp
+    inc pstack+4,x  ; and record a 1 in the quotient
+l2:
+    dec counter
+    bne l1
+
+    lda pstack+5,x  ; Set the quotient
+    sta pstack+3,x
+    lda pstack+4,x
+    sta pstack+2,x
+
+    lda tmp         ; Save the remainder to the stack
+    sta pstack+4,x
+    lda tmp+1
+    sta pstack+5,x
+
+    lda sign        ; Check to see if the sign should be negative
+    bpl done
+
+    sec             ; Negate the quotient
+    lda #0
+    sbc pstack+2,x
+    sta pstack+2,x
+    lda #0
+    sbc pstack+3,x
+    sta pstack+3,x
+
+done:
+    jmp next
+end-code
+{ 1 3 /mod --> 1 0 }
+{ 2 3 /mod --> 2 0 }
+{ 3 3 /mod --> 0 1 }
+{ 4 3 /mod --> 1 1 }
+{ 6 3 /mod --> 0 2 }
 
 ( n1 -- n2 )
 code 1+
@@ -1145,6 +1279,24 @@ end-code
 { ffffh 0 = --> 0000h }
 { ffffh ffffh = --> ffffh }
 { 0 0 = --> ffffh }
+
+\\
+\\ Common Math Words
+\\
+
+( n1 n2 -- n3 )
+: /
+    /mod swap drop
+;
+{ 6 3 / --> 2 }
+{ 10 3 / --> 3 }
+
+( n1 n2 -- n3 )
+: mod
+    /mod drop
+;
+{ 6 3 mod --> 0 }
+{ 10 3 mod --> 1 }
 
 ( n1 -- n2 )
 : abs
