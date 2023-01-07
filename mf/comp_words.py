@@ -10,6 +10,11 @@ import testing
 LOOP_TYPE_BEGIN = 1
 LOOP_TYPE_DO = 2
 
+def exec_include(c):
+    """Process an include command"""
+    file_name = c.read_to("\"")
+    c.process_file(file_name)
+
 # ( limit initial -- )
 def exec_do(c):
     """Compile the word DO"""
@@ -200,10 +205,6 @@ def exec_code(c):
 def exec_immediate(c):
     cw = c.get_current_word()
     cw.set_flags(cw.get_flags() | compiler.Compiler.FLAG_IMMEDIATE)
-    
-def exec_include(c):
-    filename = c.read_to("\"")
-    print("INCLUDE ({})".format(filename))
 
 def exec_lbrace(c):
     """Handle a left brace --- the declaration for a test case."""
@@ -307,6 +308,3 @@ def register_all(c):
     c.register(compiler.CompilerWord("do", exec_do, True))
     c.register(compiler.CompilerWord("loop", exec_loop, True))
     c.register(compiler.CompilerWord("+loop", exec_plusloop, True))
-
-    
-

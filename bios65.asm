@@ -6,6 +6,7 @@
 .include "bios_vec.asm"             ; Define the hardware vectors
 .include "io_f256.asm"              ; Define the I/O registers
 
+CHAR_BS = 8                         ; Backspace
 CHAR_FF = 12                        ; Form feed character
 CHAR_NL = 13                        ; Newline character
 
@@ -39,6 +40,8 @@ boot        jmp iboot               ; Boot from power up or reset
 setshell    jmp isetshell           ; Set the address for the shell to Y:A
 warm        jmp iwarm               ; Re-initialize BIOS variables and start main code
 conout      jmp iconout             ; Print a character in A to the screen
+constat     jmp kbd_status          ; Return the status of the console
+conin       jmp kbd_dequeue         ; Return any pending key in A (0 if none)
 printah     jmp iprintah            ; Print the hexadecimal number in A
 printyah    jmp iprintyah           ; Print the 16-bit hexadecimal number in Y:A
 prints      jmp iprints             ; Print the ASCIIZ string indicated by src_ptr
@@ -57,6 +60,20 @@ iboot:      lda #<start             ; At the moment, the shell will always be wh
             jsr setshell            ; Set the address of the shell
             
             jmp warm                ; Initialize system
+
+kbdtest:    .proc
+            lda #'>'
+            jsr conout
+            
+loop:
+            jsr constat
+            and #1
+            beq loop
+
+            jsr conin
+            jsr conout
+            bra loop
+            .pend
 
 ;
 ; Set the address of the shell
@@ -83,6 +100,8 @@ iwarm:      .proc
             lda #MMU_IO_PAGE_0      ; Make sure we're on I/O page #0
             sta MMU_IO_CTRL
 
+            jsr initkbd             ; Initialize the keyboard code
+            jsr initint             ; Initialize the interrupt system
             jsr inittext            ; Initialize the text screen
             jmp (shell_start)       ; Transfer control to installed shell
             .pend
@@ -122,6 +141,23 @@ inittext:   .proc
             rts
             .pend
 
+;
+; Initialize the interrupts... just turn on the keyboard intterupt
+;
+initint:    .proc
+            lda #~INT_PS2_KBD
+            sta INT_MASK_0
+
+            lda #$ff
+            sta INT_MASK_1
+
+            sta INT_PEND_0
+            sta INT_PEND_1
+
+            cli
+
+            rts
+            .pend
 
 CURS_CHAR = $7f                     ; Define the character to use for the text cursor (font dependent)
 
@@ -360,7 +396,7 @@ copy_text:  lda #MMU_IO_PAGE_TEXT   ; Move to the text page
 
             ldy #0                  ; Copy a text line from src to dst
 loop1:      lda (src_ptr),y
-            sta (src_ptr)
+            sta (dst_ptr),y
             iny
             cpy curs_width
             bne loop1    
@@ -370,7 +406,7 @@ loop1:      lda (src_ptr),y
 
             ldy #0                  ; Copy a color line from src to dst
 loop2:      lda (src_ptr),y
-            sta (src_ptr)
+            sta (dst_ptr),y
             iny
             cpy curs_width
             bne loop2
@@ -389,7 +425,7 @@ loop2:      lda (src_ptr),y
             sta src_ptr+1
 
             inx                     ; Move src line number to the next row
-            cmp curs_height         ; Have we copied the last row?
+            cpx curs_height         ; Have we copied the last row?
             bne copy_text           ; No: copy the line
 
             lda dst_ptr             ; Clear the destination line
@@ -469,7 +505,21 @@ not_cr:     cmp #CHAR_FF            ; Is it a FF character?
             jsr consclr             ; Yes: clear the screen
             bra done
 
-not_ff:     sta tmp                 ; Otherwise: save A in preparation for printing
+not_ff:     cmp #CHAR_BS            ; Is it a backspace character?
+            bne not_bs
+
+            lda curs_x              ; Yes: move the cursor back
+            beq bs_leftmost         ; Is it already on column 0?
+            dec a                   ; No: move it back one
+            sta curs_x
+            jsr cursset
+bs_leftmost:
+            lda #' '                ; Clear the current character
+            ldy curs_x              ; Get the index to the cursor
+            sta (cur_line),y        ; Write the character to the screen
+            bra done
+
+not_bs:     sta tmp                 ; Otherwise: save A in preparation for printing
             
             lda MMU_IO_CTRL         ; Save the current I/O page
             pha
@@ -504,10 +554,11 @@ iprintah:   .proc
             phx
 
             pha
-            and #$f0                ; Isolate the high nibble
             lsr a
             lsr a
             lsr a
+            lsr a
+            and #$0f
             tax                     ; Convert it to an index
             lda hex_digits,x        ; Lookup the hex digit for that nibble
             jsr conout              ; And print it
@@ -566,9 +617,37 @@ h_nmi:      .proc
 ; Handle IRQ and BRK interrupts
 ;
 h_irq:      .proc
+            pha
+
+            lda MMU_IO_CTRL         ; Save the current IO page settings
+            pha
+
+            stz MMU_IO_PAGE_0       ; Go to I/O page 0
+
+            lda INT_PEND_0          ; Check group 0 pending
+            bit #INT_PS2_KBD        ; Is it the keyboard?
+            beq done                ; No: we're done 
+
+            jsr handlekbd           ; Handle a keyboard interrupt
+
+done:
+            lda #$ff                ; Clear all pending interrupts
+            sta INT_PEND_0
+            sta INT_PEND_1
+
+            pla                     ; Restore the IO page settings
+            sta MMU_IO_CTRL
+
+            pla
             rti                     ; Just return
             .pend
+
+;
+; Import code from other files...
+;
 
 bios_font:  .binary "bin/MSX_CP437_8x8.bin"
 
 .send
+
+.include "keyboard.asm"

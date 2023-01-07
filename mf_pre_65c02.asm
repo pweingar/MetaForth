@@ -12,6 +12,8 @@
 pstack = $0000          ; Location of the "bottom" of the parameter stack
 USERAREA = $1000        ; Area for user variables
 
+CHAR_TAB = 9
+
 
 .include "bios65.asm"   ; Include the light BIOS
 
@@ -43,6 +45,10 @@ init_user:
         .word 0         ; Initial CONTEXT
         .word 0         ; Initial CURRENT
         .word <>endcode ; Initial DP
+        .word 0         ; Initial >IN
+        .word 0         ; Initial TIB
+        .word 0         ; Initial SOURCE-ID
+
 init_user_end:
 
 user_s0 = 0
@@ -52,6 +58,9 @@ user_state = 6
 user_context = 8
 user_current = 10
 user_dp = 12
+user_in = 14
+user_tib = 16
+user_source_id = 18
 
 ;;
 ;; Bootstrapping code

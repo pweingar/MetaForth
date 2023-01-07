@@ -110,12 +110,59 @@ xt_emit:
 	.bend
 ; END emit
 
+; ( -- f )
+; BEGIN key?
+w_keyx3f:
+	.byte $04
+	.text 'key?'
+	.word w_emit
+xt_keyx3f:
+	.block
+	jsr constat
+	and #1
+	beq waiting
+	stz pstack,x
+	stz pstack+1,x
+	bra done
+	waiting:
+	lda #$ff
+	sta pstack,x
+	sta pstack+1,x
+	done:
+	dex
+	dex
+	jmp next
+	.bend
+; END key?
+
+; ( -- c )
+; BEGIN key
+w_key:
+	.byte $03
+	.text 'key'
+	.word w_keyx3f
+xt_key:
+	.block
+	phx
+	wait:
+	jsr conin
+	cmp #0
+	beq wait
+	plx
+	sta pstack,x
+	stz pstack+1,x
+	dex
+	dex
+	jmp next
+	.bend
+; END key
+
 ; ( -- )
 ; BEGIN cr
 w_cr:
 	.byte $02
 	.text 'cr'
-	.word w_emit
+	.word w_key
 xt_cr:
 	.block
 	phx
@@ -1999,12 +2046,89 @@ xt_x2bx21:
 	.bend
 ; END +!
 
+; ( addr c -- addr n1 n2 n3 )
+; BEGIN enclose
+w_enclose:
+	.byte $07
+	.text 'enclose'
+	.word w_x2bx21
+xt_enclose:
+	.block
+	;
+	; scan a text buffer start at addr and find the first non delimiter (c) the offset to it goes in n1
+	; scan to the next delimiter... its offset goes in n2
+	; if NUL found instead (or end of buffer) n3 = n2, otherwise n3 = n2 + 1
+	;
+	lda pstack+5,x          ; Copy the address
+	sta src_ptr+1
+	lda pstack+4,x
+	sta src_ptr
+	lda pstack+2,x          ; tmp := c
+	sta tmp
+	; Prepare the return values
+	txa
+	sec
+	sbc #4
+	tax
+	stz pstack+7,x          ; n1 ... offset to first character
+	stz pstack+6,x
+	stz pstack+5,x          ; n2 ... offset to first delimiter
+	stz pstack+4,x
+	stz pstack+3,x          ; n3 ... n2 + 1 or n2
+	stz pstack+2,x
+	; Skip over leading delimiters
+	ldy #0
+	loop1:
+	lda (src_ptr),y         ; Get the character
+	bne chk_delim1          ; NUL? No:; check it against the delimiter
+	none:
+	jmp next                ; Yes: we want to return 0s
+	chk_delim1:
+	cmp tmp                 ; Is it the delimiter?
+	beq skip2               ; Yes: skip the character
+	lda tmp                 ; Check the delimiter
+	cmp #' '                ; Is it BL?
+	bne found               ; No: ok, we've found the first character;
+	lda (src_ptr),y         ; Get the character back
+	cmp #CHAR_TAB           ; Is it a TAB?
+	bne found               ; No: we found the first character
+	iny                     ; Move to the next character
+	beq none                ; If we've rolled over, we found nothing
+	bra loop1               ; Otherwise: check the next character
+	found:                      ; We found the first character
+	sty pstack+6,x          ; Save the offset to it in n1
+	skip2:
+	iny                     ; Go to the next character
+	beq found_nul           ; If it rolls over, we've reached the end (NUL)
+	loop2:
+	lda (src_ptr),y         ; Get the character
+	beq found_nul           ; If it is NUL, we've reached the end (NUL)
+	cmp tmp                 ; Check it against the delimiter
+	beq found_delim         ; If it's the delimiter, we've reached the end (with delimiter)
+	lda tmp                 ; Get the delimiter
+	cmp #' '                ; Is it space?
+	bne skip2               ; No: go to the next character
+	lda (src_ptr),y         ; Get the character again
+	cmp #CHAR_TAB           ; Is it a tab?
+	bne skip2               ; No: go to the next character
+	found_delim:                ; We found a delimiter
+	sty pstack+4,x          ; Save the offset of the delimiter in n2
+	iny
+	sty pstack+2,x          ; And the offset +1 to n3
+	jmp next                ; And we're done
+	found_nul:                  ; We did not find a delimiter... reached NUL or end of buffer
+	sty pstack+4,x          ; Save the offset of the delimiter in n2
+	sty pstack+2,x          ; And to n3
+	jmp next                ; And we're done
+	.bend
+; END enclose
+
 ; ( addr1 addr2 u -- )
 ; BEGIN move
 w_move:
 	.byte $04
 	.text 'move'
-	.word w_x2bx21
+	.word w_enclose
 xt_move:
 	.block
 	sec                     ; Compare addr1 and addr2
@@ -2708,12 +2832,54 @@ xt_dp:
 ; END dp
 
 ; ( Pointer to the current compilation point )
+; BEGIN >in
+w_x3ein:
+	.byte $03
+	.text '>in'
+	.fill 13
+	.word w_dp
+xt_x3ein:
+	.block
+	jmp xt_x28userx29
+	.word 7
+	.bend
+; END >in
+
+; ( Pointer to cursor offset into input buffer )
+; BEGIN tib
+w_tib:
+	.byte $03
+	.text 'tib'
+	.fill 13
+	.word w_x3ein
+xt_tib:
+	.block
+	jmp xt_x28userx29
+	.word 8
+	.bend
+; END tib
+
+; ( Pointer to the cell containing the pointer to the input buffer )
+; BEGIN source-id
+w_sourcex2did:
+	.byte $09
+	.text 'source-id'
+	.fill 7
+	.word w_tib
+xt_sourcex2did:
+	.block
+	jmp xt_x28userx29
+	.word 9
+	.bend
+; END source-id
+
+; ( Pointer to the source ID -1 for string, 0 for keyboard, any other number for file )
 ; ( -- )
 ; BEGIN (branch)
 w_x28branchx29:
 	.byte $08
 	.text '(branch)'
-	.word w_dp
+	.word w_sourcex2did
 xt_x28branchx29:
 	.block
 	ldy #1              ; ip := branch address
@@ -2788,13 +2954,65 @@ xt_x28dox29:
 	.bend
 ; END (do)
 
+; ( n -- )
+; BEGIN >i
+w_x3ei:
+	.byte $02
+	.text '>i'
+	.word w_x28dox29
+xt_x3ei:
+	.block
+	.virtual $0101,x
+	limit       .word ?
+	current     .word ?
+	.endv
+	lda pstack+3,x      ; tmp := n
+	sta tmp+1
+	lda pstack+2,x
+	sta tmp
+	dex
+	dex
+	stx savex           ; Point X to the return stack temporarily
+	tsx
+	lda tmp+1           ; current := tmp = n
+	sta current+1
+	lda tmp
+	sta current
+	ldx savex
+	jmp next
+	.bend
+; END >i
+
+; ( -- )
+; BEGIN leave
+w_leave:
+	.byte $05
+	.text 'leave'
+	.word w_x3ei
+xt_leave:
+	.block
+	.virtual $0101,x
+	limit       .word ?
+	current     .word ?
+	.endv
+	stx savex           ; Point X to the return stack temporarily
+	tsx
+	lda current+1       ; limit := current
+	sta limit+1
+	lda current
+	sta limit
+	ldx savex
+	jmp next
+	.bend
+; END leave
+
 ; ( -- )
 ; ( R: x*i current limit -- x*i current limit | x*i )
 ; BEGIN (loop)
 w_x28loopx29:
 	.byte $06
 	.text '(loop)'
-	.word w_x28dox29
+	.word w_leave
 xt_x28loopx29:
 	.block
 	.virtual $0101,x
@@ -3429,15 +3647,23 @@ xt_type:
 l_201:
 	.word xt_i
 	.word xt_cx40
+	.word xt_x3fdup
+	.word xt_x28branch0x29
+	.word l_203
 	.word xt_emit
+	.word xt_x28branchx29
+	.word l_204
+l_203:
+	.word xt_leave
+l_204:
 	.word xt_x28loopx29
 	.word l_201
 l_202:
 	.word xt_x28branchx29
-	.word l_203
+	.word l_205
 l_200:
 	.word xt_drop
-l_203:
+l_205:
 	.word i_exit
 	.bend
 ; END type
@@ -3471,66 +3697,208 @@ xt_spaces:
 	jmp i_enter
 	.word xt_0
 	.word xt_x28dox29
-l_204:
+l_206:
 	.word xt_space
 	.word xt_x28loopx29
-	.word l_204
-l_205:
+	.word l_206
+l_207:
 	.word i_exit
 	.bend
 ; END spaces
 
+; ( addr n -- )
+; BEGIN expect
+w_expect:
+	.byte $06
+	.text 'expect'
+	.fill 10
+	.word w_spaces
+xt_expect:
+	.block
+	jmp i_enter
+	.word xt_over
+	.word xt_x2b
+	.word xt_over
+	.word xt_x28dox29
+l_208:
+	.word xt_key
+	.word xt_dup
+	.word xt_x28literalx29
+	.word 8
+	.word xt_x3d
+	.word xt_x28branch0x29
+	.word l_210
+	.word xt_drop
+	.word xt_dup
+	.word xt_i
+	.word xt_x3d
+	.word xt_x28branch0x29
+	.word l_211
+	.word xt_i
+	.word xt_1x2d
+	.word xt_x3ei
+	.word xt_x28literalx29
+	.word 7
+	.word xt_emit
+	.word xt_x28branchx29
+	.word l_212
+l_211:
+	.word xt_i
+	.word xt_2x2d
+	.word xt_x3ei
+	.word xt_x28literalx29
+	.word 8
+	.word xt_emit
+l_212:
+	.word xt_x28branchx29
+	.word l_213
+l_210:
+	.word xt_dup
+	.word xt_x28literalx29
+	.word 13
+	.word xt_x3d
+	.word xt_x28branch0x29
+	.word l_214
+	.word xt_leave
+	.word xt_drop
+	.word xt_bl
+	.word xt_0
+	.word xt_x28branchx29
+	.word l_215
+l_214:
+	.word xt_dup
+l_215:
+	.word xt_i
+	.word xt_cx21
+	.word xt_0
+	.word xt_i
+	.word xt_1x2b
+	.word xt_cx21
+	.word xt_emit
+l_213:
+	.word xt_x28loopx29
+	.word l_208
+l_209:
+	.word xt_drop
+	.word i_exit
+	.bend
+; END expect
+
+; ( addr addr-end )
+; ( addr addr-end addr )
+; ( addr c )
+; ( backspace pressed... )
+; ( addr )
+; ( at beginning, do not advance index and ring bell )
+; ( not at the beginning, move the cursor back one )
+; ( another key pressed )
+; ( addr c c )
+; ( carriage return pressed )
+; ( end loop early )
+; ( replace cr with blank )
+; ( addr bl 0 )
+; ( addr c c )
+; ( addr c )
+; ( write NUL sentinel after c in buffer )
+; ( echo the character )
+; ( -- n )
+; BEGIN random
+w_random:
+	.byte $06
+	.text 'random'
+	.fill 10
+	.word w_expect
+xt_random:
+	.block
+	jmp i_enter
+	.word xt_x28literalx29
+	.word 54948
+	.word xt_x40
+	.word i_exit
+	.bend
+; END random
+
+; ( Return a random, 16-bit number )
+; BEGIN maze
+w_maze:
+	.byte $04
+	.text 'maze'
+	.fill 12
+	.word w_random
+xt_maze:
+	.block
+	jmp i_enter
+	.word xt_1
+	.word xt_x28literalx29
+	.word 54950
+	.word xt_cx21
+l_216:
+	.word xt_random
+	.word xt_1
+	.word xt_and
+	.word xt_x28literalx29
+	.word 205
+	.word xt_x2b
+	.word xt_emit
+	.word xt_x28branchx29
+	.word l_216
+l_217:
+	.word i_exit
+	.bend
+; END maze
+
+; ( Draw a random maze to fill the screen )
+; ( Turn on the random number generator )
 ; BEGIN cold
 w_cold:
 	.byte $04
 	.text 'cold'
 	.fill 12
-	.word w_spaces
+	.word w_maze
 xt_cold:
 	.block
 	jmp i_enter
 	.word xt_x28literalx29
-	.word l_206
+	.word l_218
 	.word xt_x28branchx29
-	.word l_207
-l_206:
+	.word l_219
+l_218:
 	.ptext "Welcome to MetaForth v00.00.00"
-l_207:
+l_219:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
 	.word xt_x28literalx29
-	.word 5
-	.word xt_spaces
-	.word xt_x28literalx29
-	.word 10
-	.word xt_0
-	.word xt_x28dox29
-l_208:
-	.word xt_x28literalx29
-	.word l_210
+	.word l_220
 	.word xt_x28branchx29
-	.word l_211
-l_210:
-	.ptext "Hello, MetaForth!"
-l_211:
+	.word l_221
+l_220:
+	.ptext "ok"
+l_221:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
-	.word xt_x28loopx29
-	.word l_208
-l_209:
-	.word xt_unittest
 	.word xt_x28literalx29
-	.word l_212
+	.word 20480
+	.word xt_x28literalx29
+	.word 80
+	.word xt_expect
+	.word xt_cr
+	.word xt_x28literalx29
+	.word l_222
 	.word xt_x28branchx29
-	.word l_213
-l_212:
-	.ptext "All unit tests PASSED!"
-l_213:
+	.word l_223
+l_222:
+	.ptext "typed..."
+l_223:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
+	.word xt_x28literalx29
+	.word 20480
+	.word xt_x28literalx29
+	.word 80
+	.word xt_type
 	.word i_exit
 	.bend
 ; END cold

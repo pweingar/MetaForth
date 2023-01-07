@@ -219,6 +219,7 @@ class Compiler:
         self._label_stack = []
         self._parameter_stack = []
         self._test_word = None
+        self._file_stack = []
 
     def register(self, word):
         """Register a compiler word."""
@@ -401,6 +402,8 @@ class Compiler:
         """Process the words in a file"""
 
         # TODO: allow for include files
+        if self._input_file != None:
+            self._file_stack.append(self._input_file)
 
         with open(file, "r") as input:
             self._input_file = tokens.TokenStream(input)
@@ -409,6 +412,9 @@ class Compiler:
                 if token:
                     self.process_token(token)
                     token = self._input_file.get_token()
+
+        if len(self._file_stack) > 0:
+            self._input_file = self._file_stack.pop()
 
     def emit(self, emitter):
         """Emit all the words to the assembly file."""
