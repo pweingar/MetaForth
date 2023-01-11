@@ -4,6 +4,24 @@ include" forth_65c02.fth"
 \\ Common words
 \\
 
+( Define some constants )
+8 constant bs     ( Backspace )
+13 constant nl     ( Newline character )
+32 constant bl     ( Blank character )
+
+( Define the user variables )
+
+0 user s0           ( Initial PSP )
+1 user r0           ( Initial RSP )
+2 user base         ( Current radix )
+3 user state        ( Compiler/Interpreter state )
+4 user context      ( Pointer to top wordlist for searching )
+5 user current      ( Pointer to the current wordlist for definitions )
+6 user dp           ( Pointer to the current compilation point )
+7 user >in          ( Pointer to cursor offset into input buffer )
+8 user tib          ( Pointer to the cell containing the pointer to the input buffer )
+9 user source-id    ( Pointer to the source ID -1 for string, 0 for keyboard, any other number for file )
+
 ( x -- 0 | x x )
 : ?dup
     dup if
@@ -219,26 +237,44 @@ include" forth_65c02.fth"
 
 ( addr n -- )
 : expect
-    over +          ( addr addr-end )
-    over            ( addr-end addr )
+    over +                      ( addr addr-end )
+    over                        ( addr-end addr )
     do
-        key         ( addr c )
+        key                     ( addr c )
         case
-            8 of        ( Handle the backspace key )
+            bs of               ( Handle the backspace key )
+                dup             ( addr addr )
+                i = not if
+                    ( If we're not at the start of the string )
+                    ( TODO: ring the bell if we are at the start )
+
+                    bs emit     ( Delete the previous character from the screen )
+                    bl emit
+                    bs emit
+                    0 i 1- c!   ( And zero out the current character)
+                    i 2- >i
+                then
             endof
 
-            13 of       ( Handle the return key )
-                leave
+            nl of               ( Handle the return key )
+                leave           ( Just return to the caller )
             endof
 
             ( Handle any other keypress )
-            dup dup         ( addr c c c )
-            i c!            ( addr c c )
-            0 i 1+ c!       ( write NUL sentinel after c in buffer )
-            emit            ( echo the character )
+            dup dup             ( addr c c c )
+            i c!                ( addr c c )
+            0 i 1+ c!           ( write NUL sentinel after c in buffer )
+            emit                ( echo the character )
         end-case
     loop
-    drop                    ( drop the starting address )
+    drop                        ( drop the starting address )
+;
+
+( -- )
+: query
+    tib @                   ( get address for TIB )
+    80 expect               ( Load at most 80 characters into TIB from keyboard )
+    0 >in !                 ( Set the IN index to the beginning )
 ;
 
 \\
@@ -252,11 +288,16 @@ include" forth_65c02.fth"
 include" f256jr.fth"
 
 : cold
+    4000h dp !              ( Initialize the dictionary pointer )
+    BF00h tib !             ( Initialize the TIB )
+
     c" Welcome to MetaForth v00.00.00" count type cr
 
-    5000h 80 expect cr
-    c" typed..." count type cr
-    5000h 80 type
+    query cr cr
+    c" You typed" count type
+    bl emit AEh emit
+    tib @ 80 type
+    AFh emit
 
 \\    unittest
 \\    c" All unit tests PASSED!" count type cr

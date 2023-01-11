@@ -82,25 +82,50 @@ end-code
 
 ( -- )
 code halt
-    lda #<haltmsg
+    lda #<registers         ; Print register banner
     sta src_ptr
-    lda #>haltmsg
+    lda #>registers
     sta src_ptr+1
     jsr prints
 
+    ldy ip+1                ; Print the IP
+    lda ip
+    jsr printyah
+
+    lda #' '
+    jsr conout
+
+    ldy wp+1                ; Print the WP
+    lda wp
+    jsr printyah
+
+    lda #' '
+    jsr conout
+
+    stx savex               ; Print the return stack pointer
+    ldy #$01
+    tsx
+    txa
+    jsr printyah
+    ldx savex
+
+    lda #' '
+    jsr conout
+
+    ldy #0                  ; Print the parameter stack pointer
+    txa
+    jsr printyah
+
+    lda #13
+    jsr conout
+
+    cpx #$6e                ; Check to see if there is anything on the parameter stack
+    bge lock
+
+    lda #>stackmsg          ; Yes: print the stack message and the stack contents
+    sta src_ptr+1
     lda #<stackmsg
     sta src_ptr
-    lda #>stackmsg
-    sta src_ptr+1
-    jsr prints
-
-    txa
-    jsr printah
-
-    lda #<stackcont
-    sta src_ptr
-    lda #>stackcont
-    sta src_ptr+1
     jsr prints
 
 loop:
@@ -118,20 +143,14 @@ loop:
     bra loop
 
 lock:
-    lda #<endmsg
-    sta src_ptr
-    lda #>endmsg
-    sta src_ptr+1
-    jsr prints
 
 wait:
     nop
     bra wait
 
-haltmsg:    .null 13,"System halted...",13
-stackmsg:   .null "Stack ["
-stackcont:  .null "] "
-endmsg:     .null 13,13,"END-OF-LINE",13
+registers:  .text 13,13,"|   IP   WP  RSP  PSP",13
+            .null "| "
+stackmsg:   .null 13,"Parameter Stack:",13
 end-code
 
 ( c -- )
@@ -1122,10 +1141,6 @@ end-code
 2 constant cells
 { cells 2 - 0= --> ffffh }
 
-( -- n )
-32 constant bl
-{ bl 32 - 0= --> ffffh }
-
 ( -- a-addr )
 code (user)
     clc                     ; push(up + memory(wp + 3))
@@ -1143,19 +1158,6 @@ code (user)
 
     jmp next
 end-code 
-
-( Define the user variables )
-
-0 user s0           ( Initial PSP )
-1 user r0           ( Initial RSP )
-2 user base         ( Current radix )
-3 user state        ( Compiler/Interpreter state )
-4 user context      ( Pointer to top wordlist for searching )
-5 user current      ( Pointer to the current wordlist for definitions )
-6 user dp           ( Pointer to the current compilation point )
-7 user >in          ( Pointer to cursor offset into input buffer )
-8 user tib          ( Pointer to the cell containing the pointer to the input buffer )
-9 user source-id    ( Pointer to the source ID -1 for string, 0 for keyboard, any other number for file )
 
 \\
 \\ Control Words
@@ -1239,8 +1241,8 @@ current     .word ?
     lda pstack+2,x
     sta tmp
 
-    dex
-    dex
+    inx
+    inx
 
     stx savex           ; Point X to the return stack temporarily
     tsx
@@ -1340,7 +1342,7 @@ limit       .word ?
 current     .word ?
     .endv
 
-    lda pstack+3,x
+    ldy pstack+3,x
     sta tmp+1
     lda pstack+2,x
     sta tmp
