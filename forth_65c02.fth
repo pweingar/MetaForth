@@ -82,9 +82,48 @@ end-code
 
 ( -- )
 code halt
+    lda #<haltmsg
+    sta src_ptr
+    lda #>haltmsg
+    sta src_ptr+1
+    jsr prints
+
+    lda #<stackmsg
+    sta src_ptr
+    lda #>stackmsg
+    sta src_ptr+1
+    jsr prints
+
+    txa
+    jsr printah
+
+    lda #<stackcont
+    sta src_ptr
+    lda #>stackcont
+    sta src_ptr+1
+    jsr prints
+
+loop:
+    cpx #$6e
+    beq lock
+
+    ldy pstack+3,x
+    lda pstack+2,x
+    inx
+    inx
+
+    jsr printyah
+    lda #' '
+    jsr conout
+    bra loop
+
 lock:
     nop
     bra lock
+
+haltmsg:    .null 13,"System halted...",13
+stackmsg:   .null "Stack ["
+stackcont:  .null "] "
 end-code
 
 ( c -- )
@@ -1241,12 +1280,20 @@ current     .word ?
     inc current+1
 
 chk_current:
-    lda current         ; current == limit?
-    cmp limit
-    bne dobranch
-    lda current+1
-    cmp limit+1
-    bne dobranch
+    sec
+    lda current+1       ; compare high bytes
+    sbc limit+1
+    bvc label1          ; the equality comparison is in the Z flag here
+    eor #$80            ; the Z flag is affected here
+label1:
+    bmi dobranch        ; if current+1 < limit+1 then NUM1 < limit
+    bvc label2          ; the Z flag was affected only if V is 1
+    eor #$80            ; restore the Z flag to the value it had after SBC NUM2H
+label2:
+    bne nobranch        ; if current+1 <> limit+1 then current > limit (so current >= limit)
+    lda current         ; compare low bytes
+    sbc limit
+    bcc dobranch        ; if current < limit then current < limit
 
 nobranch:
     txa                 ; Yes: Remove the context from the return stack
@@ -1305,13 +1352,20 @@ current     .word ?
     inc savex
 
 chk_current:
-    lda current+1       ; Is current < limit
-    cmp limit+1
-    bne chk_ne
-    lda current
-    cmp limit
-chk_ne:
-    bcc dobranch        ; Yes: take the branch
+    sec
+    lda current+1       ; compare high bytes
+    sbc limit+1
+    bvc label1          ; the equality comparison is in the Z flag here
+    eor #$80            ; the Z flag is affected here
+label1:
+    bmi dobranch        ; if current+1 < limit+1 then NUM1 < limit
+    bvc label2          ; the Z flag was affected only if V is 1
+    eor #$80            ; restore the Z flag to the value it had after SBC NUM2H
+label2:
+    bne nobranch        ; if current+1 <> limit+1 then current > limit (so current >= limit)
+    lda current         ; compare low bytes
+    sbc limit
+    bcc dobranch        ; if current < limit then current < limit
 
 nobranch:
     txa                 ; Yes: Remove the context from the return stack
@@ -1363,6 +1417,47 @@ current     .word ?
 
     dex
     dex
+    jmp next
+end-code
+
+( x*i n1 n2 -- x*i | x*i n1 )
+code (of)
+    lda pstack+2,x      ; Does n1 == n2?
+    cmp pstack+4,x
+    bne not_eq
+    lda pstack+3,x
+    cmp pstack+5,x
+    bne not_eq
+
+    ; Yes... pop both off and continue with code after OF
+    inx
+    inx
+    inx
+    inx
+
+    clc                 ; Skip over the branch target
+    lda ip
+    adc #2
+    sta ip
+    lda ip+1
+    adc #0
+    sta ip+1
+
+    jmp next
+
+    ; No... pop n2 off of stack and jump past END-OF
+not_eq:
+    inx                 ; Remove n2 from stack
+    inx
+
+    ldy #1              ; Take the branch target
+    lda (ip)
+    sta tmp
+    lda (ip),y
+    sta ip+1
+    lda tmp
+    sta ip
+
     jmp next
 end-code
 

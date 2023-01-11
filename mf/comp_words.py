@@ -10,6 +10,37 @@ import testing
 LOOP_TYPE_BEGIN = 1
 LOOP_TYPE_DO = 2
 
+def exec_case(c):
+    """Process a CASE word"""
+    end_case_label = c.gen_label()
+    c.push_label(end_case_label)
+
+def exec_end_case(c):
+    """Process an END-CASE word"""
+    current_word = c.get_current_word()
+    end_case_label = c.pop_label()
+    current_word.compile(compiler.LabelDeclaration("xt_drop"))
+    current_word.compile(compiler.LabelDeclaration(end_case_label))
+    print("end-case {}".format(end_case_label))
+
+def exec_of(c):
+    """Process an OF clause"""
+    current_word = c.get_current_word()
+    end_of_label = c.gen_label()
+    c.push_label(end_of_label)
+    current_word.compile(compiler.LabelReference("xt_(of)"))
+    current_word.compile(compiler.LabelReference(end_of_label))
+
+def exec_endof(c):
+    """Process an ENDOF word"""
+    current_word = c.get_current_word()
+    end_of_label = c.pop_label()
+    end_case_label = c.pop_label()
+    c.push_label(end_case_label)
+    current_word.compile(compiler.LabelReference("xt_(branch)"))
+    current_word.compile(compiler.LabelReference(end_case_label))
+    current_word.compile(compiler.LabelDeclaration(end_of_label))
+
 def exec_include(c):
     """Process an include command"""
     file_name = c.read_to("\"")
@@ -308,3 +339,7 @@ def register_all(c):
     c.register(compiler.CompilerWord("do", exec_do, True))
     c.register(compiler.CompilerWord("loop", exec_loop, True))
     c.register(compiler.CompilerWord("+loop", exec_plusloop, True))
+    c.register(compiler.CompilerWord("case", exec_case, True))
+    c.register(compiler.CompilerWord("end-case", exec_end_case, True))
+    c.register(compiler.CompilerWord("of", exec_of, True))
+    c.register(compiler.CompilerWord("endof", exec_endof, True))

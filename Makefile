@@ -8,12 +8,13 @@ all: forth.hex
 runhex: forth.hex
 	python $(FOENIXMGR)/FoenixMgr/fnxmgr.py --upload forth.hex
 
-%.asm: %.fth
+forth.asm: forth.fth
 	python mf/compiler.py
 
 %.hex: %.asm
 	$(AS) $(ASFLAGS) --intel-hex -o $@ $< --list=$*.lst
 
 clean:
+	del forth.asm
 	del *.hex
 	del *.lst

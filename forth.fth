@@ -183,8 +183,8 @@ include" forth_65c02.fth"
 
 ( c-addr n -- )
 : type
-    ?dup                \ copy n if it's not zero 
-    if
+    ?dup if
+        ( n is > 0 )
         over +          \ start-addr end-addr 
         swap            \ end-addr start-addr
         do
@@ -196,6 +196,7 @@ include" forth_65c02.fth"
             then
         loop
     else
+        ( n == 0 )
         drop            \ if zero, clean c-addr off the stack
     then
 ;
@@ -219,38 +220,24 @@ include" forth_65c02.fth"
 ( addr n -- )
 : expect
     over +          ( addr addr-end )
-    over            ( addr addr-end addr )
+    swap            ( addr-end addr )
     do
         key         ( addr c )
-        dup 8 = if
-            ( backspace pressed... )
-            drop            ( addr )
-            dup i = if
-                ( at beginning, do not advance index and ring bell )
-                i 1- >i         
-                7 emit
-            else
-                ( not at the beginning, move the cursor back one)
-                i 2- >i
-                8 emit
-            then
-        else
-            ( another key pressed )
+        case
+            8 of        ( Handle the backspace key )
+            endof
+
+            13 of       ( Handle the return key )
+                leave
+            endof
+
+            ( Handle any other keypress )
             dup             ( addr c c )
-            13 = if
-                ( carriage return pressed )
-                leave       ( end loop early)
-                drop bl     ( replace cr with blank )
-                0           ( addr bl 0 )
-            else
-                dup         ( addr c c )
-            then
             i c!            ( addr c )
             0 i 1+ c!       ( write NUL sentinel after c in buffer )
             emit            ( echo the character )
-        then
+        end-case
     loop
-    drop
 ;
 
 \\
@@ -265,9 +252,6 @@ include" f256jr.fth"
 
 : cold
     c" Welcome to MetaForth v00.00.00" count type cr
-    c" ok" count type cr
-\\  maze
-\\    begin key emit again
 
     5000h 80 expect cr
     c" typed..." count type cr

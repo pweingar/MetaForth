@@ -86,9 +86,40 @@ w_halt:
 	.word w_assertx3d
 xt_halt:
 	.block
+	lda #<haltmsg
+	sta src_ptr
+	lda #>haltmsg
+	sta src_ptr+1
+	jsr prints
+	lda #<stackmsg
+	sta src_ptr
+	lda #>stackmsg
+	sta src_ptr+1
+	jsr prints
+	txa
+	jsr printah
+	lda #<stackcont
+	sta src_ptr
+	lda #>stackcont
+	sta src_ptr+1
+	jsr prints
+	loop:
+	cpx #$6e
+	beq lock
+	ldy pstack+3,x
+	lda pstack+2,x
+	inx
+	inx
+	jsr printyah
+	lda #' '
+	jsr conout
+	bra loop
 	lock:
 	nop
 	bra lock
+	haltmsg:    .null 13,"System halted...",13
+	stackmsg:   .null "Stack ["
+	stackcont:  .null "] "
 	.bend
 ; END halt
 
@@ -3025,12 +3056,20 @@ xt_x28loopx29:
 	bne chk_current
 	inc current+1
 	chk_current:
-	lda current         ; current == limit?
-	cmp limit
-	bne dobranch
-	lda current+1
-	cmp limit+1
-	bne dobranch
+	sec
+	lda current+1       ; compare high bytes
+	sbc limit+1
+	bvc label1          ; the equality comparison is in the Z flag here
+	eor #$80            ; the Z flag is affected here
+	label1:
+	bmi dobranch        ; if current+1 < limit+1 then NUM1 < limit
+	bvc label2          ; the Z flag was affected only if V is 1
+	eor #$80            ; restore the Z flag to the value it had after SBC NUM2H
+	label2:
+	bne nobranch        ; if current+1 <> limit+1 then current > limit (so current >= limit)
+	lda current         ; compare low bytes
+	sbc limit
+	bcc dobranch        ; if current < limit then current < limit
 	nobranch:
 	txa                 ; Yes: Remove the context from the return stack
 	clc
@@ -3088,13 +3127,20 @@ xt_x28x2bloopx29:
 	inc savex           ; Remove n from the stack
 	inc savex
 	chk_current:
-	lda current+1       ; Is current < limit
-	cmp limit+1
-	bne chk_ne
-	lda current
-	cmp limit
-	chk_ne:
-	bcc dobranch        ; Yes: take the branch
+	sec
+	lda current+1       ; compare high bytes
+	sbc limit+1
+	bvc label1          ; the equality comparison is in the Z flag here
+	eor #$80            ; the Z flag is affected here
+	label1:
+	bmi dobranch        ; if current+1 < limit+1 then NUM1 < limit
+	bvc label2          ; the Z flag was affected only if V is 1
+	eor #$80            ; restore the Z flag to the value it had after SBC NUM2H
+	label2:
+	bne nobranch        ; if current+1 <> limit+1 then current > limit (so current >= limit)
+	lda current         ; compare low bytes
+	sbc limit
+	bcc dobranch        ; if current < limit then current < limit
 	nobranch:
 	txa                 ; Yes: Remove the context from the return stack
 	clc
@@ -3149,12 +3195,54 @@ xt_i:
 	.bend
 ; END i
 
+; ( x*i n1 n2 -- x*i | x*i n1 )
+; BEGIN (of)
+w_x28ofx29:
+	.byte $04
+	.text '(of)'
+	.word w_i
+xt_x28ofx29:
+	.block
+	lda pstack+2,x      ; Does n1 == n2?
+	cmp pstack+4,x
+	bne not_eq
+	lda pstack+3,x
+	cmp pstack+5,x
+	bne not_eq
+	; Yes... pop both off and continue with code after OF
+	inx
+	inx
+	inx
+	inx
+	clc                 ; Skip over the branch target
+	lda ip
+	adc #2
+	sta ip
+	lda ip+1
+	adc #0
+	sta ip+1
+	jmp next
+	; No... pop n2 off of stack and jump past END-OF
+	not_eq:
+	inx                 ; Remove n2 from stack
+	inx
+	ldy #1              ; Take the branch target
+	lda (ip)
+	sta tmp
+	lda (ip),y
+	sta ip+1
+	lda tmp
+	sta ip
+	jmp next
+	.bend
+; END (of)
+
 ; ( i*x xt -- j*y )
 ; BEGIN execute
 w_execute:
 	.byte $07
 	.text 'execute'
-	.word w_i
+	.word w_x28ofx29
 xt_execute:
 	.block
 	lda pstack+2,x      ; wp := xt
@@ -3668,6 +3756,8 @@ l_205:
 	.bend
 ; END type
 
+; ( n is > 0 )
+; ( n == 0 )
 ; ( -- )
 ; BEGIN space
 w_space:
@@ -3718,56 +3808,26 @@ xt_expect:
 	jmp i_enter
 	.word xt_over
 	.word xt_x2b
-	.word xt_over
+	.word xt_swap
 	.word xt_x28dox29
 l_208:
 	.word xt_key
-	.word xt_dup
 	.word xt_x28literalx29
 	.word 8
-	.word xt_x3d
-	.word xt_x28branch0x29
-	.word l_210
-	.word xt_drop
-	.word xt_dup
-	.word xt_i
-	.word xt_x3d
-	.word xt_x28branch0x29
+	.word xt_x28ofx29
 	.word l_211
-	.word xt_i
-	.word xt_1x2d
-	.word xt_x3ei
-	.word xt_x28literalx29
-	.word 7
-	.word xt_emit
 	.word xt_x28branchx29
-	.word l_212
+	.word l_210
 l_211:
-	.word xt_i
-	.word xt_2x2d
-	.word xt_x3ei
-	.word xt_x28literalx29
-	.word 8
-	.word xt_emit
-l_212:
-	.word xt_x28branchx29
-	.word l_213
-l_210:
-	.word xt_dup
 	.word xt_x28literalx29
 	.word 13
-	.word xt_x3d
-	.word xt_x28branch0x29
-	.word l_214
+	.word xt_x28ofx29
+	.word l_212
 	.word xt_leave
-	.word xt_drop
-	.word xt_bl
-	.word xt_0
 	.word xt_x28branchx29
-	.word l_215
-l_214:
+	.word l_210
+l_212:
 	.word xt_dup
-l_215:
 	.word xt_i
 	.word xt_cx21
 	.word xt_0
@@ -3775,39 +3835,52 @@ l_215:
 	.word xt_1x2b
 	.word xt_cx21
 	.word xt_emit
-l_213:
+xt_drop:
+l_210:
 	.word xt_x28loopx29
 	.word l_208
 l_209:
-	.word xt_drop
 	.word i_exit
 	.bend
 ; END expect
 
 ; ( addr addr-end )
-; ( addr addr-end addr )
+; ( addr-end addr )
 ; ( addr c )
-; ( backspace pressed... )
-; ( addr )
-; ( at beginning, do not advance index and ring bell )
-; ( not at the beginning, move the cursor back one )
-; ( another key pressed )
-; ( addr c c )
-; ( carriage return pressed )
-; ( end loop early )
-; ( replace cr with blank )
-; ( addr bl 0 )
+; ( Handle the backspace key )
+; ( Handle the return key )
+; ( Handle any other keypress )
 ; ( addr c c )
 ; ( addr c )
 ; ( write NUL sentinel after c in buffer )
 ; ( echo the character )
+; ( -- )
+; BEGIN initrandom
+w_initrandom:
+	.byte $0A
+	.text 'initrandom'
+	.fill 6
+	.word w_expect
+xt_initrandom:
+	.block
+	jmp i_enter
+	.word xt_1
+	.word xt_x28literalx29
+	.word 54950
+	.word xt_cx21
+	.word i_exit
+	.bend
+; END initrandom
+
+; ( initialize the random number generator )
+; ( Turn on the random number generator )
 ; ( -- n )
 ; BEGIN random
 w_random:
 	.byte $06
 	.text 'random'
 	.fill 10
-	.word w_expect
+	.word w_initrandom
 xt_random:
 	.block
 	jmp i_enter
@@ -3828,11 +3901,8 @@ w_maze:
 xt_maze:
 	.block
 	jmp i_enter
-	.word xt_1
-	.word xt_x28literalx29
-	.word 54950
-	.word xt_cx21
-l_216:
+	.word xt_initrandom
+l_213:
 	.word xt_random
 	.word xt_1
 	.word xt_and
@@ -3841,14 +3911,13 @@ l_216:
 	.word xt_x2b
 	.word xt_emit
 	.word xt_x28branchx29
-	.word l_216
-l_217:
+	.word l_213
+l_214:
 	.word i_exit
 	.bend
 ; END maze
 
 ; ( Draw a random maze to fill the screen )
-; ( Turn on the random number generator )
 ; BEGIN cold
 w_cold:
 	.byte $04
@@ -3859,22 +3928,12 @@ xt_cold:
 	.block
 	jmp i_enter
 	.word xt_x28literalx29
-	.word l_218
+	.word l_215
 	.word xt_x28branchx29
-	.word l_219
-l_218:
+	.word l_216
+l_215:
 	.ptext "Welcome to MetaForth v00.00.00"
-l_219:
-	.word xt_count
-	.word xt_type
-	.word xt_cr
-	.word xt_x28literalx29
-	.word l_220
-	.word xt_x28branchx29
-	.word l_221
-l_220:
-	.ptext "ok"
-l_221:
+l_216:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
@@ -3885,12 +3944,12 @@ l_221:
 	.word xt_expect
 	.word xt_cr
 	.word xt_x28literalx29
-	.word l_222
+	.word l_217
 	.word xt_x28branchx29
-	.word l_223
-l_222:
+	.word l_218
+l_217:
 	.ptext "typed..."
-l_223:
+l_218:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
