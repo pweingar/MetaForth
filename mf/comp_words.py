@@ -19,7 +19,7 @@ def exec_end_case(c):
     """Process an END-CASE word"""
     current_word = c.get_current_word()
     end_case_label = c.pop_label()
-    current_word.compile(compiler.LabelDeclaration("xt_drop"))
+    current_word.compile(compiler.LabelReference("xt_drop"))
     current_word.compile(compiler.LabelDeclaration(end_case_label))
     print("end-case {}".format(end_case_label))
 

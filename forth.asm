@@ -105,7 +105,7 @@ xt_halt:
 	jsr prints
 	loop:
 	cpx #$6e
-	beq lock
+	bge lock
 	ldy pstack+3,x
 	lda pstack+2,x
 	inx
@@ -115,11 +115,18 @@ xt_halt:
 	jsr conout
 	bra loop
 	lock:
+	lda #<endmsg
+	sta src_ptr
+	lda #>endmsg
+	sta src_ptr+1
+	jsr prints
+	wait:
 	nop
-	bra lock
+	bra wait
 	haltmsg:    .null 13,"System halted...",13
 	stackmsg:   .null "Stack ["
 	stackcont:  .null "] "
+	endmsg:     .null 13,13,"END-OF-LINE",13
 	.bend
 ; END halt
 
@@ -3808,7 +3815,7 @@ xt_expect:
 	jmp i_enter
 	.word xt_over
 	.word xt_x2b
-	.word xt_swap
+	.word xt_over
 	.word xt_x28dox29
 l_208:
 	.word xt_key
@@ -3828,6 +3835,7 @@ l_211:
 	.word l_210
 l_212:
 	.word xt_dup
+	.word xt_dup
 	.word xt_i
 	.word xt_cx21
 	.word xt_0
@@ -3835,11 +3843,12 @@ l_212:
 	.word xt_1x2b
 	.word xt_cx21
 	.word xt_emit
-xt_drop:
+	.word xt_drop
 l_210:
 	.word xt_x28loopx29
 	.word l_208
 l_209:
+	.word xt_drop
 	.word i_exit
 	.bend
 ; END expect
@@ -3850,10 +3859,11 @@ l_209:
 ; ( Handle the backspace key )
 ; ( Handle the return key )
 ; ( Handle any other keypress )
+; ( addr c c c )
 ; ( addr c c )
-; ( addr c )
 ; ( write NUL sentinel after c in buffer )
 ; ( echo the character )
+; ( drop the starting address )
 ; ( -- )
 ; BEGIN initrandom
 w_initrandom:

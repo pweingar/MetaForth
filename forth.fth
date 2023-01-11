@@ -220,7 +220,7 @@ include" forth_65c02.fth"
 ( addr n -- )
 : expect
     over +          ( addr addr-end )
-    swap            ( addr-end addr )
+    over            ( addr-end addr )
     do
         key         ( addr c )
         case
@@ -232,12 +232,13 @@ include" forth_65c02.fth"
             endof
 
             ( Handle any other keypress )
-            dup             ( addr c c )
-            i c!            ( addr c )
+            dup dup         ( addr c c c )
+            i c!            ( addr c c )
             0 i 1+ c!       ( write NUL sentinel after c in buffer )
             emit            ( echo the character )
         end-case
     loop
+    drop                    ( drop the starting address )
 ;
 
 \\

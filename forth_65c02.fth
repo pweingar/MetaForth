@@ -105,7 +105,7 @@ code halt
 
 loop:
     cpx #$6e
-    beq lock
+    bge lock
 
     ldy pstack+3,x
     lda pstack+2,x
@@ -118,12 +118,20 @@ loop:
     bra loop
 
 lock:
+    lda #<endmsg
+    sta src_ptr
+    lda #>endmsg
+    sta src_ptr+1
+    jsr prints
+
+wait:
     nop
-    bra lock
+    bra wait
 
 haltmsg:    .null 13,"System halted...",13
 stackmsg:   .null "Stack ["
 stackcont:  .null "] "
+endmsg:     .null 13,13,"END-OF-LINE",13
 end-code
 
 ( c -- )
