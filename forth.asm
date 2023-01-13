@@ -2050,7 +2050,7 @@ xt_fill:
 	.bend
 ; END fill
 
-; ( a-addr -- )
+; ( n a-addr -- )
 ; BEGIN +!
 w_x2bx21:
 	.byte $02
@@ -2058,23 +2058,22 @@ w_x2bx21:
 	.word w_fill
 xt_x2bx21:
 	.block
-	lda (pstack+2,x)        ; Increment the low byte
-	inc a
-	sta (pstack+2,x)
-	bne done                ; If it does not roll over, we're done
-	lda pstack+2,x          ; Increment the pointer
-	inc a
-	sta pstack+2,x
-	bne inc2
 	lda pstack+3,x
-	inc a
-	sta pstack+3,x
-	inc2:
-	lda (pstack+2,x)        ; Increment the high byte
-	inc a
-	sta (pstack+2,x)
+	sta tmp+1
+	lda pstack+2,x
+	sta tmp
+	clc
+	ldy #1
+	lda (tmp)
+	adc pstack+4,x
+	sta (tmp)
+	lda (tmp),y
+	adc pstack+5,x
+	sta (tmp),y
 	done:
 	inx                     ; Clean up the stack
+	inx
+	inx
 	inx
 	jmp next
 	.bend
@@ -2157,12 +2156,58 @@ xt_enclose:
 	.bend
 ; END enclose
 
+; ( src-addr dst-addr u -- )
+; BEGIN cmove
+w_cmove:
+	.byte $05
+	.text 'cmove'
+	.word w_enclose
+xt_cmove:
+	.block
+	lda pstack+3,x          ; Pull count off the stack
+	sta tmp+1
+	lda pstack+2,x
+	sta tmp
+	lda pstack+5,x          ; Pull the dst_ptr
+	sta dst_ptr+1
+	lda pstack+4,x
+	sta dst_ptr
+	lda pstack+7,x          ; Pull the src_ptr
+	sta src_ptr+1
+	lda pstack+6,x
+	sta src_ptr
+	txa                     ; Clean up the stack
+	clc
+	adc #6
+	sta savex               ; And save it for later restoration
+	ldx #0                  ; We'll use X for the high byte of the count
+	ldy #0                  ; and Y for the low byte of the count
+	loop:
+	cpx tmp+1               ; is tmp == X:Y?
+	bne copy
+	cpy tmp
+	beq done                ; Yes: we're done
+	copy:
+	lda (src_ptr),y         ; Copy the byte
+	sta (dst_ptr),y
+	iny                     ; Move to the next byte
+	bne loop                ; Repeat for 256 bytes
+	inx                     ; Move to the next block of 256
+	inc src_ptr+1
+	inc dst_ptr+1
+	bra loop                ; And continue the loop
+	done:
+	ldx savex
+	jmp next
+	.bend
+; END cmove
+
 ; ( addr1 addr2 u -- )
 ; BEGIN move
 w_move:
 	.byte $04
 	.text 'move'
-	.word w_enclose
+	.word w_cmove
 xt_move:
 	.block
 	sec                     ; Compare addr1 and addr2
@@ -3208,7 +3253,7 @@ w_r0:
 xt_r0:
 	.block
 	jmp xt_x28userx29
-	.word 1
+	.word 2
 	.bend
 ; END r0
 
@@ -3222,7 +3267,7 @@ w_base:
 xt_base:
 	.block
 	jmp xt_x28userx29
-	.word 2
+	.word 4
 	.bend
 ; END base
 
@@ -3236,7 +3281,7 @@ w_state:
 xt_state:
 	.block
 	jmp xt_x28userx29
-	.word 3
+	.word 6
 	.bend
 ; END state
 
@@ -3250,7 +3295,7 @@ w_context:
 xt_context:
 	.block
 	jmp xt_x28userx29
-	.word 4
+	.word 8
 	.bend
 ; END context
 
@@ -3264,7 +3309,7 @@ w_current:
 xt_current:
 	.block
 	jmp xt_x28userx29
-	.word 5
+	.word 10
 	.bend
 ; END current
 
@@ -3278,7 +3323,7 @@ w_dp:
 xt_dp:
 	.block
 	jmp xt_x28userx29
-	.word 6
+	.word 12
 	.bend
 ; END dp
 
@@ -3292,7 +3337,7 @@ w_x3ein:
 xt_x3ein:
 	.block
 	jmp xt_x28userx29
-	.word 7
+	.word 14
 	.bend
 ; END >in
 
@@ -3306,7 +3351,7 @@ w_tib:
 xt_tib:
 	.block
 	jmp xt_x28userx29
-	.word 8
+	.word 16
 	.bend
 ; END tib
 
@@ -3320,18 +3365,32 @@ w_sourcex2did:
 xt_sourcex2did:
 	.block
 	jmp xt_x28userx29
-	.word 9
+	.word 18
 	.bend
 ; END source-id
 
 ; ( Pointer to the source ID -1 for string, 0 for keyboard, any other number for file )
+; BEGIN blk
+w_blk:
+	.byte $03
+	.text 'blk'
+	.fill 13
+	.word w_sourcex2did
+xt_blk:
+	.block
+	jmp xt_x28userx29
+	.word 20
+	.bend
+; END blk
+
+; ( Pointer to the block number )
 ; ( x -- 0 | x x )
 ; BEGIN ?dup
 w_x3fdup:
 	.byte $04
 	.text '?dup'
 	.fill 12
-	.word w_sourcex2did
+	.word w_blk
 xt_x3fdup:
 	.block
 	jmp i_enter
@@ -3938,13 +3997,94 @@ xt_query:
 ; ( get address for TIB )
 ; ( Load at most 80 characters into TIB from keyboard )
 ; ( Set the IN index to the beginning )
+; ( c-addr u -- )
+; BEGIN erase
+w_erase:
+	.byte $05
+	.text 'erase'
+	.fill 11
+	.word w_query
+xt_erase:
+	.block
+	jmp i_enter
+	.word xt_0
+	.word xt_fill
+	.word i_exit
+	.bend
+; END erase
+
+; ( Write u NULs to c-addr )
+; ( c-addr u -- )
+; BEGIN blanks
+w_blanks:
+	.byte $06
+	.text 'blanks'
+	.fill 10
+	.word w_erase
+xt_blanks:
+	.block
+	jmp i_enter
+	.word xt_bl
+	.word xt_fill
+	.word i_exit
+	.bend
+; END blanks
+
+; ( Write u NULs to c-addr )
+; ( c -- )
+; BEGIN word
+w_word:
+	.byte $04
+	.text 'word'
+	.fill 12
+	.word w_blanks
+xt_word:
+	.block
+	jmp i_enter
+	.word xt_tib
+	.word xt_x40
+	.word xt_x3ein
+	.word xt_x40
+	.word xt_x2b
+	.word xt_swap
+	.word xt_enclose
+	.word xt_x3ein
+	.word xt_x2bx21
+	.word xt_over
+	.word xt_x2d
+	.word xt_x3er
+	.word xt_r
+	.word xt_here
+	.word xt_cx21
+	.word xt_x2b
+	.word xt_here
+	.word xt_1x2b
+	.word xt_rx3e
+	.word xt_cmove
+	.word i_exit
+	.bend
+; END word
+
+; ( Read the next word from the input source )
+; ( TODO: handle blocks and files )
+; ( c addr1 )
+; ( c addr2 )
+; ( addr2 c )
+; ( add2 n1 n2 n3 )
+; ( addr2 n1 n2 )
+; ( addr2 n1 : Save n2 - n1 )
+; ( store the character count to the dictionary )
+; ( addr3 : Starting address of the word )
+; ( addr3 addr4 : Starting address in the dictionary space )
+; ( addr3 addr4 count )
+; ( copy the word to the dictionary space )
 ; ( -- )
 ; BEGIN initrandom
 w_initrandom:
 	.byte $0A
 	.text 'initrandom'
 	.fill 6
-	.word w_query
+	.word w_word
 xt_initrandom:
 	.block
 	jmp i_enter
@@ -4011,6 +4151,9 @@ w_cold:
 xt_cold:
 	.block
 	jmp i_enter
+	.word xt_0
+	.word xt_blk
+	.word xt_x21
 	.word xt_x28literalx29
 	.word 16384
 	.word xt_dp
@@ -4029,35 +4172,37 @@ l_215:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
-	.word xt_query
-	.word xt_cr
-	.word xt_cr
 	.word xt_x28literalx29
 	.word l_216
 	.word xt_x28branchx29
 	.word l_217
 l_216:
-	.ptext "You typed"
+	.ptext "ok"
 l_217:
 	.word xt_count
 	.word xt_type
+	.word xt_cr
+	.word xt_query
 	.word xt_bl
-	.word xt_emit
+	.word xt_word
+	.word xt_cr
 	.word xt_x28literalx29
-	.word 174
-	.word xt_emit
-	.word xt_tib
-	.word xt_x40
-	.word xt_x28literalx29
-	.word 80
+	.word l_218
+	.word xt_x28branchx29
+	.word l_219
+l_218:
+	.ptext "You entered:"
+l_219:
+	.word xt_count
 	.word xt_type
-	.word xt_x28literalx29
-	.word 175
-	.word xt_emit
+	.word xt_here
+	.word xt_count
+	.word xt_type
 	.word i_exit
 	.bend
 ; END cold
 
+; ( Initialize the block number to 0 )
 ; ( Initialize the dictionary pointer )
 ; ( Initialize the TIB )
 .send

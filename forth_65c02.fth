@@ -483,28 +483,25 @@ done:
     jmp next
 end-code
 
-( a-addr -- )
+( n a-addr -- )
 code +!
-    lda (pstack+2,x)        ; Increment the low byte
-    inc a
-    sta (pstack+2,x) 
-    bne done                ; If it does not roll over, we're done
-
-    lda pstack+2,x          ; Increment the pointer
-    inc a
-    sta pstack+2,x
-    bne inc2
     lda pstack+3,x
-    inc a
-    sta pstack+3,x
-    
-inc2:
-    lda (pstack+2,x)        ; Increment the high byte
-    inc a
-    sta (pstack+2,x)
-    
+    sta tmp+1
+    lda pstack+2,x
+    sta tmp
+
+    clc
+    ldy #1
+    lda (tmp)
+    adc pstack+4,x
+    sta (tmp)
+    lda (tmp),y
+    adc pstack+5,x
+    sta (tmp),y
 done:
     inx                     ; Clean up the stack
+    inx
+    inx
     inx
 
     jmp next
@@ -595,6 +592,53 @@ found_nul:                  ; We did not find a delimiter... reached NUL or end 
     sty pstack+4,x          ; Save the offset of the delimiter in n2
     sty pstack+2,x          ; And to n3
     jmp next                ; And we're done   
+end-code
+
+( src-addr dst-addr u -- )
+code cmove
+    lda pstack+3,x          ; Pull count off the stack
+    sta tmp+1
+    lda pstack+2,x
+    sta tmp
+
+    lda pstack+5,x          ; Pull the dst_ptr
+    sta dst_ptr+1
+    lda pstack+4,x
+    sta dst_ptr
+
+    lda pstack+7,x          ; Pull the src_ptr
+    sta src_ptr+1
+    lda pstack+6,x
+    sta src_ptr
+
+    txa                     ; Clean up the stack
+    clc
+    adc #6
+    sta savex               ; And save it for later restoration
+
+    ldx #0                  ; We'll use X for the high byte of the count
+    ldy #0                  ; and Y for the low byte of the count
+
+loop:
+    cpx tmp+1               ; is tmp == X:Y?
+    bne copy
+    cpy tmp
+    beq done                ; Yes: we're done
+
+copy:
+    lda (src_ptr),y         ; Copy the byte
+    sta (dst_ptr),y
+
+    iny                     ; Move to the next byte
+    bne loop                ; Repeat for 256 bytes
+    inx                     ; Move to the next block of 256
+    inc src_ptr+1
+    inc dst_ptr+1
+    bra loop                ; And continue the loop
+
+done:
+    ldx savex
+    jmp next
 end-code
 
 ( addr1 addr2 u -- )

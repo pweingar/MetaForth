@@ -12,15 +12,16 @@ include" forth_65c02.fth"
 ( Define the user variables )
 
 0 user s0           ( Initial PSP )
-1 user r0           ( Initial RSP )
-2 user base         ( Current radix )
-3 user state        ( Compiler/Interpreter state )
-4 user context      ( Pointer to top wordlist for searching )
-5 user current      ( Pointer to the current wordlist for definitions )
-6 user dp           ( Pointer to the current compilation point )
-7 user >in          ( Pointer to cursor offset into input buffer )
-8 user tib          ( Pointer to the cell containing the pointer to the input buffer )
-9 user source-id    ( Pointer to the source ID -1 for string, 0 for keyboard, any other number for file )
+2 user r0           ( Initial RSP )
+4 user base         ( Current radix )
+6 user state        ( Compiler/Interpreter state )
+8 user context      ( Pointer to top wordlist for searching )
+10 user current     ( Pointer to the current wordlist for definitions )
+12 user dp          ( Pointer to the current compilation point )
+14 user >in         ( Pointer to cursor offset into input buffer )
+16 user tib         ( Pointer to the cell containing the pointer to the input buffer )
+18 user source-id   ( Pointer to the source ID -1 for string, 0 for keyboard, any other number for file )
+20 user blk         ( Pointer to the block number )
 
 ( x -- 0 | x x )
 : ?dup
@@ -277,6 +278,37 @@ include" forth_65c02.fth"
     0 >in !                 ( Set the IN index to the beginning )
 ;
 
+( c-addr u -- )
+: erase
+    ( Write u NULs to c-addr )
+    0 fill
+;
+
+( c-addr u -- )
+: blanks
+    ( Write u NULs to c-addr )
+    bl fill
+;
+
+( c -- )
+: word
+    ( Read the next word from the input source )
+    ( TODO: handle blocks and files )
+
+    tib @                   ( c addr1 )
+    >in @ +                 ( c addr2 )
+    swap                    ( addr2 c )
+    enclose                 ( add2 n1 n2 n3 )
+    \here 32 blanks
+    >in +!                  ( addr2 n1 n2 )
+    over - >r               ( addr2 n1 : Save n2 - n1)
+    r here c!               ( store the character count to the dictionary )
+    +                       ( addr3 : Starting address of the word )
+    here 1+                 ( addr3 addr4 : Starting address in the dictionary space )
+    r>                      ( addr3 addr4 count )
+    cmove                   ( copy the word to the dictionary space )
+;
+
 \\
 \\ Input Routines
 \\
@@ -288,16 +320,23 @@ include" forth_65c02.fth"
 include" f256jr.fth"
 
 : cold
+    0 blk !                 ( Initialize the block number to 0 )
     4000h dp !              ( Initialize the dictionary pointer )
     BF00h tib !             ( Initialize the TIB )
 
     c" Welcome to MetaForth v00.00.00" count type cr
 
-    query cr cr
-    c" You typed" count type
-    bl emit AEh emit
-    tib @ 80 type
-    AFh emit
+    \\ query cr cr
+    \\ c" You typed" count type
+    \\ bl emit AEh emit
+    \\ tib @ 80 type
+    \\ AFh emit
+
+    c" ok" count type cr
+    query
+    bl word cr
+    c" You entered: " count type
+    here count type
 
 \\    unittest
 \\    c" All unit tests PASSED!" count type cr
