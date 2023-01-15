@@ -7,6 +7,7 @@
 w_testname:
 	.byte $08
 	.text 'testname'
+	.fill 8
 	.word 0
 xt_testname:
 	.block
@@ -25,6 +26,7 @@ xt_testname:
 w_assertx3d:
 	.byte $07
 	.text 'assert='
+	.fill 9
 	.word w_testname
 xt_assertx3d:
 	.block
@@ -83,6 +85,7 @@ xt_assertx3d:
 w_halt:
 	.byte $04
 	.text 'halt'
+	.fill 12
 	.word w_assertx3d
 xt_halt:
 	.block
@@ -147,6 +150,7 @@ xt_halt:
 w_emit:
 	.byte $04
 	.text 'emit'
+	.fill 12
 	.word w_halt
 xt_emit:
 	.block
@@ -165,6 +169,7 @@ xt_emit:
 w_keyx3f:
 	.byte $04
 	.text 'key?'
+	.fill 12
 	.word w_emit
 xt_keyx3f:
 	.block
@@ -190,6 +195,7 @@ xt_keyx3f:
 w_key:
 	.byte $03
 	.text 'key'
+	.fill 13
 	.word w_keyx3f
 xt_key:
 	.block
@@ -212,6 +218,7 @@ xt_key:
 w_cr:
 	.byte $02
 	.text 'cr'
+	.fill 14
 	.word w_key
 xt_cr:
 	.block
@@ -228,6 +235,7 @@ xt_cr:
 w_0:
 	.byte $01
 	.text '0'
+	.fill 15
 	.word w_cr
 xt_0:
 	.block
@@ -244,6 +252,7 @@ xt_0:
 w_1:
 	.byte $01
 	.text '1'
+	.fill 15
 	.word w_0
 xt_1:
 	.block
@@ -261,6 +270,7 @@ xt_1:
 w_2:
 	.byte $01
 	.text '2'
+	.fill 15
 	.word w_1
 xt_2:
 	.block
@@ -278,6 +288,7 @@ xt_2:
 w_x2d1:
 	.byte $02
 	.text '-1'
+	.fill 14
 	.word w_2
 xt_x2d1:
 	.block
@@ -295,6 +306,7 @@ xt_x2d1:
 w_x2d2:
 	.byte $02
 	.text '-2'
+	.fill 14
 	.word w_x2d1
 xt_x2d2:
 	.block
@@ -312,6 +324,7 @@ xt_x2d2:
 w_x28literalx29:
 	.byte $09
 	.text '(literal)'
+	.fill 7
 	.word w_x2d2
 xt_x28literalx29:
 	.block
@@ -338,6 +351,7 @@ xt_x28literalx29:
 w_depth:
 	.byte $05
 	.text 'depth'
+	.fill 11
 	.word w_x28literalx29
 xt_depth:
 	.block
@@ -1798,6 +1812,7 @@ l_197:
 w_drop:
 	.byte $04
 	.text 'drop'
+	.fill 12
 	.word w_unittest
 xt_drop:
 	.block
@@ -1812,6 +1827,7 @@ xt_drop:
 w_dup:
 	.byte $03
 	.text 'dup'
+	.fill 13
 	.word w_drop
 xt_dup:
 	.block
@@ -1830,6 +1846,7 @@ xt_dup:
 w_swap:
 	.byte $04
 	.text 'swap'
+	.fill 12
 	.word w_dup
 xt_swap:
 	.block
@@ -1850,6 +1867,7 @@ xt_swap:
 w_over:
 	.byte $04
 	.text 'over'
+	.fill 12
 	.word w_swap
 xt_over:
 	.block
@@ -1869,6 +1887,7 @@ xt_over:
 w_x3er:
 	.byte $02
 	.text '>r'
+	.fill 14
 	.word w_over
 xt_x3er:
 	.block
@@ -1888,6 +1907,7 @@ xt_x3er:
 w_rx3e:
 	.byte $02
 	.text 'r>'
+	.fill 14
 	.word w_x3er
 xt_rx3e:
 	.block
@@ -1906,6 +1926,7 @@ xt_rx3e:
 w_r:
 	.byte $01
 	.text 'r'
+	.fill 15
 	.word w_rx3e
 xt_r:
 	.block
@@ -1927,6 +1948,7 @@ xt_r:
 w_rdrop:
 	.byte $05
 	.text 'rdrop'
+	.fill 11
 	.word w_r
 xt_rdrop:
 	.block
@@ -1940,6 +1962,7 @@ xt_rdrop:
 w_x21:
 	.byte $01
 	.text '!'
+	.fill 15
 	.word w_rdrop
 xt_x21:
 	.block
@@ -1965,6 +1988,7 @@ xt_x21:
 w_x40:
 	.byte $01
 	.text '@'
+	.fill 15
 	.word w_x21
 xt_x40:
 	.block
@@ -1986,6 +2010,7 @@ xt_x40:
 w_cx21:
 	.byte $02
 	.text 'c!'
+	.fill 14
 	.word w_x40
 xt_cx21:
 	.block
@@ -2004,6 +2029,7 @@ xt_cx21:
 w_cx40:
 	.byte $02
 	.text 'c@'
+	.fill 14
 	.word w_cx21
 xt_cx40:
 	.block
@@ -2019,6 +2045,7 @@ xt_cx40:
 w_fill:
 	.byte $04
 	.text 'fill'
+	.fill 12
 	.word w_cx40
 xt_fill:
 	.block
@@ -2055,6 +2082,7 @@ xt_fill:
 w_x2bx21:
 	.byte $02
 	.text '+!'
+	.fill 14
 	.word w_fill
 xt_x2bx21:
 	.block
@@ -2084,6 +2112,7 @@ xt_x2bx21:
 w_enclose:
 	.byte $07
 	.text 'enclose'
+	.fill 9
 	.word w_x2bx21
 xt_enclose:
 	.block
@@ -2161,6 +2190,7 @@ xt_enclose:
 w_cmove:
 	.byte $05
 	.text 'cmove'
+	.fill 11
 	.word w_enclose
 xt_cmove:
 	.block
@@ -2207,6 +2237,7 @@ xt_cmove:
 w_move:
 	.byte $04
 	.text 'move'
+	.fill 12
 	.word w_cmove
 xt_move:
 	.block
@@ -2310,6 +2341,7 @@ xt_move:
 w_x2b:
 	.byte $01
 	.text '+'
+	.fill 15
 	.word w_move
 xt_x2b:
 	.block
@@ -2331,6 +2363,7 @@ xt_x2b:
 w_x2d:
 	.byte $01
 	.text '-'
+	.fill 15
 	.word w_x2b
 xt_x2d:
 	.block
@@ -2352,6 +2385,7 @@ xt_x2d:
 w_x2a:
 	.byte $01
 	.text '*'
+	.fill 15
 	.word w_x2d
 xt_x2a:
 	.block
@@ -2429,6 +2463,7 @@ xt_x2a:
 w_x2fmod:
 	.byte $04
 	.text '/mod'
+	.fill 12
 	.word w_x2a
 xt_x2fmod:
 	.block
@@ -2507,6 +2542,7 @@ xt_x2fmod:
 w_1x2b:
 	.byte $02
 	.text '1+'
+	.fill 14
 	.word w_x2fmod
 xt_1x2b:
 	.block
@@ -2523,6 +2559,7 @@ xt_1x2b:
 w_2x2b:
 	.byte $02
 	.text '2+'
+	.fill 14
 	.word w_1x2b
 xt_2x2b:
 	.block
@@ -2542,6 +2579,7 @@ xt_2x2b:
 w_1x2d:
 	.byte $02
 	.text '1-'
+	.fill 14
 	.word w_2x2b
 xt_1x2d:
 	.block
@@ -2559,6 +2597,7 @@ xt_1x2d:
 w_2x2d:
 	.byte $02
 	.text '2-'
+	.fill 14
 	.word w_1x2d
 xt_2x2d:
 	.block
@@ -2578,6 +2617,7 @@ xt_2x2d:
 w_and:
 	.byte $03
 	.text 'and'
+	.fill 13
 	.word w_2x2d
 xt_and:
 	.block
@@ -2598,6 +2638,7 @@ xt_and:
 w_or:
 	.byte $02
 	.text 'or'
+	.fill 14
 	.word w_and
 xt_or:
 	.block
@@ -2618,6 +2659,7 @@ xt_or:
 w_xor:
 	.byte $03
 	.text 'xor'
+	.fill 13
 	.word w_or
 xt_xor:
 	.block
@@ -2638,6 +2680,7 @@ xt_xor:
 w_not:
 	.byte $03
 	.text 'not'
+	.fill 13
 	.word w_xor
 xt_not:
 	.block
@@ -2656,6 +2699,7 @@ xt_not:
 w_0x3c:
 	.byte $02
 	.text '0<'
+	.fill 14
 	.word w_not
 xt_0x3c:
 	.block
@@ -2677,6 +2721,7 @@ xt_0x3c:
 w_0x3d:
 	.byte $02
 	.text '0='
+	.fill 14
 	.word w_0x3c
 xt_0x3d:
 	.block
@@ -2700,6 +2745,7 @@ xt_0x3d:
 w_0x3e:
 	.byte $02
 	.text '0>'
+	.fill 14
 	.word w_0x3d
 xt_0x3e:
 	.block
@@ -2725,6 +2771,7 @@ xt_0x3e:
 w_x28variablex29:
 	.byte $0A
 	.text '(variable)'
+	.fill 6
 	.word w_0x3e
 xt_x28variablex29:
 	.block
@@ -2746,6 +2793,7 @@ xt_x28variablex29:
 w_x28constantx29:
 	.byte $0A
 	.text '(constant)'
+	.fill 6
 	.word w_x28variablex29
 xt_x28constantx29:
 	.block
@@ -2780,6 +2828,7 @@ xt_cells:
 w_x28userx29:
 	.byte $06
 	.text '(user)'
+	.fill 10
 	.word w_cells
 xt_x28userx29:
 	.block
@@ -2803,6 +2852,7 @@ xt_x28userx29:
 w_x28branchx29:
 	.byte $08
 	.text '(branch)'
+	.fill 8
 	.word w_x28userx29
 xt_x28branchx29:
 	.block
@@ -2822,6 +2872,7 @@ xt_x28branchx29:
 w_x28branch0x29:
 	.byte $09
 	.text '(branch0)'
+	.fill 7
 	.word w_x28branchx29
 xt_x28branch0x29:
 	.block
@@ -2859,6 +2910,7 @@ xt_x28branch0x29:
 w_x28dox29:
 	.byte $04
 	.text '(do)'
+	.fill 12
 	.word w_x28branch0x29
 xt_x28dox29:
 	.block
@@ -2883,6 +2935,7 @@ xt_x28dox29:
 w_x3ei:
 	.byte $02
 	.text '>i'
+	.fill 14
 	.word w_x28dox29
 xt_x3ei:
 	.block
@@ -2912,6 +2965,7 @@ xt_x3ei:
 w_leave:
 	.byte $05
 	.text 'leave'
+	.fill 11
 	.word w_x3ei
 xt_leave:
 	.block
@@ -2936,6 +2990,7 @@ xt_leave:
 w_x28loopx29:
 	.byte $06
 	.text '(loop)'
+	.fill 10
 	.word w_leave
 xt_x28loopx29:
 	.block
@@ -2997,6 +3052,7 @@ xt_x28loopx29:
 w_x28x2bloopx29:
 	.byte $07
 	.text '(+loop)'
+	.fill 9
 	.word w_x28loopx29
 xt_x28x2bloopx29:
 	.block
@@ -3068,6 +3124,7 @@ xt_x28x2bloopx29:
 w_i:
 	.byte $01
 	.text 'i'
+	.fill 15
 	.word w_x28x2bloopx29
 xt_i:
 	.block
@@ -3093,6 +3150,7 @@ xt_i:
 w_x28ofx29:
 	.byte $04
 	.text '(of)'
+	.fill 12
 	.word w_i
 xt_x28ofx29:
 	.block
@@ -3135,6 +3193,7 @@ xt_x28ofx29:
 w_execute:
 	.byte $07
 	.text 'execute'
+	.fill 9
 	.word w_x28ofx29
 xt_execute:
 	.block
@@ -3152,6 +3211,7 @@ xt_execute:
 w_x28vocabularyx29:
 	.byte $0C
 	.text '(vocabulary)'
+	.fill 4
 	.word w_execute
 xt_x28vocabularyx29:
 	.block
@@ -3178,6 +3238,7 @@ xt_x28vocabularyx29:
 w_forth:
 	.byte $05
 	.text 'forth'
+	.fill 11
 	.word w_x28vocabularyx29
 xt_forth:
 	.block
@@ -3186,13 +3247,94 @@ xt_forth:
 	.bend
 ; END forth
 
+; ( c-addr1 c-addr2 -- 0 | pfa u 1 )
+; BEGIN (find)
+w_x28findx29:
+	.byte $06
+	.text '(find)'
+	.fill 10
+	.word w_forth
+xt_x28findx29:
+	.block
+	; find the word indicated by the counted string at c-addr1 on the dictionary, starting with c-addr2
+	lda pstack+3,x          ; src_ptr = dictionary name
+	sta src_ptr+1
+	lda pstack+2,x
+	sta src_ptr
+	lda pstack+5,x          ; dst_ptr = word to find
+	sta dst_ptr+1
+	lda pstack+4,x
+	sta dst_ptr
+	loop:
+	lda src_ptr             ; Check to see if src_ptr = NULL
+	bne not_eod
+	lda src_ptr+1
+	bne not_eod
+	; We've reached the end of the dictionary without finding a match
+	inx                     ; Clean up the stack
+	inx
+	stz pstack+3,x          ; And return 0
+	stz pstack+2,x
+	jmp next
+	not_eod:
+	lda (src_ptr)           ; Get the size of the word in the dictionary
+	and #$3f                ; Filter out the flags
+	cmp (dst_ptr)           ; Check it against the word to search
+	beq chk_chars           ; If they match, check the characters
+	; Otherwise, move to the next word in the dictionary
+	next_word:
+	clc                     ; Move src_ptr to the link field
+	lda src_ptr
+	adc #17
+	sta src_ptr
+	lda src_ptr+1
+	adc #0
+	sta src_ptr+1
+	ldy #1                  ; Follow the link to the next word in the dictionary
+	lda (src_ptr)
+	pha
+	lda (src_ptr),y
+	sta src_ptr+1
+	pla
+	sta src_ptr
+	bra loop                ; And check that word
+	chk_chars:
+	tay                     ; y := index of last character in word
+	dey
+	char_loop:
+	lda (src_ptr),y         ; Check the yth character
+	cmp (dst_ptr),y
+	bne next_word           ; If they are not equal, go to the next word in the dictionary
+	dey                     ; Move to the previous character in the words
+	cpy #$ff                ; Did we just check the first character?
+	bne char_loop           ; No: check this one
+	; Words are equal... we found a match!
+	dex                     ; Make room for all the return values
+	dex
+	lda #1                  ; 1 at top of stack
+	stz pstack+3,x
+	sta pstack+2,x
+	lda (dst_ptr)           ; Then the length of the word
+	stz pstack+5,x
+	sta pstack+4,x
+	clc                     ; Then the pfa pointer
+	lda src_ptr
+	adc #17+5               ; Skip size, name, link, and code cfa
+	sta pstack+6,x
+	lda src_ptr+1
+	adc #0
+	sta pstack+7,x
+	jmp next
+	.bend
+; END (find)
+
 ; ( Define some constants )
 ; BEGIN bs
 w_bs:
 	.byte $02
 	.text 'bs'
 	.fill 14
-	.word w_forth
+	.word w_x28findx29
 xt_bs:
 	.block
 	jmp xt_x28constantx29
@@ -3932,6 +4074,9 @@ l_209:
 	.word xt_nl
 	.word xt_x28ofx29
 	.word l_211
+	.word xt_0
+	.word xt_i
+	.word xt_cx21
 	.word xt_leave
 	.word xt_x28branchx29
 	.word l_208
@@ -3965,6 +4110,7 @@ l_207:
 ; ( Delete the previous character from the screen )
 ; ( And zero out the current character )
 ; ( Handle the return key )
+; ( Write a blank at the end of the line )
 ; ( Just return to the caller )
 ; ( Handle any other keypress )
 ; ( addr c c c )
@@ -4048,6 +4194,9 @@ xt_word:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_enclose
+	.word xt_0
+	.word xt_here
+	.word xt_x21
 	.word xt_x3ein
 	.word xt_x2bx21
 	.word xt_over
@@ -4078,13 +4227,44 @@ xt_word:
 ; ( addr3 addr4 : Starting address in the dictionary space )
 ; ( addr3 addr4 count )
 ; ( copy the word to the dictionary space )
+; ( -- pfa b tf | 0 )
+; BEGIN -find
+w_x2dfind:
+	.byte $05
+	.text '-find'
+	.fill 11
+	.word w_word
+xt_x2dfind:
+	.block
+	jmp i_enter
+	.word xt_bl
+	.word xt_word
+	.word xt_here
+	.word xt_context
+	.word xt_x40
+	.word xt_x40
+	.word xt_x28findx29
+	.word xt_dup
+	.word xt_0x3d
+	.word xt_x28branch0x29
+	.word l_212
+	.word xt_drop
+	.word xt_here
+	.word xt_latest
+	.word xt_x28findx29
+l_212:
+	.word i_exit
+	.bend
+; END -find
+
+; ( Read a word of input and try to find it in the dictionary )
 ; ( -- )
 ; BEGIN initrandom
 w_initrandom:
 	.byte $0A
 	.text 'initrandom'
 	.fill 6
-	.word w_word
+	.word w_x2dfind
 xt_initrandom:
 	.block
 	jmp i_enter
@@ -4126,7 +4306,7 @@ xt_maze:
 	.block
 	jmp i_enter
 	.word xt_initrandom
-l_212:
+l_213:
 	.word xt_random
 	.word xt_1
 	.word xt_and
@@ -4135,8 +4315,8 @@ l_212:
 	.word xt_x2b
 	.word xt_emit
 	.word xt_x28branchx29
-	.word l_212
-l_213:
+	.word l_213
+l_214:
 	.word i_exit
 	.bend
 ; END maze
@@ -4151,6 +4331,8 @@ w_cold:
 xt_cold:
 	.block
 	jmp i_enter
+	.word xt_forth
+	.word xt_definitions
 	.word xt_0
 	.word xt_blk
 	.word xt_x21
@@ -4163,41 +4345,91 @@ xt_cold:
 	.word xt_tib
 	.word xt_x21
 	.word xt_x28literalx29
-	.word l_214
-	.word xt_x28branchx29
 	.word l_215
-l_214:
-	.ptext "Welcome to MetaForth v00.00.00"
+	.word xt_x28branchx29
+	.word l_216
 l_215:
+	.ptext "Welcome to MetaForth v00.00.00"
+l_216:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
-	.word xt_x28literalx29
-	.word l_216
-	.word xt_x28branchx29
-	.word l_217
-l_216:
-	.ptext "ok"
+	.word xt_0
+	.word xt_here
+	.word xt_x21
 l_217:
+	.word xt_here
+	.word xt_x40
+	.word xt_0x3d
+	.word xt_x28branch0x29
+	.word l_219
+	.word xt_cr
+	.word xt_x28literalx29
+	.word l_220
+	.word xt_x28branchx29
+	.word l_221
+l_220:
+	.ptext "ok"
+l_221:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
 	.word xt_query
-	.word xt_bl
-	.word xt_word
+l_219:
+	.word xt_x2dfind
+	.word xt_dup
+	.word xt_0x3d
+	.word xt_x28branch0x29
+	.word l_222
+	.word xt_drop
+	.word xt_here
+	.word xt_x40
+	.word xt_0x3d
+	.word xt_not
+	.word xt_x28branch0x29
+	.word l_223
 	.word xt_cr
 	.word xt_x28literalx29
-	.word l_218
+	.word l_224
 	.word xt_x28branchx29
-	.word l_219
-l_218:
-	.ptext "You entered:"
-l_219:
+	.word l_225
+l_224:
+	.ptext "Word not found:"
+l_225:
 	.word xt_count
 	.word xt_type
+	.word xt_bl
+	.word xt_emit
 	.word xt_here
 	.word xt_count
 	.word xt_type
+	.word xt_cr
+l_223:
+	.word xt_x28branchx29
+	.word l_226
+l_222:
+	.word xt_drop
+	.word xt_drop
+	.word xt_cr
+	.word xt_x28literalx29
+	.word l_227
+	.word xt_x28branchx29
+	.word l_228
+l_227:
+	.ptext "Found:"
+l_228:
+	.word xt_count
+	.word xt_type
+	.word xt_bl
+	.word xt_emit
+	.word xt_nfa
+	.word xt_count
+	.word xt_type
+	.word xt_cr
+l_226:
+	.word xt_x28branchx29
+	.word l_217
+l_218:
 	.word i_exit
 	.bend
 ; END cold

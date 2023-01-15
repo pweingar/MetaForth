@@ -258,6 +258,7 @@ include" forth_65c02.fth"
             endof
 
             nl of               ( Handle the return key )
+                0 i c!          ( Write a blank at the end of the line )
                 leave           ( Just return to the caller )
             endof
 
@@ -299,7 +300,8 @@ include" forth_65c02.fth"
     >in @ +                 ( c addr2 )
     swap                    ( addr2 c )
     enclose                 ( add2 n1 n2 n3 )
-    \here 32 blanks
+    0 here !
+    \ here 32 blanks
     >in +!                  ( addr2 n1 n2 )
     over - >r               ( addr2 n1 : Save n2 - n1)
     r here c!               ( store the character count to the dictionary )
@@ -307,6 +309,22 @@ include" forth_65c02.fth"
     here 1+                 ( addr3 addr4 : Starting address in the dictionary space )
     r>                      ( addr3 addr4 count )
     cmove                   ( copy the word to the dictionary space )
+;
+
+( -- pfa b tf | 0 )
+: -find
+    ( Read a word of input and try to find it in the dictionary )
+    bl word
+    here
+    context @ @
+    (find)
+
+    dup 0= if
+        drop
+        here
+        latest
+        (find)
+    then
 ;
 
 \\
@@ -320,6 +338,7 @@ include" forth_65c02.fth"
 include" f256jr.fth"
 
 : cold
+    forth definitions
     0 blk !                 ( Initialize the block number to 0 )
     4000h dp !              ( Initialize the dictionary pointer )
     BF00h tib !             ( Initialize the TIB )
@@ -332,11 +351,30 @@ include" f256jr.fth"
     \\ tib @ 80 type
     \\ AFh emit
 
-    c" ok" count type cr
-    query
-    bl word cr
-    c" You entered: " count type
-    here count type
+    0 here !
+
+    begin
+        here @ 0= if
+            cr c" ok" count type cr
+            query
+        then
+
+        -find
+        dup 0= if
+            drop
+            here @ 0= not if
+                cr c" Word not found:" count type
+                bl emit
+                here count type cr
+            then
+        else
+            drop
+            drop
+            cr c" Found:" count type
+            bl emit
+            nfa count type cr
+        then
+    again
 
 \\    unittest
 \\    c" All unit tests PASSED!" count type cr

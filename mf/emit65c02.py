@@ -59,10 +59,12 @@ class EmitterC02:
 
     def emit_code_word(self, word):
         """Emit the CODE word."""
+        name = word.get_name()[:EmitterC02.MAX_NAME_SIZE]
         self._out.write("; BEGIN {}\n".format(word.get_name()))
         self.emit_label_declaration(word.get_name_label())
-        self._out.write("\t.byte ${:02X}\n".format(len(word.get_name()) + word.get_flags()))
-        self._out.write("\t.text \'{}\'\n".format(word.get_name()))
+        self._out.write("\t.byte ${:02X}\n".format(len(name) + word.get_flags()))
+        self._out.write("\t.text \'{}\'\n".format(name))
+        self._out.write("\t.fill {}\n".format(EmitterC02.MAX_NAME_SIZE - len(name)))
         if word.get_link():
             # If there is a linked word, emit the reference link to the word
             self.emit_label_reference(word.get_link().get_name_label())

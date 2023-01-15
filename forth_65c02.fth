@@ -1559,3 +1559,96 @@ code forth
     jmp xt_x28vocabularyx29
     .word <>w_cold
 end-code
+
+( c-addr1 c-addr2 -- 0 | pfa u 1 )
+code (find)
+    ; find the word indicated by the counted string at c-addr1 on the dictionary, starting with c-addr2
+
+    lda pstack+3,x          ; src_ptr = dictionary name
+    sta src_ptr+1
+    lda pstack+2,x
+    sta src_ptr
+
+    lda pstack+5,x          ; dst_ptr = word to find
+    sta dst_ptr+1
+    lda pstack+4,x
+    sta dst_ptr
+
+loop:
+    lda src_ptr             ; Check to see if src_ptr = NULL
+    bne not_eod
+    lda src_ptr+1
+    bne not_eod
+
+    ; We've reached the end of the dictionary without finding a match
+
+    inx                     ; Clean up the stack
+    inx
+
+    stz pstack+3,x          ; And return 0
+    stz pstack+2,x
+    jmp next
+
+not_eod:
+    lda (src_ptr)           ; Get the size of the word in the dictionary
+    and #$3f                ; Filter out the flags
+    cmp (dst_ptr)           ; Check it against the word to search
+    beq chk_chars           ; If they match, check the characters
+
+    ; Otherwise, move to the next word in the dictionary
+
+next_word:
+    clc                     ; Move src_ptr to the link field
+    lda src_ptr
+    adc #17
+    sta src_ptr
+    lda src_ptr+1
+    adc #0
+    sta src_ptr+1
+
+    ldy #1                  ; Follow the link to the next word in the dictionary
+    lda (src_ptr)
+    pha
+    lda (src_ptr),y
+    sta src_ptr+1
+    pla
+    sta src_ptr
+
+    bra loop                ; And check that word
+
+chk_chars:
+    tay                     ; y := index of last character in word
+    dey
+
+char_loop:
+    lda (src_ptr),y         ; Check the yth character
+    cmp (dst_ptr),y
+    bne next_word           ; If they are not equal, go to the next word in the dictionary
+
+    dey                     ; Move to the previous character in the words
+    cpy #$ff                ; Did we just check the first character?
+    bne char_loop           ; No: check this one
+
+    ; Words are equal... we found a match!
+
+    dex                     ; Make room for all the return values
+    dex
+
+    lda #1                  ; 1 at top of stack
+    stz pstack+3,x
+    sta pstack+2,x
+
+    lda (dst_ptr)           ; Then the length of the word
+    stz pstack+5,x
+    sta pstack+4,x
+
+    clc                     ; Then the pfa pointer
+    lda src_ptr
+    adc #17+5               ; Skip size, name, link, and code cfa
+    sta pstack+6,x
+    lda src_ptr+1
+    adc #0
+    sta pstack+7,x
+
+    jmp next
+end-code
