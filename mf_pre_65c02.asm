@@ -23,7 +23,7 @@ wp      .word ?         ; Word pointer
 up      .word ?         ; User pointer
 donep   .word ?         ; Pointer to the code to take over when the interpreter quits
 test    .word ?         ; Pointer to the current test name
-tmp     .word ?
+tmp     .fill 4
 savex   .byte ?
 counter .byte ?         ; A counter used for some code
 sign    .byte ?         ; A scratch byte to keep track of the sign of a number
@@ -48,6 +48,9 @@ init_user:
         .word 0         ; Initial >IN
         .word $bf00     ; Initial TIB
         .word 0         ; Initial SOURCE-ID
+        .word 0         ; Initial BLK
+        .word $ffff     ; Initial DPL
+        .word 0         ; Initial HLD
 
 init_user_end:
 
@@ -61,6 +64,9 @@ user_dp = 12
 user_in = 14
 user_tib = 16
 user_source_id = 18
+user_blk = 20
+user_dpl = 22
+user_hld = 24
 
 ;;
 ;; Bootstrapping code

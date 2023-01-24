@@ -22,6 +22,8 @@ include" forth_65c02.fth"
 16 user tib         ( Pointer to the cell containing the pointer to the input buffer )
 18 user source-id   ( Pointer to the source ID -1 for string, 0 for keyboard, any other number for file )
 20 user blk         ( Pointer to the block number )
+22 user dpl         ( Pointer to the DPL )
+24 user hld         ( Pointer to the HLD variable )
 
 ( x -- 0 | x x )
 : ?dup
@@ -31,6 +33,33 @@ include" forth_65c02.fth"
 ;
 { 0 ?dup --> 0 }
 { 1 ?dup --> 1 1 }
+
+( x1 x2 x3 -- x2 x3 x1 )
+: rot
+    >r
+    swap 
+    r>
+    swap
+;
+{ 1 2 3 rot --> 2 3 1 }
+
+( x1 x2 -- x1 x2 x1 x2 )
+: 2dup
+    over
+    over
+;
+{ 1 2 2dup --> 1 2 1 2 }
+
+( x x -- )
+: 2drop
+    drop
+    drop
+;
+{ 1 2 3 4 2drop --> 1 2 }
+
+\\
+\\ Comparison Words
+\\
 
 ( n1 n2 -- f )
 : <
@@ -60,9 +89,48 @@ include" forth_65c02.fth"
 { ffffh ffffh = --> ffffh }
 { 0 0 = --> ffffh }
 
+( d1 d2 -- f )
+: d<
+    d- drop 0<
+;
+
 \\
 \\ Common Math Words
 \\
+
+( n1 -- n2 )
+: abs
+    dup 0< if
+        0 swap -
+    then
+;
+{ 1 abs --> 1 }
+{ ffffh abs --> 1 }
+{ 0 abs --> 0 }
+
+( d1 -- d2 )
+: dabs
+    over 0< if              ( If d1 is negative... )
+        0 0 2swap d-        ( d2 := 0 - d1 )
+    then
+;
+{ 1 2 dabs --> 1 2 }
+{ ffffh ffffh dabs --> 0 1 }
+{ 0 0 dabs --> 0 0 }
+
+( n1 n2 -- n3 n4 )
+: /mod
+    dup 8000h and >r    ( n1 n2 r: f2 )
+    swap                ( n2 n1 )
+    dup 8000h and >r    ( n2 n1 r: f2 f1 )
+    abs s>d             ( n2 d1 )
+    rot                 ( d1 n2 )
+    um/mod              ( n3 n4 )
+    r> r>               ( n3 n4 f2 f1 )
+    xor if              ( n3 n4 )
+        0 swap -
+    then
+;
 
 ( n1 n2 -- n3 )
 : /
@@ -78,16 +146,9 @@ include" forth_65c02.fth"
 { 6 3 mod --> 0 }
 { 10 3 mod --> 1 }
 
-( n1 -- n2 )
-: abs
-    dup 0< if
-        0 swap -
-    then
-;
-
 ( n1 n2 -- n1|n2 )
 : max
-    over over < if
+    2dup < if
         over drop
     else
         drop
@@ -99,7 +160,7 @@ include" forth_65c02.fth"
 
 ( n1 n2 -- n1|n2 )
 : min
-    over over > if
+    2dup > if
         over drop
     else
         drop
@@ -108,29 +169,6 @@ include" forth_65c02.fth"
 { 1 2 min --> 1 }
 { 3 0 min --> 0 }
 { fffeh ffffh min --> fffeh }
-
-( x1 x2 x3 -- x2 x3 x1 )
-: rot
-    >r
-    swap 
-    r>
-    swap
-;
-{ 1 2 3 rot --> 2 3 1 }
-
-( x1 x2 -- x1 x2 x1 x2 )
-: 2dup
-    over
-    over
-;
-{ 1 2 2dup --> 1 2 1 2 }
-
-( x x -- )
-: 2drop
-    drop
-    drop
-;
-{ 1 2 3 4 2drop --> 1 2 }
 
 \\
 \\ Dictionary words
@@ -328,6 +366,122 @@ include" forth_65c02.fth"
 ;
 
 \\
+\\ Number Conversion
+\\
+
+( -- )
+: decimal
+    10 base !
+;
+
+( -- )
+: hex
+    16 base !
+;
+
+( -- )
+: octal 
+    8 base !
+;
+
+( d1 addr1 -- d2 addr2 )
+: (number)
+    begin
+        1+ dup >r           ( d1 addr1+1 R: addr1+1 )
+        c@                  ( d1 c )
+        base @              ( d1 c n )
+        digit               ( d1 n2 tf | d1 0)
+        
+        while
+        >r                  ( d1 R: addr1+1 n2 )
+        base @ u*           ( d2 )
+        r>                  ( d2 n2 R: addr1+1 )
+        s>d                 ( d2 d3 )
+        d+                  ( d4 )
+        r>
+    repeat
+    r>
+;
+
+( addr -- d )
+: number
+    0 0 rot                 ( d0 addr )
+    dup 1+ c@               ( d0 addr c )
+    2dh = if                ( is it the minus sign? )
+        1 >r                ( save flag )
+    else
+        0 >r
+        1 +                 ( d0 addr+1 )
+    then
+    
+    -1
+    begin
+        dpl !               ( d0 addr )
+        (number)            ( d1 addr2 )
+        dup c@              ( d1 addr2 c )
+        bl =
+        while
+        dup c@              ( d1 addr2 c )
+        2eh = if            ( is it '-' )
+            0               ( d1 addr2 0 )
+        else
+            dpl @           ( d1 addr2 n )
+        then
+    repeat
+    drop                    ( d1 )
+    r>                      ( d1 f )
+    if
+        0 0 2swap d-        ( d2 )
+    then
+;
+
+( -- )
+: <#
+    pad hld !
+;
+
+( c -- )
+: hold
+    -1 hld +!
+    hld @ c!
+;
+
+( d1 -- d2 )
+: #
+    base @      ( d1 n )
+    um/mod      ( n1 n2 )
+    s>d rot     ( d2 n1 )
+    9 over < if ( if the remainder < 9 )
+        7 +     ( make it alphabetic)
+    then
+    30h +       ( and make it ASCII)
+    hold
+;
+
+( d1 -- d2 )
+: #s
+    begin
+        #
+        over over
+        or 0=
+    until
+;
+
+( n d -- d )
+: sign
+    rot 0< if
+        2dh hold
+    then
+;
+
+( d -- addr count )
+: #>
+    2drop
+    hld @
+    pad over -
+;
+
+\\
 \\ Input Routines
 \\
 
@@ -345,11 +499,11 @@ include" f256jr.fth"
 
     c" Welcome to MetaForth v00.00.00" count type cr
 
-    \\ query cr cr
-    \\ c" You typed" count type
-    \\ bl emit AEh emit
-    \\ tib @ 80 type
-    \\ AFh emit
+    unittest
+    c" All unit tests PASSED!" count type cr
+
+    hex
+    ffffh fffeh over swap dabs <# #s sign #> type cr
 
     0 here !
 
@@ -375,7 +529,4 @@ include" f256jr.fth"
             nfa count type cr
         then
     again
-
-\\    unittest
-\\    c" All unit tests PASSED!" count type cr
 ;

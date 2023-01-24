@@ -334,6 +334,39 @@ code swap
 end-code
 { 1 2 3 swap --> 1 3 2 }
 
+( d1 d2 -- d2 d1 )
+code 2swap
+    lda pstack+5,x
+    pha
+    lda pstack+4,x
+    pha
+    lda pstack+3,x
+    pha
+    lda pstack+2,x
+    pha
+
+    lda pstack+9,x
+    sta pstack+5,x
+    lda pstack+8,x
+    sta pstack+4,x
+    lda pstack+7,x
+    sta pstack+3,x
+    lda pstack+6,x
+    sta pstack+2,x
+
+    pla
+    sta pstack+6,x
+    pla
+    sta pstack+7,x
+    pla
+    sta pstack+8,x
+    pla
+    sta pstack+9,x
+    
+    jmp next
+end-code
+{ 1 2 3 4 2swap --> 3 4 1 2 }
+
 ( x1 x2 -- x1 x2 x1 )
 code over
     lda pstack+4,x
@@ -345,6 +378,26 @@ code over
     jmp next
 end-code
 { 1 2 over --> 1 2 1 }
+
+( d1 d2 -- d1 d2 d1 )
+code 2over
+    dex
+    dex
+    dex
+    dex
+
+    lda pstack+13,x
+    sta pstack+5,x
+    lda pstack+12,x
+    sta pstack+4,x
+    lda pstack+11,x
+    sta pstack+3,x
+    lda pstack+10,x
+    sta pstack+2,x
+    
+    jmp next
+end-code
+{ 1 2 3 4 2over --> 1 2 3 4 1 2 }
 
 ( x -- ) ( R: -- x )
 code >r
@@ -772,6 +825,62 @@ end-code
 { 3 10 + --> 13 }
 { ffffh 5 + --> 4 }
 
+( d1 d2 -- d3 )
+code d+
+    clc
+    lda pstack+6,x
+    adc pstack+2,x
+    sta pstack+6,x
+    
+    lda pstack+7,x
+    adc pstack+3,x
+    sta pstack+7,x
+    
+    lda pstack+8,x
+    adc pstack+4,x
+    sta pstack+8,x
+    
+    lda pstack+9,x
+    adc pstack+5,x
+    sta pstack+9,x
+    
+    inx
+    inx
+    inx
+    inx
+
+    jmp next
+end-code
+{ 1234h 5678h 1111h 1111h d+ --> 2345h 6789h }
+{ 0000h 1111h 0000h eeefh d+ --> 0001h 0000h }
+
+( d1 d2 -- d3 )
+code d-
+    sec
+    lda pstack+6,x
+    sbc pstack+2,x
+    sta pstack+6,x
+    
+    lda pstack+7,x
+    sbc pstack+3,x
+    sta pstack+7,x
+    
+    lda pstack+8,x
+    sbc pstack+4,x
+    sta pstack+8,x
+    
+    lda pstack+9,x
+    sbc pstack+5,x
+    sta pstack+9,x
+    
+    inx
+    inx
+    inx
+    inx
+    
+    jmp next
+end-code
+
 ( n1 n2 -- n3 )
 code -
     sec
@@ -788,6 +897,42 @@ end-code
 { 4 3 - --> 1 }
 { 3 4 - --> ffffh }
 { 10 5 - --> 5 }
+
+( u1 u2 -- u3 )
+code u*
+    lda #0          ; Initialize RESULT to 0
+    sta tmp+2
+    ldx #16         ; There are 16 bits in n2
+l1:
+    lsr pstack+3,x  ; Get low bit of n2
+    ror pstack+2,x
+    bcc l2          ; 0 or 1?
+    tay             ; If 1, add n1 (hi byte of tmp is in A)
+    clc
+    lda pstack+4,x
+    adc tmp+2
+    sta tmp+2
+    tya
+    adc pstack+5,x
+l2:
+    ror A           
+    ror tmp+2
+    ror tmp+1
+    ror tmp
+    dec a
+    bne l1
+    sta tmp+3
+
+    lda tmp         ; Save result to parameter stack
+    sta pstack+4,x
+    lda tmp+1
+    sta pstack+5,x
+
+    inx             ; Clean up parameter stack
+    inx
+
+    jmp next
+end-code
 
 ( n1 n2 -- n3 )
 code *
@@ -869,95 +1014,86 @@ done:
     jmp next
 end-code
 
-( n1 n2 -- n3 n4 )
-( code adapted from https://llx.com/Neil/a2/mult.html )
-code /mod  
-    stz sign     
-    lda pstack+5,x  ; Check to see if n1 is negative
-    bpl chk_n2
+( ud1 n1 -- n2 n3 )
+code um/mod
+    sec
+    lda     pstack+6,x          ; Subtract hi cell of dividend by
+    sbc     pstack+2,x          ; divisor to see if there's an overflow condition.
+    lda     pstack+7,x
+    sbc     pstack+3,x
+    bcs     overflow            ; Branch if /0 or overflow.
 
-    lda #$80        ; Yes: record the sign
-    sta sign
+    lda     #$11                ; Loop 17x.
+    sta     tmp                 ; Use tmp for loop counter.
+ loop:
+    rol     pstack+4,x          ; Rotate dividend lo cell left one bit.
+    rol     pstack+5,x
+    dec     tmp                 ; Decrement loop counter.
+    beq     done                ; If we're done, then branch to end.
+    rol     pstack+6,x          ; Otherwise rotate dividend hi cell left one bit.
+    rol     pstack+7,x
+    stz     tmp+1
+    rol     tmp+1               ; Rotate the bit carried out of above into tmp+1.
 
-    sec             ; Negate n1
-    lda #0
-    sbc pstack+4,x
-    sta pstack+4,x
-    lda #0
-    sbc pstack+5,x
-    sta pstack+5,x
+    sec
+    lda     pstack+6,x          ; Subtract dividend hi cell minus divisor.
+    sbc     pstack+2,x
+    sta     tmp+2               ; Put result temporarily in tmp+2 (lo byte)
+    lda     pstack+7,x
+    sbc     pstack+3,x
+    tay                         ; and Y (hi byte).
+    lda     tmp+1               ; Remember now to bring in the bit carried out above.
+    sbc     #0
+    bcc     loop
 
-chk_n2:
-    lda pstack+3,x  ; Check to see if n2 is negative
-    bpl init_tmp
+    lda     tmp+2               ; If that didn't cause a borrow,
+    sta     pstack+6,x          ; make the result from above to
+    sty     pstack+7,x          ; be the new dividend hi cell
+    bra     loop                ; and then brach up.  (NMOS 6502 can use BCS here.)
 
-    lda sign        ; Flip the sign bit, if so
-    eor #$80        ; And set the bit for the remainder
-    sta sign
-
-    sec             ; Negate n2
-    lda #0
-    sbc pstack+2,x
-    sta pstack+2,x
-    lda #0
-    sbc pstack+3,x
-    sta pstack+3,x
-
-init_tmp:
-    stz tmp         ; Initialize tmp (remainder) to 0
-    stz tmp+1
-
-    lda #16         ; There are 16 bits in NUM1
-    sta counter
-    
-l1:
-    asl pstack+4,x  ; Shift hi bit of NUM1 into REM
-    rol pstack+5,x  ; (vacating the lo bit, which will be used for the quotient)
-    rol tmp
-    rol tmp+1
-    lda tmp
-    sec             ; Trial subtraction
-    sbc pstack+2,x
-    tay
-    lda tmp+1,x
-    sbc pstack+3,x
-    bcc l2          ; Did subtraction succeed?
-    sta tmp+1       ; If yes, save it
-    sty tmp
-    inc pstack+4,x  ; and record a 1 in the quotient
-l2:
-    dec counter
-    bne l1
-
-    lda pstack+5,x  ; Set the quotient
-    sta pstack+3,x
-    lda pstack+4,x
-    sta pstack+2,x
-
-    lda tmp         ; Save the remainder to the stack
-    sta pstack+4,x
-    lda tmp+1
-    sta pstack+5,x
-
-    lda sign        ; Check to see if the sign should be negative
-    bpl done
-
-    sec             ; Negate the quotient
-    lda #0
-    sbc pstack+2,x
-    sta pstack+2,x
-    lda #0
-    sbc pstack+3,x
-    sta pstack+3,x
+overflow:
+    lda     #$ff                ; If overflow or /0 condition found,
+    sta     pstack+6,x          ; just put FFFF in both the remainder
+    sta     pstack+7,x
+    sta     pstack+4,x          ; and the quotient.
+    sta     pstack+5,x
 
 done:
+    inx
+    inx
+
     jmp next
 end-code
-{ 1 3 /mod --> 1 0 }
-{ 2 3 /mod --> 2 0 }
-{ 3 3 /mod --> 0 1 }
-{ 4 3 /mod --> 1 1 }
-{ 6 3 /mod --> 0 2 }
+{ 0 1 3 um/mod --> 1 0 }
+{ 0 2 3 um/mod --> 2 0 }
+{ 0 3 3 um/mod --> 0 1 }
+{ 0 4 3 um/mod --> 1 1 }
+{ 0 6 3 um/mod --> 0 2 }
+
+( n -- d )
+code s>d
+    dex
+    dex
+    lda pstack+4,x
+    sta pstack+2,x
+    lda pstack+5,x
+    sta pstack+3,x
+
+    bmi is_neg
+    
+    stz pstack+4,x
+    stz pstack+5,x
+    jmp next
+
+is_neg:
+    lda #$ff
+    sta pstack+4,x
+    sta pstack+5,x
+    jmp next
+end-code
+{ 1234h s>d --> 0000h 1234h }
+{ ffffh s>d --> ffffh ffffh }
+{ fffeh s>d --> ffffh fffeh }
 
 ( n1 -- n2 )
 code 1+
@@ -1342,7 +1478,7 @@ chk_current:
 label1:
     bmi dobranch        ; if current+1 < limit+1 then NUM1 < limit
     bvc label2          ; the Z flag was affected only if V is 1
-    eor #$80            ; restore the Z flag to the value it had after SBC NUM2H
+    eor #$80            ; restore the Z flag to the value it had after sbc NUM2H
 label2:
     bne nobranch        ; if current+1 <> limit+1 then current > limit (so current >= limit)
     lda current         ; compare low bytes
@@ -1414,7 +1550,7 @@ chk_current:
 label1:
     bmi dobranch        ; if current+1 < limit+1 then NUM1 < limit
     bvc label2          ; the Z flag was affected only if V is 1
-    eor #$80            ; restore the Z flag to the value it had after SBC NUM2H
+    eor #$80            ; restore the Z flag to the value it had after sbc NUM2H
 label2:
     bne nobranch        ; if current+1 <> limit+1 then current > limit (so current >= limit)
     lda current         ; compare low bytes
@@ -1650,5 +1786,70 @@ char_loop:
     adc #0
     sta pstack+7,x
 
+    jmp next
+end-code
+
+( c n1 -- n2 tf | 0)
+code digit
+    lda pstack+4,x          ; Get the character in A
+
+    cmp #'a'
+    blt get_base
+    cmp #'z'+1
+    bge get_base
+
+    and #$df               ; Turn off the case bit
+    
+get_base:
+    ldy pstack+2,x          ; Get the base into Y
+    dey
+
+loop:
+    cmp digits,y            ; Check to see if we have a match
+    beq found               ; If so: return the number
+    dey                     ; Move to the previous digit
+    cpy #$ff                ; Have we checked the first digit?
+    bne loop                ; No: check against this digit
+
+    ; We were not able to convert the digit
+
+    stz pstack+5,x          ; Return false
+    stz pstack+4,x
+
+    inx                     ; Clean up the stack
+    inx
+
+    jmp next
+
+found:
+    stz pstack+5,x          ; Return the value of the digit
+    sty pstack+4,x
+
+    lda #$ff                ; And the true flag
+    sta pstack+3,x
+    sta pstack+2,x
+
+    jmp next
+
+digits:
+    .text "0123456789ABCDEF"
+end-code
+{ 30h 10 digit --> 0 ffffh }
+{ 31h 10 digit --> 1 ffffh }
+{ 39h 10 digit --> 9 ffffh }
+{ 41h 10 digit --> 0 }
+{ 61h 10 digit --> 0 }
+{ 41h 16 digit --> 10 ffffh }
+{ 61h 16 digit --> 10 ffffh }
+{ 46h 16 digit --> fh ffffh }
+{ 66h 16 digit --> fh ffffh }
+
+( -- addr )
+code pad
+    lda #$90
+    sta pstack+1,x
+    stz pstack,x
+    dex
+    dex
     jmp next
 end-code
