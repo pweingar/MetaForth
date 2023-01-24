@@ -3624,10 +3624,12 @@ xt_x28x2bloopx29:
 	limit       .word ?
 	current     .word ?
 	.endv
-	ldy pstack+3,x
+	lda pstack+3,x      ; Pop n from the stack
 	sta tmp+1
 	lda pstack+2,x
 	sta tmp
+	inx
+	inx
 	stx savex           ; Point X to the return stack temporarily
 	tsx
 	clc                 ; Increment current by n
@@ -3637,8 +3639,6 @@ xt_x28x2bloopx29:
 	lda current+1
 	adc tmp+1
 	sta current+1
-	inc savex           ; Remove n from the stack
-	inc savex
 	chk_current:
 	sec
 	lda current+1       ; compare high bytes
@@ -3646,9 +3646,9 @@ xt_x28x2bloopx29:
 	bvc label1          ; the equality comparison is in the Z flag here
 	eor #$80            ; the Z flag is affected here
 	label1:
-	bmi dobranch        ; if current+1 < limit+1 then NUM1 < limit
+	bmi dobranch        ; if current+1 < limit+1 then current < limit
 	bvc label2          ; the Z flag was affected only if V is 1
-	eor #$80            ; restore the Z flag to the value it had after sbc NUM2H
+	eor #$80            ; restore the Z flag to the value it had after sbc current+1
 	label2:
 	bne nobranch        ; if current+1 <> limit+1 then current > limit (so current >= limit)
 	lda current         ; compare low bytes
@@ -4756,13 +4756,22 @@ w_spaces:
 xt_spaces:
 	.block
 	jmp i_enter
+	.word xt_dup
+	.word xt_0x3e
+	.word xt_x28branch0x29
+	.word l_250
 	.word xt_0
 	.word xt_x28dox29
-l_250:
+l_251:
 	.word xt_space
 	.word xt_x28loopx29
-	.word l_250
-l_251:
+	.word l_251
+l_252:
+	.word xt_x28branchx29
+	.word l_253
+l_250:
+	.word xt_drop
+l_253:
 	.word i_exit
 	.bend
 ; END spaces
@@ -4781,17 +4790,17 @@ xt_expect:
 	.word xt_x2b
 	.word xt_over
 	.word xt_x28dox29
-l_252:
+l_254:
 	.word xt_key
 	.word xt_bs
 	.word xt_x28ofx29
-	.word l_255
+	.word l_257
 	.word xt_dup
 	.word xt_i
 	.word xt_x3d
 	.word xt_not
 	.word xt_x28branch0x29
-	.word l_256
+	.word l_258
 	.word xt_bs
 	.word xt_emit
 	.word xt_bl
@@ -4805,20 +4814,20 @@ l_252:
 	.word xt_i
 	.word xt_2x2d
 	.word xt_x3ei
-l_256:
+l_258:
 	.word xt_x28branchx29
-	.word l_254
-l_255:
+	.word l_256
+l_257:
 	.word xt_nl
 	.word xt_x28ofx29
-	.word l_257
+	.word l_259
 	.word xt_0
 	.word xt_i
 	.word xt_cx21
 	.word xt_leave
 	.word xt_x28branchx29
-	.word l_254
-l_257:
+	.word l_256
+l_259:
 	.word xt_dup
 	.word xt_dup
 	.word xt_i
@@ -4829,10 +4838,10 @@ l_257:
 	.word xt_cx21
 	.word xt_emit
 	.word xt_drop
-l_254:
+l_256:
 	.word xt_x28loopx29
-	.word l_252
-l_253:
+	.word l_254
+l_255:
 	.word xt_drop
 	.word i_exit
 	.bend
@@ -4985,12 +4994,12 @@ xt_x2dfind:
 	.word xt_dup
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_258
+	.word l_260
 	.word xt_drop
 	.word xt_here
 	.word xt_latest
 	.word xt_x28findx29
-l_258:
+l_260:
 	.word i_exit
 	.bend
 ; END -find
@@ -5060,7 +5069,7 @@ w_x28numberx29:
 xt_x28numberx29:
 	.block
 	jmp i_enter
-l_259:
+l_261:
 	.word xt_1x2b
 	.word xt_dup
 	.word xt_x3er
@@ -5069,7 +5078,7 @@ l_259:
 	.word xt_x40
 	.word xt_digit
 	.word xt_x28branch0x29
-	.word l_260
+	.word l_262
 	.word xt_x3er
 	.word xt_base
 	.word xt_x40
@@ -5079,8 +5088,8 @@ l_259:
 	.word xt_dx2b
 	.word xt_rx3e
 	.word xt_x28branchx29
-	.word l_259
-l_260:
+	.word l_261
+l_262:
 	.word xt_rx3e
 	.word i_exit
 	.bend
@@ -5115,19 +5124,19 @@ xt_number:
 	.word 45
 	.word xt_x3d
 	.word xt_x28branch0x29
-	.word l_261
+	.word l_263
 	.word xt_1
 	.word xt_x3er
 	.word xt_x28branchx29
-	.word l_262
-l_261:
+	.word l_264
+l_263:
 	.word xt_0
 	.word xt_x3er
 	.word xt_1
 	.word xt_x2b
-l_262:
+l_264:
 	.word xt_x2d1
-l_263:
+l_265:
 	.word xt_dpl
 	.word xt_x21
 	.word xt_x28numberx29
@@ -5136,33 +5145,33 @@ l_263:
 	.word xt_bl
 	.word xt_x3d
 	.word xt_x28branch0x29
-	.word l_264
+	.word l_266
 	.word xt_dup
 	.word xt_cx40
 	.word xt_x28literalx29
 	.word 46
 	.word xt_x3d
 	.word xt_x28branch0x29
-	.word l_265
+	.word l_267
 	.word xt_0
 	.word xt_x28branchx29
-	.word l_266
-l_265:
+	.word l_268
+l_267:
 	.word xt_dpl
 	.word xt_x40
-l_266:
+l_268:
 	.word xt_x28branchx29
-	.word l_263
-l_264:
+	.word l_265
+l_266:
 	.word xt_drop
 	.word xt_rx3e
 	.word xt_x28branch0x29
-	.word l_267
+	.word l_269
 	.word xt_0
 	.word xt_0
 	.word xt_2swap
 	.word xt_dx2d
-l_267:
+l_269:
 	.word i_exit
 	.bend
 ; END number
@@ -5239,11 +5248,11 @@ xt_x23:
 	.word xt_over
 	.word xt_x3c
 	.word xt_x28branch0x29
-	.word l_268
+	.word l_270
 	.word xt_x28literalx29
 	.word 7
 	.word xt_x2b
-l_268:
+l_270:
 	.word xt_x28literalx29
 	.word 48
 	.word xt_x2b
@@ -5268,15 +5277,15 @@ w_x23s:
 xt_x23s:
 	.block
 	jmp i_enter
-l_269:
+l_271:
 	.word xt_x23
 	.word xt_over
 	.word xt_over
 	.word xt_or
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_269
-l_270:
+	.word l_271
+l_272:
 	.word i_exit
 	.bend
 ; END #s
@@ -5294,11 +5303,11 @@ xt_sign:
 	.word xt_rot
 	.word xt_0x3c
 	.word xt_x28branch0x29
-	.word l_271
+	.word l_273
 	.word xt_x28literalx29
 	.word 45
 	.word xt_hold
-l_271:
+l_273:
 	.word i_exit
 	.bend
 ; END sign
@@ -5323,13 +5332,156 @@ xt_x23x3e:
 	.bend
 ; END #>
 
+; ( d n -- )
+; BEGIN d.r
+w_dx2er:
+	.byte $03
+	.text 'd.r'
+	.fill 13
+	.word w_x23x3e
+xt_dx2er:
+	.block
+	jmp i_enter
+	.word xt_x3er
+	.word xt_over
+	.word xt_swap
+	.word xt_dabs
+	.word xt_x3cx23
+	.word xt_x23s
+	.word xt_sign
+	.word xt_x23x3e
+	.word xt_rx3e
+	.word xt_over
+	.word xt_x2d
+	.word xt_spaces
+	.word xt_type
+	.word i_exit
+	.bend
+; END d.r
+
+; ( Store n to the return stack )
+; ( d -- )
+; BEGIN d.
+w_dx2e:
+	.byte $02
+	.text 'd.'
+	.fill 14
+	.word w_dx2er
+xt_dx2e:
+	.block
+	jmp i_enter
+	.word xt_0
+	.word xt_dx2er
+	.word i_exit
+	.bend
+; END d.
+
+; ( x -- )
+; BEGIN .
+w_x2e:
+	.byte $01
+	.text '.'
+	.fill 15
+	.word w_dx2e
+xt_x2e:
+	.block
+	jmp i_enter
+	.word xt_sx3ed
+	.word xt_dx2e
+	.word i_exit
+	.bend
+; END .
+
+; ( n1 n2 -- )
+; BEGIN .r
+w_x2er:
+	.byte $02
+	.text '.r'
+	.fill 14
+	.word w_x2e
+xt_x2er:
+	.block
+	jmp i_enter
+	.word xt_x3er
+	.word xt_sx3ed
+	.word xt_rx3e
+	.word xt_dx2er
+	.word i_exit
+	.bend
+; END .r
+
+; ( addr -- )
+; BEGIN ?
+w_x3f:
+	.byte $01
+	.text '?'
+	.fill 15
+	.word w_x2er
+xt_x3f:
+	.block
+	jmp i_enter
+	.word xt_x40
+	.word xt_x2e
+	.word i_exit
+	.bend
+; END ?
+
+; ( addr n -- )
+; BEGIN dump
+w_dump:
+	.byte $04
+	.text 'dump'
+	.fill 12
+	.word w_x3f
+xt_dump:
+	.block
+	jmp i_enter
+	.word xt_0
+	.word xt_x28dox29
+l_274:
+	.word xt_cr
+	.word xt_dup
+	.word xt_0
+	.word xt_swap
+	.word xt_x28literalx29
+	.word 5
+	.word xt_dx2er
+	.word xt_x28literalx29
+	.word 58
+	.word xt_emit
+	.word xt_x28literalx29
+	.word 8
+	.word xt_0
+	.word xt_x28dox29
+l_276:
+	.word xt_dup
+	.word xt_x40
+	.word xt_0
+	.word xt_swap
+	.word xt_x28literalx29
+	.word 5
+	.word xt_dx2er
+	.word xt_2x2b
+	.word xt_x28loopx29
+	.word l_276
+l_277:
+	.word xt_x28literalx29
+	.word 8
+	.word xt_x28x2bloopx29
+	.word l_274
+l_275:
+	.word xt_drop
+	.word i_exit
+	.bend
+; END dump
+
 ; ( -- )
 ; BEGIN initrandom
 w_initrandom:
 	.byte $0A
 	.text 'initrandom'
 	.fill 6
-	.word w_x23x3e
+	.word w_dump
 xt_initrandom:
 	.block
 	jmp i_enter
@@ -5371,7 +5523,7 @@ xt_maze:
 	.block
 	jmp i_enter
 	.word xt_initrandom
-l_272:
+l_278:
 	.word xt_random
 	.word xt_1
 	.word xt_and
@@ -5380,8 +5532,8 @@ l_272:
 	.word xt_x2b
 	.word xt_emit
 	.word xt_x28branchx29
-	.word l_272
-l_273:
+	.word l_278
+l_279:
 	.word i_exit
 	.bend
 ; END maze
@@ -5410,82 +5562,73 @@ xt_cold:
 	.word xt_tib
 	.word xt_x21
 	.word xt_x28literalx29
-	.word l_274
+	.word l_280
 	.word xt_x28branchx29
-	.word l_275
-l_274:
+	.word l_281
+l_280:
 	.ptext "Welcome to MetaForth v00.00.00"
-l_275:
+l_281:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
 	.word xt_unittest
 	.word xt_x28literalx29
-	.word l_276
+	.word l_282
 	.word xt_x28branchx29
-	.word l_277
-l_276:
+	.word l_283
+l_282:
 	.ptext "All unit tests PASSED!"
-l_277:
+l_283:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
 	.word xt_hex
 	.word xt_x28literalx29
-	.word 65535
+	.word 36864
+	.word xt_x3f
 	.word xt_x28literalx29
-	.word 65534
-	.word xt_over
-	.word xt_swap
-	.word xt_dabs
-	.word xt_x3cx23
-	.word xt_x23s
-	.word xt_sign
-	.word xt_x23x3e
-	.word xt_type
-	.word xt_cr
-	.word xt_0
+	.word 32768
 	.word xt_here
 	.word xt_x21
-l_278:
+l_284:
 	.word xt_here
 	.word xt_x40
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_280
+	.word l_286
 	.word xt_cr
 	.word xt_x28literalx29
-	.word l_281
+	.word l_287
 	.word xt_x28branchx29
-	.word l_282
-l_281:
+	.word l_288
+l_287:
 	.ptext "ok"
-l_282:
+l_288:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
 	.word xt_query
-l_280:
+l_286:
 	.word xt_x2dfind
 	.word xt_dup
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_283
+	.word l_289
 	.word xt_drop
 	.word xt_here
 	.word xt_x40
 	.word xt_0x3d
 	.word xt_not
 	.word xt_x28branch0x29
-	.word l_284
+	.word l_290
 	.word xt_cr
 	.word xt_x28literalx29
-	.word l_285
+	.word l_291
 	.word xt_x28branchx29
-	.word l_286
-l_285:
+	.word l_292
+l_291:
 	.ptext "Word not found:"
-l_286:
+l_292:
 	.word xt_count
 	.word xt_type
 	.word xt_bl
@@ -5494,20 +5637,20 @@ l_286:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
-l_284:
+l_290:
 	.word xt_x28branchx29
-	.word l_287
-l_283:
+	.word l_293
+l_289:
 	.word xt_drop
 	.word xt_drop
 	.word xt_cr
 	.word xt_x28literalx29
-	.word l_288
+	.word l_294
 	.word xt_x28branchx29
-	.word l_289
-l_288:
+	.word l_295
+l_294:
 	.ptext "Found:"
-l_289:
+l_295:
 	.word xt_count
 	.word xt_type
 	.word xt_bl
@@ -5516,10 +5659,10 @@ l_289:
 	.word xt_count
 	.word xt_type
 	.word xt_cr
-l_287:
+l_293:
 	.word xt_x28branchx29
-	.word l_278
-l_279:
+	.word l_284
+l_285:
 	.word i_exit
 	.bend
 ; END cold

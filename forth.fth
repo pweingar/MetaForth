@@ -269,9 +269,13 @@ include" forth_65c02.fth"
 
 ( n -- )
 : spaces
-    0 do
-        space
-    loop
+    dup 0> if
+        0 do
+            space
+        loop
+    else
+        drop
+    then
 ;
 
 ( addr n -- )
@@ -481,8 +485,57 @@ include" forth_65c02.fth"
     pad over -
 ;
 
+( d n -- )
+: d.r
+    >r              ( Store n to the return stack )
+    over swap
+    dabs
+    <# #s sign #>
+    r>
+    over - spaces
+    type
+;
+
+( d -- )
+: d.
+    0
+    d.r
+;
+
+( x -- )
+: .
+    s>d
+    d.
+;
+
+( n1 n2 -- )
+: .r
+    >r
+    s>d
+    r> d.r
+;
+
+( addr -- )
+: ?
+    @ .
+;
+
+( addr n -- )
+: dump
+    0 do
+        cr
+        dup 0 swap 5 d.r
+        3ah emit
+        8 0 do
+            dup @ 0 swap 5 d.r
+            2+
+        loop
+    8 +loop
+    drop
+;
+
 \\
-\\ Input Routines
+\\ Text interpreter
 \\
 
 \\
@@ -503,9 +556,9 @@ include" f256jr.fth"
     c" All unit tests PASSED!" count type cr
 
     hex
-    ffffh fffeh over swap dabs <# #s sign #> type cr
+    9000h ?
 
-    0 here !
+    8000h here !
 
     begin
         here @ 0= if

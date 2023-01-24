@@ -1522,10 +1522,12 @@ limit       .word ?
 current     .word ?
     .endv
 
-    ldy pstack+3,x
+    lda pstack+3,x      ; Pop n from the stack
     sta tmp+1
     lda pstack+2,x
     sta tmp
+    inx
+    inx
 
     stx savex           ; Point X to the return stack temporarily
     tsx
@@ -1538,9 +1540,6 @@ current     .word ?
     adc tmp+1
     sta current+1
 
-    inc savex           ; Remove n from the stack
-    inc savex
-
 chk_current:
     sec
     lda current+1       ; compare high bytes
@@ -1548,9 +1547,9 @@ chk_current:
     bvc label1          ; the equality comparison is in the Z flag here
     eor #$80            ; the Z flag is affected here
 label1:
-    bmi dobranch        ; if current+1 < limit+1 then NUM1 < limit
+    bmi dobranch        ; if current+1 < limit+1 then current < limit
     bvc label2          ; the Z flag was affected only if V is 1
-    eor #$80            ; restore the Z flag to the value it had after sbc NUM2H
+    eor #$80            ; restore the Z flag to the value it had after sbc current+1
 label2:
     bne nobranch        ; if current+1 <> limit+1 then current > limit (so current >= limit)
     lda current         ; compare low bytes
