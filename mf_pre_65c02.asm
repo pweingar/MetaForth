@@ -10,7 +10,7 @@
 .cpu "w65c02"
 
 pstack = $0000          ; Location of the "bottom" of the parameter stack
-USERAREA = $a000        ; Area for user variables
+USERAREA = $A000        ; Area for user variables
 
 CHAR_TAB = 9
 
@@ -51,6 +51,7 @@ init_user:
         .word 0         ; Initial BLK
         .word $ffff     ; Initial DPL
         .word 0         ; Initial HLD
+        .word 0         ; Initial HANDLER
 
 init_user_end:
 
@@ -67,6 +68,7 @@ user_source_id = 18
 user_blk = 20
 user_dpl = 22
 user_hld = 24
+user_handler = 26
 
 ;;
 ;; Bootstrapping code
@@ -90,6 +92,15 @@ start   ldx #$ff        ; Initialize the RSP
         sta up
         lda #>USERAREA
         sta up+1
+
+        ; Initialize the USER area
+        ldy #0
+init_user_loop:
+        lda init_user,y
+        sta (up),y
+        iny
+        cpy #(init_user_end - init_user)
+        bne init_user_loop
 
         jmp next
 

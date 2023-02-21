@@ -213,6 +213,7 @@ class Compiler:
         self._object_words = {}
         self._input_file = None
         self._current_word = None
+        self._last_word = None
         self._old_state = None
         self._prolog = ""
         self._epilog = ""
@@ -242,10 +243,12 @@ class Compiler:
 
     def add_word(self, word):
         """Add a CodeWord or ForthWord to the dictionary"""
-        self._object_words[word.get_name()] = word
-        word.set_link(self._current_word)
-        self._current_word = word
-        self.add_entry(word)
+        if not word.get_name() in self._object_words.keys():
+            self._object_words[word.get_name()] = word
+            word.set_link(self._last_word)
+            self._last_word = word
+            self.add_entry(word)
+        self._current_word = self._object_words[word.get_name()]
 
     def add_entry(self, entry):
         """Add an entry (comment or word) to the list of entries"""

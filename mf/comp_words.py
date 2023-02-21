@@ -10,6 +10,21 @@ import testing
 LOOP_TYPE_BEGIN = 1
 LOOP_TYPE_DO = 2
 
+def exec_char(c):
+    """Process the [char] word"""
+    token = c.next_token()
+    current_word = c.get_current_word()
+    current_word.compile(compiler.LabelReference("xt_(literal)"))
+    current_word.compile(compiler.Literal(ord(token[0])));
+    
+def exec_postpone(c):
+    """Process the POSTPONE word"""
+    token = c.next_token()
+    current_word = c.get_current_word()
+    current_word.compile(compiler.LabelReference("xt_(literal)"))
+    current_word.compile(compiler.LabelReference("xt_{}".format(token)))
+    current_word.compile(compiler.LabelReference("xt_,"))
+
 def exec_case(c):
     """Process a CASE word"""
     end_case_label = c.gen_label()
@@ -138,6 +153,15 @@ def exec_until(c):
     current_word.compile(compiler.LabelReference(jump_label))
     current_word.compile(compiler.LabelDeclaration(exit_label))
 
+def exec_dstr(c):
+    """Compile the word .\""""
+    text_label = c.gen_label()
+    jump_label = c.gen_label()
+    current_word = c.get_current_word()
+    data = c.read_to("\"")
+    current_word.compile(compiler.LabelReference("xt_(.\")"))
+    current_word.compile(compiler.LiteralPascalString(data))
+
 def exec_cstr(c):
     """Compile the word C\""""
     text_label = c.gen_label()
@@ -212,6 +236,13 @@ def exec_cpu(c):
     cpu = c.next_token()
     c.set_prolog("mf_pre_{}.asm".format(cpu))
     c.set_epilog("mf_post_{}.asm".format(cpu))
+
+def exec_defer(c):
+    """Creates a new word"""
+    name = c.next_token()
+    new_word = compiler.ForthWord(name)
+    c.add_word(new_word)
+    print("Deferred {}".format(name))
 
 def exec_colon(c):
     """Creates a new word and starts compiling into it."""
@@ -315,11 +346,15 @@ def exec_dotlp(c):
 
 def register_all(c):
     """Register all the compiler words."""
+    
+    c.register(compiler.CompilerWord("[char]", exec_char, True))
+    c.register(compiler.CompilerWord("postpone", exec_postpone, True))
     c.register(compiler.CompilerWord("(", exec_lp, True))
     c.register(compiler.CompilerWord(".(", exec_dotlp, False))
     c.register(compiler.CompilerWord("include\"", exec_include, False))
     c.register(compiler.CompilerWord("code", exec_code, False))
     c.register(compiler.CompilerWord("immediate", exec_immediate, False))
+    c.register(compiler.CompilerWord("defer", exec_defer, False))
     c.register(compiler.CompilerWord(":", exec_colon, False))
     c.register(compiler.CompilerWord(";", exec_semi, True))
     c.register(compiler.CompilerWord("$cpu$", exec_cpu, False))
@@ -330,6 +365,7 @@ def register_all(c):
     c.register(compiler.CompilerWord("constant", exec_constant, False))
     c.register(compiler.CompilerWord("user", exec_user, False))
     c.register(compiler.CompilerWord("c\"", exec_cstr, True))
+    c.register(compiler.CompilerWord(".\"", exec_dstr, True))
     c.register(compiler.CompilerWord("begin", exec_begin, True))
     c.register(compiler.CompilerWord("again", exec_again_repeat, True))
     c.register(compiler.CompilerWord("repeat", exec_again_repeat, True))

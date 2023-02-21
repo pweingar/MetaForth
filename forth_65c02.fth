@@ -153,6 +153,54 @@ registers:  .text 13,13,"|   IP   WP  RSP  PSP",13
 stackmsg:   .null 13,"Parameter Stack:",13
 end-code
 
+( -- addr )
+code rp@
+    stx savex           ; Save the parameter stack pointer
+    tsx                 ; Get the return stack pointer
+    sta tmp             ; Save it for later
+    ldx savex           ; Recover the parameter stack pointer
+
+    lda #$01            ; Get the high byte of the RSP
+    sta pstack+1,x      ; Save it to the parameter stack
+    lda tmp             ; Get the low byte of the RSP
+    sta pstack,x        ; Save it to the parameter stack
+    dex
+    dex
+  
+    jmp next
+end-code
+
+( addr -- )
+code rp!
+    stx savex           ; Save the parameter stack pointer
+    lda pstack+2,x      ; Get the new RSP from the parameter stack
+    tax
+    txs                 ; Set the RSP
+    ldx savex           ; Restore the parameter stack pointer
+    inx
+    inx
+
+    jmp next
+end-code
+
+( -- addr )
+code sp@
+    lda #>pstack        ; Get the high byte of the stack address
+    sta pstack+1,x      ; And push it to the stack
+    txa                 ; Get the low byte of the stack address
+    sta pstack,x        ; And push it to the stack
+    dex
+    dex
+    jmp next
+end-code
+
+( addr -- )
+code sp!
+    lda pstack+2,x      ; Get the address from the stack
+    tax                 ; And set the stack pointer
+    jmp next
+end-code
+
 ( c -- )
 code emit
     lda pstack+2,x
@@ -267,6 +315,34 @@ code (literal)
     sta pstack,x
     lda (ip),y
     sta pstack+1,x
+    dex
+    dex
+
+    clc
+    lda ip
+    adc #2
+    sta ip
+    lda ip+1
+    adc #0
+    sta ip+1
+
+    jmp next
+end-code 
+
+( -- d )
+code (dliteral)
+    ldy #1
+    lda (ip)
+    sta pstack,x
+    lda (ip),y
+    sta pstack+1,x
+    iny
+    sta pstack+2,x
+    iny
+    sta pstack+3,x
+
+    dex
+    dex
     dex
     dex
 
@@ -900,6 +976,61 @@ end-code
 
 ( u1 u2 -- u3 )
 code u*
+    stz MMU_IO_CTRL ; Go to I/O page #0
+
+    lda pstack+5,x  ; Set coprocessor unsigned A argument
+    sta $de01
+    lda pstack+4,x
+    sta $de00
+
+    lda pstack+3,x  ; Set coprocessor unsigned B argument
+    sta $de03
+    lda pstack+2,x
+    sta $de02
+
+    inx
+    inx
+
+    lda $de05       ; Read the coprocessor unsigned multiplication result
+    sta pstack+3,x
+    lda $de04
+    sta pstack+2,x
+
+    jmp next
+end-code
+{ 2 3 u* --> 6 }
+{ 10 4 u* --> 40 }
+
+( u1 u2 -- u3 )
+code *
+    stz MMU_IO_CTRL ; Go to I/O page #0
+
+    lda pstack+5,x  ; Set coprocessor unsigned A argument
+    sta $de05
+    lda pstack+4,x
+    sta $de04
+
+    lda pstack+3,x  ; Set coprocessor unsigned B argument
+    sta $de07
+    lda pstack+2,x
+    sta $de06
+
+    inx
+    inx
+
+    lda $de0d       ; Read the coprocessor unsigned multiplication result
+    sta pstack+3,x
+    lda $de0c
+    sta pstack+2,x
+
+    jmp next
+end-code
+{ 2 3 * --> 6 }
+{ 10 4 * --> 40 }
+{ fffeh 3 * --> fffah }
+
+( u1 u2 -- u3 )
+code u*-soft
     lda #0          ; Initialize RESULT to 0
     sta tmp+2
     ldx #16         ; There are 16 bits in n2
@@ -935,7 +1066,7 @@ l2:
 end-code
 
 ( n1 n2 -- n3 )
-code *
+code *-soft
     stz sign     
     lda pstack+5,x  ; Check to see if n1 is negative
     bpl chk_n2
@@ -1752,8 +1883,7 @@ next_word:
     bra loop                ; And check that word
 
 chk_chars:
-    tay                     ; y := index of last character in word
-    dey
+    tay                     ; y := index to character to check
 
 char_loop:
     lda (src_ptr),y         ; Check the yth character
@@ -1761,8 +1891,7 @@ char_loop:
     bne next_word           ; If they are not equal, go to the next word in the dictionary
 
     dey                     ; Move to the previous character in the words
-    cpy #$ff                ; Did we just check the first character?
-    bne char_loop           ; No: check this one
+    bne char_loop           ; Are we back at the size? No: keep checking
 
     ; Words are equal... we found a match!
 

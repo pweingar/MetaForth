@@ -24,6 +24,7 @@ include" forth_65c02.fth"
 20 user blk         ( Pointer to the block number )
 22 user dpl         ( Pointer to the DPL )
 24 user hld         ( Pointer to the HLD variable )
+26 user handler     ( Pointer to the HANDLER variable for TRY-CATCH )
 
 ( x -- 0 | x x )
 : ?dup
@@ -120,16 +121,6 @@ include" forth_65c02.fth"
 
 ( n1 n2 -- n3 n4 )
 : /mod
-    dup 8000h and >r    ( n1 n2 r: f2 )
-    swap                ( n2 n1 )
-    dup 8000h and >r    ( n2 n1 r: f2 f1 )
-    abs s>d             ( n2 d1 )
-    rot                 ( d1 n2 )
-    um/mod              ( n3 n4 )
-    r> r>               ( n3 n4 f2 f1 )
-    xor if              ( n3 n4 )
-        0 swap -
-    then
 ;
 
 ( n1 n2 -- n3 )
@@ -261,6 +252,15 @@ include" forth_65c02.fth"
 \\
 \\ I/O words
 \\
+
+( c-addr -- )
+: (.")
+    r               ( Get the pointer to the counted string to print )
+    count           ( Get the length and address of the string )
+    dup 1+          ( Get the offset we need to add to the return point )
+    r> + >r         ( And add it to the return point )
+    type            ( print the string)
+;
 
 ( -- )
 : space
@@ -407,6 +407,8 @@ include" forth_65c02.fth"
     r>
 ;
 
+defer ?error
+
 ( addr -- d )
 : number
     0 0 rot                 ( d0 addr )
@@ -423,14 +425,13 @@ include" forth_65c02.fth"
         dpl !               ( d0 addr )
         (number)            ( d1 addr2 )
         dup c@              ( d1 addr2 c )
-        bl =
-        while
+        bl -
+    while
         dup c@              ( d1 addr2 c )
-        2eh = if            ( is it '-' )
-            0               ( d1 addr2 0 )
-        else
-            dpl @           ( d1 addr2 n )
-        then
+        2eh -
+        halt
+        0 ?error
+        0
     repeat
     drop                    ( d1 )
     r>                      ( d1 f )
@@ -538,6 +539,95 @@ include" forth_65c02.fth"
 \\ Text interpreter
 \\
 
+defer interpret
+
+( xt -- exception# | 0 )            \ return addr on stack
+: catch 
+    sp@ >r              ( xt )      \ save data stack pointer
+    handler @ >r        ( xt )      \ and previous handler
+    rp@ handler !       ( xt )      \ set current handler
+    execute             ( )         \ execute returns if no THROW
+    r> handler !        ( )         \ restore previous handler
+    r> drop             ( )         \ discard saved stack ptr
+    0                   ( 0 )       \ normal completion
+;
+
+( ??? exception# -- ??? exception# )
+: throw 
+    ?dup if                 ( exc# )    \ 0 THROW is no-op
+        handler @ rp!       ( exc# )    \ restore prev return stack
+        r> handler !        ( exc# )    \ restore prev handler
+        r> swap >r          ( sp )      \ exc# on return stack
+        sp! drop r>         ( exc# )    \ restore stack
+                                        \ Return to the caller of CATCH because return
+                                        \ stack is restored to the state that existed
+                                        \ when CATCH began execution
+    then
+;
+
+( -- )
+: quit
+    hex
+    forth definitions
+    0 state !
+    begin
+        cr
+        state @ 0= if
+            ." ok" 
+            cr
+        then
+        query
+        cr
+        interpret
+    again
+;
+
+( n -- )
+: error
+    dup 0= not if
+        here count type
+        c" ? MSG#" count type .
+    then
+    quit
+;
+
+( f n -- )
+: ?error
+    swap if
+        error
+    else
+        drop
+    then
+;
+
+( -- )
+: interpret
+    begin
+    tib @ >in @ + c@ while  ( Repeat while the TIB has characters )
+        -find               ( Try to look up the word )
+        if
+            ( Word found... either run it or compile it )
+            state @ < if
+                cfa ,       ( COMPILE & not IMMEDIATE... compile the word )
+            else
+                cfa execute ( Otherwise, execute the word )
+            then
+        else
+            cr ." not found:" space here count type cr
+            ( Not found: maybe it's a number... )
+            here number     ( Try to parse it as a number )
+            swap drop       ( TODO: handle doubles )
+            \\ state @ if
+                ( Compiling... compile the number )
+                ( Otherwise, leave the number on the stack )
+            \\    postpone (literal) ,
+            \\    halt
+            \\ then
+            halt
+        then
+    repeat
+;
+
 \\
 \\ Boot strapping word...
 \\
@@ -546,40 +636,16 @@ include" f256jr.fth"
 
 : cold
     forth definitions
+    s0 @ sp!                ( Set the parameter stack pointer to the initial value )
+    r0 @ rp!                ( Set the return stack pointer )
     0 blk !                 ( Initialize the block number to 0 )
-    4000h dp !              ( Initialize the dictionary pointer )
+    5000h dp !              ( Initialize the dictionary pointer )
     BF00h tib !             ( Initialize the TIB )
 
-    c" Welcome to MetaForth v00.00.00" count type cr
+    ." Welcome to MetaForth v00.00.00" cr
 
-    unittest
-    c" All unit tests PASSED!" count type cr
+    \\ unittest
+    \\ ." All unit tests PASSED!" cr
 
-    hex
-    9000h ?
-
-    8000h here !
-
-    begin
-        here @ 0= if
-            cr c" ok" count type cr
-            query
-        then
-
-        -find
-        dup 0= if
-            drop
-            here @ 0= not if
-                cr c" Word not found:" count type
-                bl emit
-                here count type cr
-            then
-        else
-            drop
-            drop
-            cr c" Found:" count type
-            bl emit
-            nfa count type cr
-        then
-    again
+    quit
 ;
