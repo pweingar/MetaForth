@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.55.2200 listing file
 ; 64tass --mw65c02 --intel-hex -o forth.hex --list=forth.lst forth.asm
-; Mon Feb 20 21:02:43 2023
+; Wed Feb 22 13:48:31 2023
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -846,7 +846,7 @@
 >15db	00 00				        .word 0         ; Initial STATE
 >15dd	00 00				        .word 0         ; Initial CONTEXT
 >15df	00 00				        .word 0         ; Initial CURRENT
->15e1	f5 46				        .word <>endcode ; Initial DP
+>15e1	c1 48				        .word <>endcode ; Initial DP
 >15e3	00 00				        .word 0         ; Initial >IN
 >15e5	00 bf				        .word $bf00     ; Initial TIB
 >15e7	00 00				        .word 0         ; Initial SOURCE-ID
@@ -888,7 +888,7 @@
 .160e	c0 1c		cpy #$1c	        cpy #(init_user_end - init_user)
 .1610	d0 f6		bne $1608	        bne init_user_loop
 .1612	4c 37 16	jmp $1637	        jmp next
->1615	a5 46				vstart  .word xt_cold
+>1615	49 48				vstart  .word xt_cold
 >1617	05 17				        .word xt_halt
 .1619	6c 2e 00	jmp ($002e)	done    jmp (donep)     ; Quit the interpreter by going to the code at donep
 .161c	68		pla		i_exit  pla             ; ip := pop()
@@ -4662,7 +4662,7 @@
 >39d9	96 39					.word w_x28vocabularyx29
 .39db					xt_forth:
 .39db	4c a9 39	jmp $39a9		jmp xt_x28vocabularyx29
->39de	92 46					.word <>w_cold
+>39de	36 48					.word <>w_cold
 .39e0					w_x28findx29:
 >39e0	06					.byte $06
 >39e1	28 66 69 6e 64 29			.text '(find)'
@@ -4753,10 +4753,11 @@
 .3a86	88		dey			dey                     ; Move to the previous digit
 .3a87	c0 ff		cpy #$ff		cpy #$ff                ; Have we checked the first digit?
 .3a89	d0 f6		bne $3a81		bne loop                ; No: check against this digit
-.3a8b	74 05		stz $05,x		stz pstack+5,x          ; Return false
-.3a8d	74 04		stz $04,x		stz pstack+4,x
-.3a8f	e8		inx			inx                     ; Clean up the stack
-.3a90	e8		inx			inx
+.3a8b						not_found:
+.3a8b	e8		inx			inx                     ; Clean up the stack
+.3a8c	e8		inx			inx
+.3a8d	74 03		stz $03,x		stz pstack+3,x          ; Return false
+.3a8f	74 02		stz $02,x		stz pstack+2,x
 .3a91	4c 37 16	jmp $1637		jmp next
 .3a94						found:
 .3a94	74 05		stz $05,x		stz pstack+5,x          ; Return the value of the digit
@@ -5444,622 +5445,840 @@
 >4167	54 35					.word xt_1x2b
 >4169	2c 30					.word xt_rx3e
 >416b	f1 31					.word xt_cmove
->416d	1c 16					.word i_exit
-.416f					w_x2dfind:
->416f	05					.byte $05
->4170	2d 66 69 6e 64				.text '-find'
->4175						.fill 11
->4180	29 41					.word w_word
-.4182					xt_x2dfind:
-.4182	4c 24 16	jmp $1624		jmp i_enter
->4185	12 3b					.word xt_bl
->4187	3c 41					.word xt_word
->4189	d0 3e					.word xt_here
->418b	8a 3b					.word xt_context
->418d	ad 30					.word xt_x40
->418f	ad 30					.word xt_x40
->4191	f3 39					.word xt_x28findx29
->4193	40 2f					.word xt_dup
->4195	89 36					.word xt_0x3d
->4197	8d 37					.word xt_x28branch0x29
->4199	a3 41					.word l_269
->419b	28 2f					.word xt_drop
->419d	d0 3e					.word xt_here
->419f	68 3f					.word xt_latest
->41a1	f3 39					.word xt_x28findx29
-.41a3					l_269:
->41a3	1c 16					.word i_exit
-.41a5					w_decimal:
->41a5	07					.byte $07
->41a6	64 65 63 69 6d 61 6c			.text 'decimal'
->41ad						.fill 9
->41b6	6f 41					.word w_x2dfind
-.41b8					xt_decimal:
-.41b8	4c 24 16	jmp $1624		jmp i_enter
->41bb	49 19					.word xt_x28literalx29
->41bd	0a 00					.word 10
->41bf	5a 3b					.word xt_base
->41c1	81 30					.word xt_x21
->41c3	1c 16					.word i_exit
-.41c5					w_hex:
->41c5	03					.byte $03
->41c6	68 65 78				.text 'hex'
->41c9						.fill 13
->41d6	a5 41					.word w_decimal
-.41d8					xt_hex:
-.41d8	4c 24 16	jmp $1624		jmp i_enter
->41db	49 19					.word xt_x28literalx29
->41dd	10 00					.word 16
->41df	5a 3b					.word xt_base
->41e1	81 30					.word xt_x21
->41e3	1c 16					.word i_exit
-.41e5					w_octal:
->41e5	05					.byte $05
->41e6	6f 63 74 61 6c				.text 'octal'
->41eb						.fill 11
->41f6	c5 41					.word w_hex
-.41f8					xt_octal:
-.41f8	4c 24 16	jmp $1624		jmp i_enter
->41fb	49 19					.word xt_x28literalx29
->41fd	08 00					.word 8
->41ff	5a 3b					.word xt_base
->4201	81 30					.word xt_x21
->4203	1c 16					.word i_exit
-.4205					w_x28numberx29:
->4205	08					.byte $08
->4206	28 6e 75 6d 62 65 72 29			.text '(number)'
->420e						.fill 8
->4216	e5 41					.word w_octal
-.4218					xt_x28numberx29:
-.4218	4c 24 16	jmp $1624		jmp i_enter
-.421b					l_270:
->421b	54 35					.word xt_1x2b
->421d	40 2f					.word xt_dup
->421f	0e 30					.word xt_x3er
->4221	f3 30					.word xt_cx40
->4223	5a 3b					.word xt_base
->4225	ad 30					.word xt_x40
->4227	72 3a					.word xt_digit
->4229	8d 37					.word xt_x28branch0x29
->422b	41 42					.word l_271
->422d	0e 30					.word xt_x3er
->422f	5a 3b					.word xt_base
->4231	ad 30					.word xt_x40
->4233	95 33					.word xt_ux2a
->4235	2c 30					.word xt_rx3e
->4237	25 35					.word xt_sx3ed
->4239	0a 33					.word xt_dx2b
->423b	2c 30					.word xt_rx3e
->423d	69 37					.word xt_x28branchx29
->423f	1b 42					.word l_270
-.4241					l_271:
->4241	2c 30					.word xt_rx3e
->4243	1c 16					.word i_exit
-.4245					w_x3ferror:
->4245	06					.byte $06
->4246	3f 65 72 72 6f 72			.text '?error'
->424c						.fill 10
->4256	05 42					.word w_x28numberx29
-.4258					xt_x3ferror:
-.4258	4c 24 16	jmp $1624		jmp i_enter
->425b	60 2f					.word xt_swap
->425d	8d 37					.word xt_x28branch0x29
->425f	67 42					.word l_294
->4261	fc 45					.word xt_error
+>416d	12 3b					.word xt_bl
+>416f	d0 3e					.word xt_here
+>4171	86 3f					.word xt_count
+>4173	e5 32					.word xt_x2b
+>4175	d5 30					.word xt_cx21
+>4177	1c 16					.word i_exit
+.4179					w_x2dfind:
+>4179	05					.byte $05
+>417a	2d 66 69 6e 64				.text '-find'
+>417f						.fill 11
+>418a	29 41					.word w_word
+.418c					xt_x2dfind:
+.418c	4c 24 16	jmp $1624		jmp i_enter
+>418f	12 3b					.word xt_bl
+>4191	3c 41					.word xt_word
+>4193	d0 3e					.word xt_here
+>4195	8a 3b					.word xt_context
+>4197	ad 30					.word xt_x40
+>4199	ad 30					.word xt_x40
+>419b	f3 39					.word xt_x28findx29
+>419d	40 2f					.word xt_dup
+>419f	89 36					.word xt_0x3d
+>41a1	8d 37					.word xt_x28branch0x29
+>41a3	ad 41					.word l_269
+>41a5	28 2f					.word xt_drop
+>41a7	d0 3e					.word xt_here
+>41a9	68 3f					.word xt_latest
+>41ab	f3 39					.word xt_x28findx29
+.41ad					l_269:
+>41ad	1c 16					.word i_exit
+.41af					w_decimal:
+>41af	07					.byte $07
+>41b0	64 65 63 69 6d 61 6c			.text 'decimal'
+>41b7						.fill 9
+>41c0	79 41					.word w_x2dfind
+.41c2					xt_decimal:
+.41c2	4c 24 16	jmp $1624		jmp i_enter
+>41c5	49 19					.word xt_x28literalx29
+>41c7	0a 00					.word 10
+>41c9	5a 3b					.word xt_base
+>41cb	81 30					.word xt_x21
+>41cd	1c 16					.word i_exit
+.41cf					w_hex:
+>41cf	03					.byte $03
+>41d0	68 65 78				.text 'hex'
+>41d3						.fill 13
+>41e0	af 41					.word w_decimal
+.41e2					xt_hex:
+.41e2	4c 24 16	jmp $1624		jmp i_enter
+>41e5	49 19					.word xt_x28literalx29
+>41e7	10 00					.word 16
+>41e9	5a 3b					.word xt_base
+>41eb	81 30					.word xt_x21
+>41ed	1c 16					.word i_exit
+.41ef					w_octal:
+>41ef	05					.byte $05
+>41f0	6f 63 74 61 6c				.text 'octal'
+>41f5						.fill 11
+>4200	cf 41					.word w_hex
+.4202					xt_octal:
+.4202	4c 24 16	jmp $1624		jmp i_enter
+>4205	49 19					.word xt_x28literalx29
+>4207	08 00					.word 8
+>4209	5a 3b					.word xt_base
+>420b	81 30					.word xt_x21
+>420d	1c 16					.word i_exit
+.420f					w_x2e:
+>420f	01					.byte $01
+>4210	2e					.text '.'
+>4211						.fill 15
+>4220	ef 41					.word w_octal
+.4222					xt_x2e:
+.4222	4c 24 16	jmp $1624		jmp i_enter
+>4225	25 35					.word xt_sx3ed
+>4227	3e 44					.word xt_dx2e
+>4229	1c 16					.word i_exit
+.422b					w_x28numberx29:
+>422b	08					.byte $08
+>422c	28 6e 75 6d 62 65 72 29			.text '(number)'
+>4234						.fill 8
+>423c	0f 42					.word w_x2e
+.423e					xt_x28numberx29:
+.423e	4c 24 16	jmp $1624		jmp i_enter
+.4241					l_270:
+>4241	40 2f					.word xt_dup
+>4243	0e 30					.word xt_x3er
+>4245	f3 30					.word xt_cx40
+>4247	5a 3b					.word xt_base
+>4249	ad 30					.word xt_x40
+>424b	72 3a					.word xt_digit
+>424d	8d 37					.word xt_x28branch0x29
+>424f	67 42					.word l_271
+>4251	0e 30					.word xt_x3er
+>4253	5a 3b					.word xt_base
+>4255	ad 30					.word xt_x40
+>4257	95 33					.word xt_ux2a
+>4259	2c 30					.word xt_rx3e
+>425b	25 35					.word xt_sx3ed
+>425d	0a 33					.word xt_dx2b
+>425f	2c 30					.word xt_rx3e
+>4261	54 35					.word xt_1x2b
 >4263	69 37					.word xt_x28branchx29
->4265	69 42					.word l_295
-.4267					l_294:
->4267	28 2f					.word xt_drop
-.4269					l_295:
+>4265	41 42					.word l_270
+.4267					l_271:
+>4267	2c 30					.word xt_rx3e
 >4269	1c 16					.word i_exit
-.426b					w_number:
+.426b					w_x3ferror:
 >426b	06					.byte $06
->426c	6e 75 6d 62 65 72			.text 'number'
+>426c	3f 65 72 72 6f 72			.text '?error'
 >4272						.fill 10
->427c	45 42					.word w_x3ferror
-.427e					xt_number:
+>427c	2b 42					.word w_x28numberx29
+.427e					xt_x3ferror:
 .427e	4c 24 16	jmp $1624		jmp i_enter
->4281	b5 18					.word xt_0
->4283	b5 18					.word xt_0
->4285	9a 3c					.word xt_rot
->4287	40 2f					.word xt_dup
->4289	54 35					.word xt_1x2b
->428b	f3 30					.word xt_cx40
->428d	49 19					.word xt_x28literalx29
->428f	2d 00					.word 45
->4291	2a 3d					.word xt_x3d
->4293	8d 37					.word xt_x28branch0x29
->4295	9f 42					.word l_272
->4297	d1 18					.word xt_1
->4299	0e 30					.word xt_x3er
->429b	69 37					.word xt_x28branchx29
->429d	a7 42					.word l_273
-.429f					l_272:
->429f	b5 18					.word xt_0
->42a1	0e 30					.word xt_x3er
->42a3	d1 18					.word xt_1
->42a5	e5 32					.word xt_x2b
-.42a7					l_273:
->42a7	0d 19					.word xt_x2d1
-.42a9					l_274:
->42a9	32 3c					.word xt_dpl
->42ab	81 30					.word xt_x21
->42ad	18 42					.word xt_x28numberx29
->42af	40 2f					.word xt_dup
->42b1	f3 30					.word xt_cx40
->42b3	12 3b					.word xt_bl
->42b5	70 33					.word xt_x2d
+>4281	60 2f					.word xt_swap
+>4283	8d 37					.word xt_x28branch0x29
+>4285	8d 42					.word l_293
+>4287	02 46					.word xt_error
+>4289	69 37					.word xt_x28branchx29
+>428b	8f 42					.word l_294
+.428d					l_293:
+>428d	28 2f					.word xt_drop
+.428f					l_294:
+>428f	1c 16					.word i_exit
+.4291					w_number:
+>4291	06					.byte $06
+>4292	6e 75 6d 62 65 72			.text 'number'
+>4298						.fill 10
+>42a2	6b 42					.word w_x3ferror
+.42a4					xt_number:
+.42a4	4c 24 16	jmp $1624		jmp i_enter
+>42a7	b5 18					.word xt_0
+>42a9	b5 18					.word xt_0
+>42ab	9a 3c					.word xt_rot
+>42ad	40 2f					.word xt_dup
+>42af	f3 30					.word xt_cx40
+>42b1	49 19					.word xt_x28literalx29
+>42b3	2d 00					.word 45
+>42b5	2a 3d					.word xt_x3d
 >42b7	8d 37					.word xt_x28branch0x29
->42b9	d1 42					.word l_275
->42bb	40 2f					.word xt_dup
->42bd	f3 30					.word xt_cx40
->42bf	49 19					.word xt_x28literalx29
->42c1	2e 00					.word 46
->42c3	70 33					.word xt_x2d
->42c5	05 17					.word xt_halt
->42c7	b5 18					.word xt_0
->42c9	58 42					.word xt_x3ferror
->42cb	b5 18					.word xt_0
->42cd	69 37					.word xt_x28branchx29
->42cf	a9 42					.word l_274
-.42d1					l_275:
->42d1	28 2f					.word xt_drop
->42d3	2c 30					.word xt_rx3e
->42d5	8d 37					.word xt_x28branch0x29
->42d7	e1 42					.word l_276
->42d9	b5 18					.word xt_0
->42db	b5 18					.word xt_0
->42dd	86 2f					.word xt_2swap
->42df	3d 33					.word xt_dx2d
-.42e1					l_276:
->42e1	1c 16					.word i_exit
-.42e3					w_x3cx23:
->42e3	02					.byte $02
->42e4	3c 23					.text '<#'
->42e6						.fill 14
->42f4	6b 42					.word w_number
-.42f6					xt_x3cx23:
-.42f6	4c 24 16	jmp $1624		jmp i_enter
->42f9	c4 3a					.word xt_pad
->42fb	4a 3c					.word xt_hld
->42fd	81 30					.word xt_x21
->42ff	1c 16					.word i_exit
-.4301					w_hold:
->4301	04					.byte $04
->4302	68 6f 6c 64				.text 'hold'
->4306						.fill 12
->4312	e3 42					.word w_x3cx23
-.4314					xt_hold:
-.4314	4c 24 16	jmp $1624		jmp i_enter
->4317	0d 19					.word xt_x2d1
->4319	4a 3c					.word xt_hld
->431b	4a 31					.word xt_x2bx21
->431d	4a 3c					.word xt_hld
->431f	ad 30					.word xt_x40
->4321	d5 30					.word xt_cx21
->4323	1c 16					.word i_exit
-.4325					w_x23:
->4325	01					.byte $01
->4326	23					.text '#'
->4327						.fill 15
->4336	01 43					.word w_hold
-.4338					xt_x23:
-.4338	4c 24 16	jmp $1624		jmp i_enter
->433b	5a 3b					.word xt_base
->433d	ad 30					.word xt_x40
->433f	ca 34					.word xt_umx2fmod
->4341	25 35					.word xt_sx3ed
->4343	9a 3c					.word xt_rot
->4345	49 19					.word xt_x28literalx29
->4347	09 00					.word 9
->4349	c4 2f					.word xt_over
->434b	f2 3c					.word xt_x3c
->434d	8d 37					.word xt_x28branch0x29
->434f	57 43					.word l_277
->4351	49 19					.word xt_x28literalx29
->4353	07 00					.word 7
->4355	e5 32					.word xt_x2b
-.4357					l_277:
->4357	49 19					.word xt_x28literalx29
->4359	30 00					.word 48
->435b	e5 32					.word xt_x2b
->435d	14 43					.word xt_hold
->435f	1c 16					.word i_exit
-.4361					w_x23s:
->4361	02					.byte $02
->4362	23 73					.text '#s'
->4364						.fill 14
->4372	25 43					.word w_x23
-.4374					xt_x23s:
-.4374	4c 24 16	jmp $1624		jmp i_enter
-.4377					l_278:
->4377	38 43					.word xt_x23
->4379	c4 2f					.word xt_over
->437b	c4 2f					.word xt_over
->437d	f8 35					.word xt_or
->437f	89 36					.word xt_0x3d
->4381	8d 37					.word xt_x28branch0x29
->4383	77 43					.word l_278
-.4385					l_279:
->4385	1c 16					.word i_exit
-.4387					w_sign:
->4387	04					.byte $04
->4388	73 69 67 6e				.text 'sign'
->438c						.fill 12
->4398	61 43					.word w_x23s
-.439a					xt_sign:
-.439a	4c 24 16	jmp $1624		jmp i_enter
->439d	9a 3c					.word xt_rot
->439f	62 36					.word xt_0x3c
->43a1	8d 37					.word xt_x28branch0x29
->43a3	ab 43					.word l_280
->43a5	49 19					.word xt_x28literalx29
->43a7	2d 00					.word 45
->43a9	14 43					.word xt_hold
-.43ab					l_280:
->43ab	1c 16					.word i_exit
-.43ad					w_x23x3e:
->43ad	02					.byte $02
->43ae	23 3e					.text '#>'
->43b0						.fill 14
->43be	87 43					.word w_sign
-.43c0					xt_x23x3e:
-.43c0	4c 24 16	jmp $1624		jmp i_enter
->43c3	d6 3c					.word xt_2drop
->43c5	4a 3c					.word xt_hld
->43c7	ad 30					.word xt_x40
->43c9	c4 3a					.word xt_pad
->43cb	c4 2f					.word xt_over
->43cd	70 33					.word xt_x2d
->43cf	1c 16					.word i_exit
-.43d1					w_dx2er:
->43d1	03					.byte $03
->43d2	64 2e 72				.text 'd.r'
->43d5						.fill 13
->43e2	ad 43					.word w_x23x3e
-.43e4					xt_dx2er:
-.43e4	4c 24 16	jmp $1624		jmp i_enter
->43e7	0e 30					.word xt_x3er
->43e9	c4 2f					.word xt_over
->43eb	60 2f					.word xt_swap
->43ed	8a 3d					.word xt_dabs
->43ef	f6 42					.word xt_x3cx23
->43f1	74 43					.word xt_x23s
->43f3	9a 43					.word xt_sign
->43f5	c0 43					.word xt_x23x3e
->43f7	2c 30					.word xt_rx3e
->43f9	c4 2f					.word xt_over
->43fb	70 33					.word xt_x2d
->43fd	2e 40					.word xt_spaces
->43ff	a6 3f					.word xt_type
->4401	1c 16					.word i_exit
-.4403					w_dx2e:
->4403	02					.byte $02
->4404	64 2e					.text 'd.'
->4406						.fill 14
->4414	d1 43					.word w_dx2er
-.4416					xt_dx2e:
-.4416	4c 24 16	jmp $1624		jmp i_enter
->4419	b5 18					.word xt_0
->441b	e4 43					.word xt_dx2er
->441d	1c 16					.word i_exit
-.441f					w_x2e:
->441f	01					.byte $01
->4420	2e					.text '.'
->4421						.fill 15
->4430	03 44					.word w_dx2e
-.4432					xt_x2e:
-.4432	4c 24 16	jmp $1624		jmp i_enter
->4435	25 35					.word xt_sx3ed
->4437	16 44					.word xt_dx2e
->4439	1c 16					.word i_exit
-.443b					w_x2er:
->443b	02					.byte $02
->443c	2e 72					.text '.r'
->443e						.fill 14
->444c	1f 44					.word w_x2e
-.444e					xt_x2er:
-.444e	4c 24 16	jmp $1624		jmp i_enter
->4451	0e 30					.word xt_x3er
->4453	25 35					.word xt_sx3ed
->4455	2c 30					.word xt_rx3e
->4457	e4 43					.word xt_dx2er
->4459	1c 16					.word i_exit
-.445b					w_x3f:
->445b	01					.byte $01
->445c	3f					.text '?'
->445d						.fill 15
->446c	3b 44					.word w_x2er
-.446e					xt_x3f:
-.446e	4c 24 16	jmp $1624		jmp i_enter
->4471	ad 30					.word xt_x40
->4473	32 44					.word xt_x2e
->4475	1c 16					.word i_exit
-.4477					w_dump:
->4477	04					.byte $04
->4478	64 75 6d 70				.text 'dump'
->447c						.fill 12
->4488	5b 44					.word w_x3f
-.448a					xt_dump:
-.448a	4c 24 16	jmp $1624		jmp i_enter
->448d	b5 18					.word xt_0
->448f	ca 37					.word xt_x28dox29
-.4491					l_281:
->4491	98 18					.word xt_cr
->4493	40 2f					.word xt_dup
->4495	b5 18					.word xt_0
->4497	60 2f					.word xt_swap
->4499	49 19					.word xt_x28literalx29
->449b	05 00					.word 5
->449d	e4 43					.word xt_dx2er
->449f	49 19					.word xt_x28literalx29
->44a1	3a 00					.word 58
->44a3	29 18					.word xt_emit
+>42b9	c3 42					.word l_272
+>42bb	d1 18					.word xt_1
+>42bd	0e 30					.word xt_x3er
+>42bf	69 37					.word xt_x28branchx29
+>42c1	cb 42					.word l_273
+.42c3					l_272:
+>42c3	b5 18					.word xt_0
+>42c5	0e 30					.word xt_x3er
+>42c7	d1 18					.word xt_1
+>42c9	e5 32					.word xt_x2b
+.42cb					l_273:
+>42cb	0d 19					.word xt_x2d1
+.42cd					l_274:
+>42cd	32 3c					.word xt_dpl
+>42cf	81 30					.word xt_x21
+>42d1	3e 42					.word xt_x28numberx29
+>42d3	40 2f					.word xt_dup
+>42d5	f3 30					.word xt_cx40
+>42d7	12 3b					.word xt_bl
+>42d9	70 33					.word xt_x2d
+>42db	8d 37					.word xt_x28branch0x29
+>42dd	f9 42					.word l_275
+>42df	40 2f					.word xt_dup
+>42e1	f3 30					.word xt_cx40
+>42e3	49 19					.word xt_x28literalx29
+>42e5	2e 00					.word 46
+>42e7	70 33					.word xt_x2d
+>42e9	8d 37					.word xt_x28branch0x29
+>42eb	f3 42					.word l_276
+>42ed	49 19					.word xt_x28literalx29
+>42ef	f3 ff					.word 65523
+>42f1	7e 42					.word xt_x3ferror
+.42f3					l_276:
+>42f3	b5 18					.word xt_0
+>42f5	69 37					.word xt_x28branchx29
+>42f7	cd 42					.word l_274
+.42f9					l_275:
+>42f9	28 2f					.word xt_drop
+>42fb	2c 30					.word xt_rx3e
+>42fd	8d 37					.word xt_x28branch0x29
+>42ff	09 43					.word l_277
+>4301	b5 18					.word xt_0
+>4303	b5 18					.word xt_0
+>4305	86 2f					.word xt_2swap
+>4307	3d 33					.word xt_dx2d
+.4309					l_277:
+>4309	1c 16					.word i_exit
+.430b					w_x3cx23:
+>430b	02					.byte $02
+>430c	3c 23					.text '<#'
+>430e						.fill 14
+>431c	91 42					.word w_number
+.431e					xt_x3cx23:
+.431e	4c 24 16	jmp $1624		jmp i_enter
+>4321	c4 3a					.word xt_pad
+>4323	4a 3c					.word xt_hld
+>4325	81 30					.word xt_x21
+>4327	1c 16					.word i_exit
+.4329					w_hold:
+>4329	04					.byte $04
+>432a	68 6f 6c 64				.text 'hold'
+>432e						.fill 12
+>433a	0b 43					.word w_x3cx23
+.433c					xt_hold:
+.433c	4c 24 16	jmp $1624		jmp i_enter
+>433f	0d 19					.word xt_x2d1
+>4341	4a 3c					.word xt_hld
+>4343	4a 31					.word xt_x2bx21
+>4345	4a 3c					.word xt_hld
+>4347	ad 30					.word xt_x40
+>4349	d5 30					.word xt_cx21
+>434b	1c 16					.word i_exit
+.434d					w_x23:
+>434d	01					.byte $01
+>434e	23					.text '#'
+>434f						.fill 15
+>435e	29 43					.word w_hold
+.4360					xt_x23:
+.4360	4c 24 16	jmp $1624		jmp i_enter
+>4363	5a 3b					.word xt_base
+>4365	ad 30					.word xt_x40
+>4367	ca 34					.word xt_umx2fmod
+>4369	25 35					.word xt_sx3ed
+>436b	9a 3c					.word xt_rot
+>436d	49 19					.word xt_x28literalx29
+>436f	09 00					.word 9
+>4371	c4 2f					.word xt_over
+>4373	f2 3c					.word xt_x3c
+>4375	8d 37					.word xt_x28branch0x29
+>4377	7f 43					.word l_278
+>4379	49 19					.word xt_x28literalx29
+>437b	07 00					.word 7
+>437d	e5 32					.word xt_x2b
+.437f					l_278:
+>437f	49 19					.word xt_x28literalx29
+>4381	30 00					.word 48
+>4383	e5 32					.word xt_x2b
+>4385	3c 43					.word xt_hold
+>4387	1c 16					.word i_exit
+.4389					w_x23s:
+>4389	02					.byte $02
+>438a	23 73					.text '#s'
+>438c						.fill 14
+>439a	4d 43					.word w_x23
+.439c					xt_x23s:
+.439c	4c 24 16	jmp $1624		jmp i_enter
+.439f					l_279:
+>439f	60 43					.word xt_x23
+>43a1	c4 2f					.word xt_over
+>43a3	c4 2f					.word xt_over
+>43a5	f8 35					.word xt_or
+>43a7	89 36					.word xt_0x3d
+>43a9	8d 37					.word xt_x28branch0x29
+>43ab	9f 43					.word l_279
+.43ad					l_280:
+>43ad	1c 16					.word i_exit
+.43af					w_sign:
+>43af	04					.byte $04
+>43b0	73 69 67 6e				.text 'sign'
+>43b4						.fill 12
+>43c0	89 43					.word w_x23s
+.43c2					xt_sign:
+.43c2	4c 24 16	jmp $1624		jmp i_enter
+>43c5	9a 3c					.word xt_rot
+>43c7	62 36					.word xt_0x3c
+>43c9	8d 37					.word xt_x28branch0x29
+>43cb	d3 43					.word l_281
+>43cd	49 19					.word xt_x28literalx29
+>43cf	2d 00					.word 45
+>43d1	3c 43					.word xt_hold
+.43d3					l_281:
+>43d3	1c 16					.word i_exit
+.43d5					w_x23x3e:
+>43d5	02					.byte $02
+>43d6	23 3e					.text '#>'
+>43d8						.fill 14
+>43e6	af 43					.word w_sign
+.43e8					xt_x23x3e:
+.43e8	4c 24 16	jmp $1624		jmp i_enter
+>43eb	d6 3c					.word xt_2drop
+>43ed	4a 3c					.word xt_hld
+>43ef	ad 30					.word xt_x40
+>43f1	c4 3a					.word xt_pad
+>43f3	c4 2f					.word xt_over
+>43f5	70 33					.word xt_x2d
+>43f7	1c 16					.word i_exit
+.43f9					w_dx2er:
+>43f9	03					.byte $03
+>43fa	64 2e 72				.text 'd.r'
+>43fd						.fill 13
+>440a	d5 43					.word w_x23x3e
+.440c					xt_dx2er:
+.440c	4c 24 16	jmp $1624		jmp i_enter
+>440f	0e 30					.word xt_x3er
+>4411	c4 2f					.word xt_over
+>4413	60 2f					.word xt_swap
+>4415	8a 3d					.word xt_dabs
+>4417	1e 43					.word xt_x3cx23
+>4419	9c 43					.word xt_x23s
+>441b	c2 43					.word xt_sign
+>441d	e8 43					.word xt_x23x3e
+>441f	2c 30					.word xt_rx3e
+>4421	c4 2f					.word xt_over
+>4423	70 33					.word xt_x2d
+>4425	2e 40					.word xt_spaces
+>4427	a6 3f					.word xt_type
+>4429	1c 16					.word i_exit
+.442b					w_dx2e:
+>442b	02					.byte $02
+>442c	64 2e					.text 'd.'
+>442e						.fill 14
+>443c	f9 43					.word w_dx2er
+.443e					xt_dx2e:
+.443e	4c 24 16	jmp $1624		jmp i_enter
+>4441	b5 18					.word xt_0
+>4443	0c 44					.word xt_dx2er
+>4445	1c 16					.word i_exit
+.4447					w_x2er:
+>4447	02					.byte $02
+>4448	2e 72					.text '.r'
+>444a						.fill 14
+>4458	2b 44					.word w_dx2e
+.445a					xt_x2er:
+.445a	4c 24 16	jmp $1624		jmp i_enter
+>445d	0e 30					.word xt_x3er
+>445f	25 35					.word xt_sx3ed
+>4461	2c 30					.word xt_rx3e
+>4463	0c 44					.word xt_dx2er
+>4465	1c 16					.word i_exit
+.4467					w_x3f:
+>4467	01					.byte $01
+>4468	3f					.text '?'
+>4469						.fill 15
+>4478	47 44					.word w_x2er
+.447a					xt_x3f:
+.447a	4c 24 16	jmp $1624		jmp i_enter
+>447d	ad 30					.word xt_x40
+>447f	22 42					.word xt_x2e
+>4481	1c 16					.word i_exit
+.4483					w_dump:
+>4483	04					.byte $04
+>4484	64 75 6d 70				.text 'dump'
+>4488						.fill 12
+>4494	67 44					.word w_x3f
+.4496					xt_dump:
+.4496	4c 24 16	jmp $1624		jmp i_enter
+>4499	b5 18					.word xt_0
+>449b	ca 37					.word xt_x28dox29
+.449d					l_282:
+>449d	98 18					.word xt_cr
+>449f	40 2f					.word xt_dup
+>44a1	b5 18					.word xt_0
+>44a3	60 2f					.word xt_swap
 >44a5	49 19					.word xt_x28literalx29
->44a7	08 00					.word 8
->44a9	b5 18					.word xt_0
->44ab	ca 37					.word xt_x28dox29
-.44ad					l_283:
->44ad	40 2f					.word xt_dup
->44af	ad 30					.word xt_x40
->44b1	b5 18					.word xt_0
->44b3	60 2f					.word xt_swap
->44b5	49 19					.word xt_x28literalx29
->44b7	05 00					.word 5
->44b9	e4 43					.word xt_dx2er
->44bb	70 35					.word xt_2x2b
->44bd	47 38					.word xt_x28loopx29
->44bf	ad 44					.word l_283
-.44c1					l_284:
+>44a7	05 00					.word 5
+>44a9	0c 44					.word xt_dx2er
+>44ab	49 19					.word xt_x28literalx29
+>44ad	3a 00					.word 58
+>44af	29 18					.word xt_emit
+>44b1	49 19					.word xt_x28literalx29
+>44b3	08 00					.word 8
+>44b5	b5 18					.word xt_0
+>44b7	ca 37					.word xt_x28dox29
+.44b9					l_284:
+>44b9	40 2f					.word xt_dup
+>44bb	ad 30					.word xt_x40
+>44bd	b5 18					.word xt_0
+>44bf	60 2f					.word xt_swap
 >44c1	49 19					.word xt_x28literalx29
->44c3	08 00					.word 8
->44c5	a8 38					.word xt_x28x2bloopx29
->44c7	91 44					.word l_281
-.44c9					l_282:
->44c9	28 2f					.word xt_drop
->44cb	1c 16					.word i_exit
-.44cd					w_interpret:
->44cd	09					.byte $09
->44ce	69 6e 74 65 72 70 72 65			.text 'interpret'
->44d6	74
->44d7						.fill 7
->44de	77 44					.word w_dump
-.44e0					xt_interpret:
-.44e0	4c 24 16	jmp $1624		jmp i_enter
-.44e3					l_296:
->44e3	ea 3b					.word xt_tib
->44e5	ad 30					.word xt_x40
->44e7	d2 3b					.word xt_x3ein
->44e9	ad 30					.word xt_x40
->44eb	e5 32					.word xt_x2b
->44ed	f3 30					.word xt_cx40
->44ef	8d 37					.word xt_x28branch0x29
->44f1	3a 45					.word l_297
->44f3	82 41					.word xt_x2dfind
->44f5	8d 37					.word xt_x28branch0x29
->44f7	13 45					.word l_298
->44f9	72 3b					.word xt_state
->44fb	ad 30					.word xt_x40
->44fd	f2 3c					.word xt_x3c
->44ff	8d 37					.word xt_x28branch0x29
->4501	0b 45					.word l_299
->4503	76 3e					.word xt_cfa
->4505	08 3f					.word xt_x2c
->4507	69 37					.word xt_x28branchx29
->4509	0f 45					.word l_300
-.450b					l_299:
->450b	76 3e					.word xt_cfa
->450d	89 39					.word xt_execute
-.450f					l_300:
->450f	69 37					.word xt_x28branchx29
->4511	36 45					.word l_301
-.4513					l_298:
->4513	98 18					.word xt_cr
->4515	e8 3f					.word xt_x28x2ex22x29
->4517	0a 6e 6f 74 20 66 6f 75			.ptext "not found:"
->451f	6e 64 3a
->4522	10 40					.word xt_space
->4524	d0 3e					.word xt_here
->4526	86 3f					.word xt_count
->4528	a6 3f					.word xt_type
->452a	98 18					.word xt_cr
->452c	d0 3e					.word xt_here
->452e	7e 42					.word xt_number
->4530	60 2f					.word xt_swap
->4532	28 2f					.word xt_drop
->4534	05 17					.word xt_halt
-.4536					l_301:
->4536	69 37					.word xt_x28branchx29
->4538	e3 44					.word l_296
-.453a					l_297:
->453a	1c 16					.word i_exit
-.453c					w_catch:
->453c	05					.byte $05
->453d	63 61 74 63 68				.text 'catch'
->4542						.fill 11
->454d	cd 44					.word w_interpret
-.454f					xt_catch:
-.454f	4c 24 16	jmp $1624		jmp i_enter
->4552	f1 17					.word xt_spx40
->4554	0e 30					.word xt_x3er
->4556	62 3c					.word xt_handler
->4558	ad 30					.word xt_x40
->455a	0e 30					.word xt_x3er
->455c	aa 17					.word xt_rpx40
->455e	62 3c					.word xt_handler
->4560	81 30					.word xt_x21
->4562	89 39					.word xt_execute
->4564	2c 30					.word xt_rx3e
->4566	62 3c					.word xt_handler
->4568	81 30					.word xt_x21
->456a	2c 30					.word xt_rx3e
->456c	28 2f					.word xt_drop
->456e	b5 18					.word xt_0
->4570	1c 16					.word i_exit
-.4572					w_throw:
->4572	05					.byte $05
->4573	74 68 72 6f 77				.text 'throw'
->4578						.fill 11
->4583	3c 45					.word w_catch
-.4585					xt_throw:
-.4585	4c 24 16	jmp $1624		jmp i_enter
->4588	7a 3c					.word xt_x3fdup
->458a	8d 37					.word xt_x28branch0x29
->458c	a6 45					.word l_285
->458e	62 3c					.word xt_handler
->4590	ad 30					.word xt_x40
->4592	d1 17					.word xt_rpx21
->4594	2c 30					.word xt_rx3e
->4596	62 3c					.word xt_handler
->4598	81 30					.word xt_x21
->459a	2c 30					.word xt_rx3e
->459c	60 2f					.word xt_swap
->459e	0e 30					.word xt_x3er
->45a0	10 18					.word xt_spx21
->45a2	28 2f					.word xt_drop
->45a4	2c 30					.word xt_rx3e
-.45a6					l_285:
->45a6	1c 16					.word i_exit
-.45a8					w_quit:
->45a8	04					.byte $04
->45a9	71 75 69 74				.text 'quit'
->45ad						.fill 12
->45b9	72 45					.word w_throw
-.45bb					xt_quit:
-.45bb	4c 24 16	jmp $1624		jmp i_enter
->45be	d8 41					.word xt_hex
->45c0	db 39					.word xt_forth
->45c2	48 3f					.word xt_definitions
->45c4	b5 18					.word xt_0
->45c6	72 3b					.word xt_state
->45c8	81 30					.word xt_x21
-.45ca					l_286:
->45ca	98 18					.word xt_cr
->45cc	72 3b					.word xt_state
->45ce	ad 30					.word xt_x40
->45d0	89 36					.word xt_0x3d
->45d2	8d 37					.word xt_x28branch0x29
->45d4	dd 45					.word l_288
->45d6	e8 3f					.word xt_x28x2ex22x29
->45d8	02 6f 6b				.ptext "ok"
->45db	98 18					.word xt_cr
-.45dd					l_288:
->45dd	dc 40					.word xt_query
->45df	98 18					.word xt_cr
->45e1	e0 44					.word xt_interpret
->45e3	69 37					.word xt_x28branchx29
->45e5	ca 45					.word l_286
-.45e7					l_287:
->45e7	1c 16					.word i_exit
-.45e9					w_error:
->45e9	05					.byte $05
->45ea	65 72 72 6f 72				.text 'error'
->45ef						.fill 11
->45fa	a8 45					.word w_quit
-.45fc					xt_error:
-.45fc	4c 24 16	jmp $1624		jmp i_enter
->45ff	40 2f					.word xt_dup
->4601	89 36					.word xt_0x3d
->4603	40 36					.word xt_not
->4605	8d 37					.word xt_x28branch0x29
->4607	24 46					.word l_291
->4609	d0 3e					.word xt_here
->460b	86 3f					.word xt_count
->460d	a6 3f					.word xt_type
->460f	49 19					.word xt_x28literalx29
->4611	17 46					.word l_292
->4613	69 37					.word xt_x28branchx29
->4615	1e 46					.word l_293
-.4617					l_292:
+>44c3	05 00					.word 5
+>44c5	0c 44					.word xt_dx2er
+>44c7	70 35					.word xt_2x2b
+>44c9	47 38					.word xt_x28loopx29
+>44cb	b9 44					.word l_284
+.44cd					l_285:
+>44cd	49 19					.word xt_x28literalx29
+>44cf	08 00					.word 8
+>44d1	a8 38					.word xt_x28x2bloopx29
+>44d3	9d 44					.word l_282
+.44d5					l_283:
+>44d5	28 2f					.word xt_drop
+>44d7	1c 16					.word i_exit
+.44d9					w_interpret:
+>44d9	09					.byte $09
+>44da	69 6e 74 65 72 70 72 65			.text 'interpret'
+>44e2	74
+>44e3						.fill 7
+>44ea	83 44					.word w_dump
+.44ec					xt_interpret:
+.44ec	4c 24 16	jmp $1624		jmp i_enter
+.44ef					l_295:
+>44ef	ea 3b					.word xt_tib
+>44f1	ad 30					.word xt_x40
+>44f3	d2 3b					.word xt_x3ein
+>44f5	ad 30					.word xt_x40
+>44f7	e5 32					.word xt_x2b
+>44f9	f3 30					.word xt_cx40
+>44fb	8d 37					.word xt_x28branch0x29
+>44fd	3d 45					.word l_296
+>44ff	8c 41					.word xt_x2dfind
+>4501	8d 37					.word xt_x28branch0x29
+>4503	1f 45					.word l_297
+>4505	72 3b					.word xt_state
+>4507	ad 30					.word xt_x40
+>4509	f2 3c					.word xt_x3c
+>450b	8d 37					.word xt_x28branch0x29
+>450d	17 45					.word l_298
+>450f	76 3e					.word xt_cfa
+>4511	08 3f					.word xt_x2c
+>4513	69 37					.word xt_x28branchx29
+>4515	1b 45					.word l_299
+.4517					l_298:
+>4517	76 3e					.word xt_cfa
+>4519	89 39					.word xt_execute
+.451b					l_299:
+>451b	69 37					.word xt_x28branchx29
+>451d	39 45					.word l_300
+.451f					l_297:
+>451f	d0 3e					.word xt_here
+>4521	a4 42					.word xt_number
+>4523	60 2f					.word xt_swap
+>4525	28 2f					.word xt_drop
+>4527	72 3b					.word xt_state
+>4529	ad 30					.word xt_x40
+>452b	8d 37					.word xt_x28branch0x29
+>452d	39 45					.word l_301
+>452f	49 19					.word xt_x28literalx29
+>4531	49 19					.word xt_x28literalx29
+>4533	08 3f					.word xt_x2c
+>4535	08 3f					.word xt_x2c
+>4537	05 17					.word xt_halt
+.4539					l_301:
+.4539					l_300:
+>4539	69 37					.word xt_x28branchx29
+>453b	ef 44					.word l_295
+.453d					l_296:
+>453d	1c 16					.word i_exit
+.453f					w_catch:
+>453f	05					.byte $05
+>4540	63 61 74 63 68				.text 'catch'
+>4545						.fill 11
+>4550	d9 44					.word w_interpret
+.4552					xt_catch:
+.4552	4c 24 16	jmp $1624		jmp i_enter
+>4555	f1 17					.word xt_spx40
+>4557	0e 30					.word xt_x3er
+>4559	62 3c					.word xt_handler
+>455b	ad 30					.word xt_x40
+>455d	0e 30					.word xt_x3er
+>455f	aa 17					.word xt_rpx40
+>4561	62 3c					.word xt_handler
+>4563	81 30					.word xt_x21
+>4565	89 39					.word xt_execute
+>4567	2c 30					.word xt_rx3e
+>4569	62 3c					.word xt_handler
+>456b	81 30					.word xt_x21
+>456d	2c 30					.word xt_rx3e
+>456f	28 2f					.word xt_drop
+>4571	b5 18					.word xt_0
+>4573	1c 16					.word i_exit
+.4575					w_throw:
+>4575	05					.byte $05
+>4576	74 68 72 6f 77				.text 'throw'
+>457b						.fill 11
+>4586	3f 45					.word w_catch
+.4588					xt_throw:
+.4588	4c 24 16	jmp $1624		jmp i_enter
+>458b	7a 3c					.word xt_x3fdup
+>458d	8d 37					.word xt_x28branch0x29
+>458f	a9 45					.word l_286
+>4591	62 3c					.word xt_handler
+>4593	ad 30					.word xt_x40
+>4595	d1 17					.word xt_rpx21
+>4597	2c 30					.word xt_rx3e
+>4599	62 3c					.word xt_handler
+>459b	81 30					.word xt_x21
+>459d	2c 30					.word xt_rx3e
+>459f	60 2f					.word xt_swap
+>45a1	0e 30					.word xt_x3er
+>45a3	10 18					.word xt_spx21
+>45a5	28 2f					.word xt_drop
+>45a7	2c 30					.word xt_rx3e
+.45a9					l_286:
+>45a9	1c 16					.word i_exit
+.45ab					w_quit:
+>45ab	04					.byte $04
+>45ac	71 75 69 74				.text 'quit'
+>45b0						.fill 12
+>45bc	75 45					.word w_throw
+.45be					xt_quit:
+.45be	4c 24 16	jmp $1624		jmp i_enter
+>45c1	db 39					.word xt_forth
+>45c3	48 3f					.word xt_definitions
+>45c5	b5 18					.word xt_0
+>45c7	72 3b					.word xt_state
+>45c9	81 30					.word xt_x21
+.45cb					l_287:
+>45cb	98 18					.word xt_cr
+>45cd	72 3b					.word xt_state
+>45cf	ad 30					.word xt_x40
+>45d1	89 36					.word xt_0x3d
+>45d3	8d 37					.word xt_x28branch0x29
+>45d5	e3 45					.word l_289
+>45d7	98 18					.word xt_cr
+>45d9	49 19					.word xt_x28literalx29
+>45db	3e 00					.word 62
+>45dd	29 18					.word xt_emit
+>45df	12 3b					.word xt_bl
+>45e1	29 18					.word xt_emit
+.45e3					l_289:
+>45e3	dc 40					.word xt_query
+>45e5	98 18					.word xt_cr
+>45e7	ec 44					.word xt_interpret
+>45e9	69 37					.word xt_x28branchx29
+>45eb	cb 45					.word l_287
+.45ed					l_288:
+>45ed	1c 16					.word i_exit
+.45ef					w_error:
+>45ef	05					.byte $05
+>45f0	65 72 72 6f 72				.text 'error'
+>45f5						.fill 11
+>4600	ab 45					.word w_quit
+.4602					xt_error:
+.4602	4c 24 16	jmp $1624		jmp i_enter
+>4605	40 2f					.word xt_dup
+>4607	89 36					.word xt_0x3d
+>4609	40 36					.word xt_not
+>460b	8d 37					.word xt_x28branch0x29
+>460d	20 46					.word l_290
+>460f	d0 3e					.word xt_here
+>4611	86 3f					.word xt_count
+>4613	a6 3f					.word xt_type
+>4615	e8 3f					.word xt_x28x2ex22x29
 >4617	06 3f 20 4d 53 47 23			.ptext "? MSG#"
-.461e					l_293:
->461e	86 3f					.word xt_count
->4620	a6 3f					.word xt_type
->4622	32 44					.word xt_x2e
-.4624					l_291:
->4624	bb 45					.word xt_quit
->4626	1c 16					.word i_exit
-.4628					w_initrandom:
->4628	0a					.byte $0A
->4629	69 6e 69 74 72 61 6e 64			.text 'initrandom'
->4631	6f 6d
->4633						.fill 6
->4639	e9 45					.word w_error
-.463b					xt_initrandom:
-.463b	4c 24 16	jmp $1624		jmp i_enter
->463e	d1 18					.word xt_1
->4640	49 19					.word xt_x28literalx29
->4642	a6 d6					.word 54950
->4644	d5 30					.word xt_cx21
->4646	1c 16					.word i_exit
-.4648					w_random:
->4648	06					.byte $06
->4649	72 61 6e 64 6f 6d			.text 'random'
->464f						.fill 10
->4659	28 46					.word w_initrandom
-.465b					xt_random:
-.465b	4c 24 16	jmp $1624		jmp i_enter
->465e	49 19					.word xt_x28literalx29
->4660	a4 d6					.word 54948
->4662	ad 30					.word xt_x40
->4664	1c 16					.word i_exit
-.4666					w_maze:
->4666	04					.byte $04
->4667	6d 61 7a 65				.text 'maze'
->466b						.fill 12
->4677	48 46					.word w_random
-.4679					xt_maze:
-.4679	4c 24 16	jmp $1624		jmp i_enter
->467c	3b 46					.word xt_initrandom
-.467e					l_304:
->467e	5b 46					.word xt_random
->4680	d1 18					.word xt_1
->4682	d4 35					.word xt_and
->4684	49 19					.word xt_x28literalx29
->4686	cd 00					.word 205
->4688	e5 32					.word xt_x2b
->468a	29 18					.word xt_emit
->468c	69 37					.word xt_x28branchx29
->468e	7e 46					.word l_304
-.4690					l_305:
->4690	1c 16					.word i_exit
-.4692					w_cold:
->4692	04					.byte $04
->4693	63 6f 6c 64				.text 'cold'
->4697						.fill 12
->46a3	66 46					.word w_maze
-.46a5					xt_cold:
-.46a5	4c 24 16	jmp $1624		jmp i_enter
->46a8	db 39					.word xt_forth
->46aa	48 3f					.word xt_definitions
->46ac	2a 3b					.word xt_s0
->46ae	ad 30					.word xt_x40
->46b0	10 18					.word xt_spx21
->46b2	42 3b					.word xt_r0
->46b4	ad 30					.word xt_x40
->46b6	d1 17					.word xt_rpx21
->46b8	b5 18					.word xt_0
->46ba	1a 3c					.word xt_blk
->46bc	81 30					.word xt_x21
->46be	49 19					.word xt_x28literalx29
->46c0	00 50					.word 20480
->46c2	ba 3b					.word xt_dp
->46c4	81 30					.word xt_x21
->46c6	49 19					.word xt_x28literalx29
->46c8	00 bf					.word 48896
->46ca	ea 3b					.word xt_tib
->46cc	81 30					.word xt_x21
->46ce	e8 3f					.word xt_x28x2ex22x29
->46d0	1e 57 65 6c 63 6f 6d 65			.ptext "Welcome to MetaForth v00.00.00"
->46d8	20 74 6f 20 4d 65 74 61 46 6f 72 74 68 20 76 30
->46e8	30 2e 30 30 2e 30 30
->46ef	98 18					.word xt_cr
->46f1	bb 45					.word xt_quit
->46f3	1c 16					.word i_exit
+>461e	22 42					.word xt_x2e
+.4620					l_290:
+>4620	be 45					.word xt_quit
+>4622	1c 16					.word i_exit
+.4624					w_initrandom:
+>4624	0a					.byte $0A
+>4625	69 6e 69 74 72 61 6e 64			.text 'initrandom'
+>462d	6f 6d
+>462f						.fill 6
+>4635	ef 45					.word w_error
+.4637					xt_initrandom:
+.4637	4c 24 16	jmp $1624		jmp i_enter
+>463a	d1 18					.word xt_1
+>463c	49 19					.word xt_x28literalx29
+>463e	a6 d6					.word 54950
+>4640	d5 30					.word xt_cx21
+>4642	1c 16					.word i_exit
+.4644					w_random:
+>4644	06					.byte $06
+>4645	72 61 6e 64 6f 6d			.text 'random'
+>464b						.fill 10
+>4655	24 46					.word w_initrandom
+.4657					xt_random:
+.4657	4c 24 16	jmp $1624		jmp i_enter
+>465a	49 19					.word xt_x28literalx29
+>465c	a4 d6					.word 54948
+>465e	ad 30					.word xt_x40
+>4660	1c 16					.word i_exit
+.4662					w_iox2dpage:
+>4662	07					.byte $07
+>4663	69 6f 2d 70 61 67 65			.text 'io-page'
+>466a						.fill 9
+>4673	44 46					.word w_random
+.4675					xt_iox2dpage:
+.4675	4c 06 37	jmp $3706		jmp xt_x28constantx29
+>4678	01 00					.word 0001
+.467a					w_setx2diox2dtext:
+>467a	0b					.byte $0B
+>467b	73 65 74 2d 69 6f 2d 74			.text 'set-io-text'
+>4683	65 78 74
+>4686						.fill 5
+>468b	62 46					.word w_iox2dpage
+.468d					xt_setx2diox2dtext:
+.468d	4c 24 16	jmp $1624		jmp i_enter
+>4690	ef 18					.word xt_2
+>4692	75 46					.word xt_iox2dpage
+>4694	d5 30					.word xt_cx21
+>4696	1c 16					.word i_exit
+.4698					w_setx2diox2dcolor:
+>4698	0c					.byte $0C
+>4699	73 65 74 2d 69 6f 2d 63			.text 'set-io-color'
+>46a1	6f 6c 6f 72
+>46a5						.fill 4
+>46a9	7a 46					.word w_setx2diox2dtext
+.46ab					xt_setx2diox2dcolor:
+.46ab	4c 24 16	jmp $1624		jmp i_enter
+>46ae	49 19					.word xt_x28literalx29
+>46b0	03 00					.word 3
+>46b2	75 46					.word xt_iox2dpage
+>46b4	d5 30					.word xt_cx21
+>46b6	1c 16					.word i_exit
+.46b8					w_defx2dtextx2dfgx2dcolor:
+>46b8	10					.byte $10
+>46b9	64 65 66 2d 74 65 78 74			.text 'def-text-fg-colo'
+>46c1	2d 66 67 2d 63 6f 6c 6f
+>46c9						.fill 0
+>46c9	98 46					.word w_setx2diox2dcolor
+.46cb					xt_defx2dtextx2dfgx2dcolor:
+.46cb	4c 24 16	jmp $1624		jmp i_enter
+>46ce	49 19					.word xt_x28literalx29
+>46d0	0f 00					.word 15
+>46d2	d4 35					.word xt_and
+>46d4	75 46					.word xt_iox2dpage
+>46d6	f3 30					.word xt_cx40
+>46d8	0e 30					.word xt_x3er
+>46da	b5 18					.word xt_0
+>46dc	75 46					.word xt_iox2dpage
+>46de	d5 30					.word xt_cx21
+>46e0	49 19					.word xt_x28literalx29
+>46e2	04 00					.word 4
+>46e4	cd 33					.word xt_x2a
+>46e6	49 19					.word xt_x28literalx29
+>46e8	00 d8					.word 55296
+>46ea	e5 32					.word xt_x2b
+>46ec	40 2f					.word xt_dup
+>46ee	49 19					.word xt_x28literalx29
+>46f0	03 00					.word 3
+>46f2	e5 32					.word xt_x2b
+>46f4	60 2f					.word xt_swap
+>46f6	ca 37					.word xt_x28dox29
+.46f8					l_302:
+>46f8	1c 39					.word xt_i
+>46fa	d5 30					.word xt_cx21
+>46fc	47 38					.word xt_x28loopx29
+>46fe	f8 46					.word l_302
+.4700					l_303:
+>4700	2c 30					.word xt_rx3e
+>4702	75 46					.word xt_iox2dpage
+>4704	d5 30					.word xt_cx21
+>4706	1c 16					.word i_exit
+.4708					w_defx2dtextx2dbgx2dcolor:
+>4708	10					.byte $10
+>4709	64 65 66 2d 74 65 78 74			.text 'def-text-bg-colo'
+>4711	2d 62 67 2d 63 6f 6c 6f
+>4719						.fill 0
+>4719	b8 46					.word w_defx2dtextx2dfgx2dcolor
+.471b					xt_defx2dtextx2dbgx2dcolor:
+.471b	4c 24 16	jmp $1624		jmp i_enter
+>471e	49 19					.word xt_x28literalx29
+>4720	0f 00					.word 15
+>4722	d4 35					.word xt_and
+>4724	75 46					.word xt_iox2dpage
+>4726	f3 30					.word xt_cx40
+>4728	0e 30					.word xt_x3er
+>472a	b5 18					.word xt_0
+>472c	75 46					.word xt_iox2dpage
+>472e	d5 30					.word xt_cx21
+>4730	49 19					.word xt_x28literalx29
+>4732	04 00					.word 4
+>4734	cd 33					.word xt_x2a
+>4736	49 19					.word xt_x28literalx29
+>4738	40 d8					.word 55360
+>473a	e5 32					.word xt_x2b
+>473c	40 2f					.word xt_dup
+>473e	49 19					.word xt_x28literalx29
+>4740	03 00					.word 3
+>4742	e5 32					.word xt_x2b
+>4744	60 2f					.word xt_swap
+>4746	ca 37					.word xt_x28dox29
+.4748					l_304:
+>4748	1c 39					.word xt_i
+>474a	d5 30					.word xt_cx21
+>474c	47 38					.word xt_x28loopx29
+>474e	48 47					.word l_304
+.4750					l_305:
+>4750	2c 30					.word xt_rx3e
+>4752	75 46					.word xt_iox2dpage
+>4754	d5 30					.word xt_cx21
+>4756	1c 16					.word i_exit
+.4758					w_setx2dborderx2dcolor:
+>4758	10					.byte $10
+>4759	73 65 74 2d 62 6f 72 64			.text 'set-border-color'
+>4761	65 72 2d 63 6f 6c 6f 72
+>4769						.fill 0
+>4769	08 47					.word w_defx2dtextx2dbgx2dcolor
+.476b					xt_setx2dborderx2dcolor:
+.476b	4c 24 16	jmp $1624		jmp i_enter
+>476e	75 46					.word xt_iox2dpage
+>4770	f3 30					.word xt_cx40
+>4772	0e 30					.word xt_x3er
+>4774	b5 18					.word xt_0
+>4776	75 46					.word xt_iox2dpage
+>4778	d5 30					.word xt_cx21
+>477a	49 19					.word xt_x28literalx29
+>477c	05 d0					.word 53253
+>477e	d5 30					.word xt_cx21
+>4780	49 19					.word xt_x28literalx29
+>4782	06 d0					.word 53254
+>4784	d5 30					.word xt_cx21
+>4786	49 19					.word xt_x28literalx29
+>4788	07 d0					.word 53255
+>478a	d5 30					.word xt_cx21
+>478c	2c 30					.word xt_rx3e
+>478e	75 46					.word xt_iox2dpage
+>4790	d5 30					.word xt_cx21
+>4792	1c 16					.word i_exit
+.4794					w_setx2dborderx2dsize:
+>4794	0f					.byte $0F
+>4795	73 65 74 2d 62 6f 72 64			.text 'set-border-size'
+>479d	65 72 2d 73 69 7a 65
+>47a4						.fill 1
+>47a5	58 47					.word w_setx2dborderx2dcolor
+.47a7					xt_setx2dborderx2dsize:
+.47a7	4c 24 16	jmp $1624		jmp i_enter
+>47aa	75 46					.word xt_iox2dpage
+>47ac	f3 30					.word xt_cx40
+>47ae	0e 30					.word xt_x3er
+>47b0	b5 18					.word xt_0
+>47b2	75 46					.word xt_iox2dpage
+>47b4	d5 30					.word xt_cx21
+>47b6	c4 2f					.word xt_over
+>47b8	c4 2f					.word xt_over
+>47ba	f8 35					.word xt_or
+>47bc	8d 37					.word xt_x28branch0x29
+>47be	ee 47					.word l_306
+>47c0	49 19					.word xt_x28literalx29
+>47c2	1f 00					.word 31
+>47c4	d4 35					.word xt_and
+>47c6	49 19					.word xt_x28literalx29
+>47c8	09 d0					.word 53257
+>47ca	d5 30					.word xt_cx21
+>47cc	49 19					.word xt_x28literalx29
+>47ce	1f 00					.word 31
+>47d0	d4 35					.word xt_and
+>47d2	49 19					.word xt_x28literalx29
+>47d4	08 d0					.word 53256
+>47d6	d5 30					.word xt_cx21
+>47d8	49 19					.word xt_x28literalx29
+>47da	04 d0					.word 53252
+>47dc	f3 30					.word xt_cx40
+>47de	49 19					.word xt_x28literalx29
+>47e0	01 00					.word 1
+>47e2	f8 35					.word xt_or
+>47e4	49 19					.word xt_x28literalx29
+>47e6	04 d0					.word 53252
+>47e8	d5 30					.word xt_cx21
+>47ea	69 37					.word xt_x28branchx29
+>47ec	02 48					.word l_307
+.47ee					l_306:
+>47ee	49 19					.word xt_x28literalx29
+>47f0	04 d0					.word 53252
+>47f2	f3 30					.word xt_cx40
+>47f4	49 19					.word xt_x28literalx29
+>47f6	fe 00					.word 254
+>47f8	d4 35					.word xt_and
+>47fa	49 19					.word xt_x28literalx29
+>47fc	04 d0					.word 53252
+>47fe	d5 30					.word xt_cx21
+>4800	d6 3c					.word xt_2drop
+.4802					l_307:
+>4802	2c 30					.word xt_rx3e
+>4804	75 46					.word xt_iox2dpage
+>4806	d5 30					.word xt_cx21
+>4808	1c 16					.word i_exit
+.480a					w_maze:
+>480a	04					.byte $04
+>480b	6d 61 7a 65				.text 'maze'
+>480f						.fill 12
+>481b	94 47					.word w_setx2dborderx2dsize
+.481d					xt_maze:
+.481d	4c 24 16	jmp $1624		jmp i_enter
+>4820	37 46					.word xt_initrandom
+.4822					l_308:
+>4822	57 46					.word xt_random
+>4824	d1 18					.word xt_1
+>4826	d4 35					.word xt_and
+>4828	49 19					.word xt_x28literalx29
+>482a	cd 00					.word 205
+>482c	e5 32					.word xt_x2b
+>482e	29 18					.word xt_emit
+>4830	69 37					.word xt_x28branchx29
+>4832	22 48					.word l_308
+.4834					l_309:
+>4834	1c 16					.word i_exit
+.4836					w_cold:
+>4836	04					.byte $04
+>4837	63 6f 6c 64				.text 'cold'
+>483b						.fill 12
+>4847	0a 48					.word w_maze
+.4849					xt_cold:
+.4849	4c 24 16	jmp $1624		jmp i_enter
+>484c	db 39					.word xt_forth
+>484e	48 3f					.word xt_definitions
+>4850	2a 3b					.word xt_s0
+>4852	ad 30					.word xt_x40
+>4854	10 18					.word xt_spx21
+>4856	42 3b					.word xt_r0
+>4858	ad 30					.word xt_x40
+>485a	d1 17					.word xt_rpx21
+>485c	b5 18					.word xt_0
+>485e	1a 3c					.word xt_blk
+>4860	81 30					.word xt_x21
+>4862	49 19					.word xt_x28literalx29
+>4864	00 50					.word 20480
+>4866	ba 3b					.word xt_dp
+>4868	81 30					.word xt_x21
+>486a	49 19					.word xt_x28literalx29
+>486c	00 bf					.word 48896
+>486e	ea 3b					.word xt_tib
+>4870	81 30					.word xt_x21
+>4872	c2 41					.word xt_decimal
+>4874	e8 3f					.word xt_x28x2ex22x29
+>4876	1e 57 65 6c 63 6f 6d 65			.ptext "Welcome to MetaForth v00.00.00"
+>487e	20 74 6f 20 4d 65 74 61 46 6f 72 74 68 20 76 30
+>488e	30 2e 30 30 2e 30 30
+>4895	98 18					.word xt_cr
+>4897	49 19					.word xt_x28literalx29
+>4899	ff 00					.word 255
+>489b	49 19					.word xt_x28literalx29
+>489d	ff 00					.word 255
+>489f	b5 18					.word xt_0
+>48a1	49 19					.word xt_x28literalx29
+>48a3	0f 00					.word 15
+>48a5	cb 46					.word xt_defx2dtextx2dfgx2dcolor
+>48a7	49 19					.word xt_x28literalx29
+>48a9	80 00					.word 128
+>48ab	49 19					.word xt_x28literalx29
+>48ad	80 00					.word 128
+>48af	b5 18					.word xt_0
+>48b1	6b 47					.word xt_setx2dborderx2dcolor
+>48b3	49 19					.word xt_x28literalx29
+>48b5	0a 00					.word 10
+>48b7	49 19					.word xt_x28literalx29
+>48b9	0a 00					.word 10
+>48bb	a7 47					.word xt_setx2dborderx2dsize
+>48bd	be 45					.word xt_quit
+>48bf	1c 16					.word i_exit
 
 ;******  Processing file: mf_post_65c02.asm
 
-.46f5					endcode:
+.48c1					endcode:
 
 ;******  Return to file: forth.asm
 

@@ -4159,10 +4159,11 @@ xt_digit:
 	cpy #$ff                ; Have we checked the first digit?
 	bne loop                ; No: check against this digit
 	; We were not able to convert the digit
-	stz pstack+5,x          ; Return false
-	stz pstack+4,x
+	not_found:
 	inx                     ; Clean up the stack
 	inx
+	stz pstack+3,x          ; Return false
+	stz pstack+2,x
 	jmp next
 	found:
 	stz pstack+5,x          ; Return the value of the digit
@@ -5208,6 +5209,11 @@ xt_word:
 	.word xt_1x2b
 	.word xt_rx3e
 	.word xt_cmove
+	.word xt_bl
+	.word xt_here
+	.word xt_count
+	.word xt_x2b
+	.word xt_cx21
 	.word i_exit
 	.bend
 ; END word
@@ -5225,6 +5231,7 @@ xt_word:
 ; ( addr3 addr4 : Starting address in the dictionary space )
 ; ( addr3 addr4 count )
 ; ( copy the word to the dictionary space )
+; ( Terminate word with a blank )
 ; ( -- pfa b tf | 0 )
 ; BEGIN -find
 w_x2dfind:
@@ -5310,18 +5317,32 @@ xt_octal:
 	.bend
 ; END octal
 
+; BEGIN .
+w_x2e:
+	.byte $01
+	.text '.'
+	.fill 15
+	.word w_octal
+xt_x2e:
+	.block
+	jmp i_enter
+	.word xt_sx3ed
+	.word xt_dx2e
+	.word i_exit
+	.bend
+; END .
+
 ; ( d1 addr1 -- d2 addr2 )
 ; BEGIN (number)
 w_x28numberx29:
 	.byte $08
 	.text '(number)'
 	.fill 8
-	.word w_octal
+	.word w_x2e
 xt_x28numberx29:
 	.block
 	jmp i_enter
 l_270:
-	.word xt_1x2b
 	.word xt_dup
 	.word xt_x3er
 	.word xt_cx40
@@ -5338,6 +5359,7 @@ l_270:
 	.word xt_sx3ed
 	.word xt_dx2b
 	.word xt_rx3e
+	.word xt_1x2b
 	.word xt_x28branchx29
 	.word l_270
 l_271:
@@ -5346,15 +5368,16 @@ l_271:
 	.bend
 ; END (number)
 
-; ( d1 addr1+1 R: addr1+1 )
+; ( d1 addr1 R: addr1 )
 ; ( d1 c )
 ; ( d1 c n )
 ; ( d1 n2 tf | d1 0 )
-; ( d1 R: addr1+1 n2 )
-; ( d2 )
-; ( d2 n2 R: addr1+1 )
-; ( d2 d3 )
-; ( d4 )
+; ( d1 R: addr1 n2 )
+; ( d2 R: addr1 n2 )
+; ( d2 n2 R: addr1 )
+; ( d2 d3 R: addr1 )
+; ( d4 R: addr1 )
+; ( d4 addr1 )
 ; BEGIN ?error
 w_x3ferror:
 	.byte $06
@@ -5366,13 +5389,13 @@ xt_x3ferror:
 	jmp i_enter
 	.word xt_swap
 	.word xt_x28branch0x29
-	.word l_294
+	.word l_293
 	.word xt_error
 	.word xt_x28branchx29
-	.word l_295
-l_294:
+	.word l_294
+l_293:
 	.word xt_drop
-l_295:
+l_294:
 	.word i_exit
 	.bend
 ; END ?error
@@ -5391,7 +5414,6 @@ xt_number:
 	.word xt_0
 	.word xt_rot
 	.word xt_dup
-	.word xt_1x2b
 	.word xt_cx40
 	.word xt_x28literalx29
 	.word 45
@@ -5424,9 +5446,12 @@ l_274:
 	.word xt_x28literalx29
 	.word 46
 	.word xt_x2d
-	.word xt_halt
-	.word xt_0
+	.word xt_x28branch0x29
+	.word l_276
+	.word xt_x28literalx29
+	.word 65523
 	.word xt_x3ferror
+l_276:
 	.word xt_0
 	.word xt_x28branchx29
 	.word l_274
@@ -5434,12 +5459,12 @@ l_275:
 	.word xt_drop
 	.word xt_rx3e
 	.word xt_x28branch0x29
-	.word l_276
+	.word l_277
 	.word xt_0
 	.word xt_0
 	.word xt_2swap
 	.word xt_dx2d
-l_276:
+l_277:
 	.word i_exit
 	.bend
 ; END number
@@ -5451,11 +5476,12 @@ l_276:
 ; ( d0 addr+1 )
 ; ( d0 addr )
 ; ( d1 addr2 )
-; ( d1 addr2 c )
-; ( d1 addr2 c )
-; ( d1 )
-; ( d1 f )
+; ( d2 addr2 c )
+; ( d2 addr2 c )
+; ( -13 is undefined word error )
 ; ( d2 )
+; ( d2 f )
+; ( d3 )
 ; ( -- )
 ; BEGIN <#
 w_x3cx23:
@@ -5513,11 +5539,11 @@ xt_x23:
 	.word xt_over
 	.word xt_x3c
 	.word xt_x28branch0x29
-	.word l_277
+	.word l_278
 	.word xt_x28literalx29
 	.word 7
 	.word xt_x2b
-l_277:
+l_278:
 	.word xt_x28literalx29
 	.word 48
 	.word xt_x2b
@@ -5542,15 +5568,15 @@ w_x23s:
 xt_x23s:
 	.block
 	jmp i_enter
-l_278:
+l_279:
 	.word xt_x23
 	.word xt_over
 	.word xt_over
 	.word xt_or
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_278
-l_279:
+	.word l_279
+l_280:
 	.word i_exit
 	.bend
 ; END #s
@@ -5568,11 +5594,11 @@ xt_sign:
 	.word xt_rot
 	.word xt_0x3c
 	.word xt_x28branch0x29
-	.word l_280
+	.word l_281
 	.word xt_x28literalx29
 	.word 45
 	.word xt_hold
-l_280:
+l_281:
 	.word i_exit
 	.bend
 ; END sign
@@ -5642,28 +5668,13 @@ xt_dx2e:
 ; END d.
 
 ; ( x -- )
-; BEGIN .
-w_x2e:
-	.byte $01
-	.text '.'
-	.fill 15
-	.word w_dx2e
-xt_x2e:
-	.block
-	jmp i_enter
-	.word xt_sx3ed
-	.word xt_dx2e
-	.word i_exit
-	.bend
-; END .
-
 ; ( n1 n2 -- )
 ; BEGIN .r
 w_x2er:
 	.byte $02
 	.text '.r'
 	.fill 14
-	.word w_x2e
+	.word w_dx2e
 xt_x2er:
 	.block
 	jmp i_enter
@@ -5703,7 +5714,7 @@ xt_dump:
 	jmp i_enter
 	.word xt_0
 	.word xt_x28dox29
-l_281:
+l_282:
 	.word xt_cr
 	.word xt_dup
 	.word xt_0
@@ -5718,7 +5729,7 @@ l_281:
 	.word 8
 	.word xt_0
 	.word xt_x28dox29
-l_283:
+l_284:
 	.word xt_dup
 	.word xt_x40
 	.word xt_0
@@ -5728,13 +5739,13 @@ l_283:
 	.word xt_dx2er
 	.word xt_2x2b
 	.word xt_x28loopx29
-	.word l_283
-l_284:
+	.word l_284
+l_285:
 	.word xt_x28literalx29
 	.word 8
 	.word xt_x28x2bloopx29
-	.word l_281
-l_282:
+	.word l_282
+l_283:
 	.word xt_drop
 	.word i_exit
 	.bend
@@ -5749,7 +5760,7 @@ w_interpret:
 xt_interpret:
 	.block
 	jmp i_enter
-l_296:
+l_295:
 	.word xt_tib
 	.word xt_x40
 	.word xt_x3ein
@@ -5757,43 +5768,44 @@ l_296:
 	.word xt_x2b
 	.word xt_cx40
 	.word xt_x28branch0x29
-	.word l_297
+	.word l_296
 	.word xt_x2dfind
 	.word xt_x28branch0x29
-	.word l_298
+	.word l_297
 	.word xt_state
 	.word xt_x40
 	.word xt_x3c
 	.word xt_x28branch0x29
-	.word l_299
+	.word l_298
 	.word xt_cfa
 	.word xt_x2c
 	.word xt_x28branchx29
-	.word l_300
-l_299:
+	.word l_299
+l_298:
 	.word xt_cfa
 	.word xt_execute
-l_300:
+l_299:
 	.word xt_x28branchx29
-	.word l_301
-l_298:
-	.word xt_cr
-	.word xt_x28x2ex22x29
-	.ptext "not found:"
-	.word xt_space
-	.word xt_here
-	.word xt_count
-	.word xt_type
-	.word xt_cr
+	.word l_300
+l_297:
 	.word xt_here
 	.word xt_number
 	.word xt_swap
 	.word xt_drop
+	.word xt_state
+	.word xt_x40
+	.word xt_x28branch0x29
+	.word l_301
+	.word xt_x28literalx29
+	.word xt_x28literalx29
+	.word xt_x2c
+	.word xt_x2c
 	.word xt_halt
 l_301:
+l_300:
 	.word xt_x28branchx29
-	.word l_296
-l_297:
+	.word l_295
+l_296:
 	.word i_exit
 	.bend
 ; END interpret
@@ -5846,7 +5858,7 @@ xt_throw:
 	jmp i_enter
 	.word xt_x3fdup
 	.word xt_x28branch0x29
-	.word l_285
+	.word l_286
 	.word xt_handler
 	.word xt_x40
 	.word xt_rpx21
@@ -5859,7 +5871,7 @@ xt_throw:
 	.word xt_spx21
 	.word xt_drop
 	.word xt_rx3e
-l_285:
+l_286:
 	.word i_exit
 	.bend
 ; END throw
@@ -5879,29 +5891,31 @@ w_quit:
 xt_quit:
 	.block
 	jmp i_enter
-	.word xt_hex
 	.word xt_forth
 	.word xt_definitions
 	.word xt_0
 	.word xt_state
 	.word xt_x21
-l_286:
+l_287:
 	.word xt_cr
 	.word xt_state
 	.word xt_x40
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_288
-	.word xt_x28x2ex22x29
-	.ptext "ok"
+	.word l_289
 	.word xt_cr
-l_288:
+	.word xt_x28literalx29
+	.word 62
+	.word xt_emit
+	.word xt_bl
+	.word xt_emit
+l_289:
 	.word xt_query
 	.word xt_cr
 	.word xt_interpret
 	.word xt_x28branchx29
-	.word l_286
-l_287:
+	.word l_287
+l_288:
 	.word i_exit
 	.bend
 ; END quit
@@ -5920,21 +5934,14 @@ xt_error:
 	.word xt_0x3d
 	.word xt_not
 	.word xt_x28branch0x29
-	.word l_291
+	.word l_290
 	.word xt_here
 	.word xt_count
 	.word xt_type
-	.word xt_x28literalx29
-	.word l_292
-	.word xt_x28branchx29
-	.word l_293
-l_292:
+	.word xt_x28x2ex22x29
 	.ptext "? MSG#"
-l_293:
-	.word xt_count
-	.word xt_type
 	.word xt_x2e
-l_291:
+l_290:
 	.word xt_quit
 	.word i_exit
 	.bend
@@ -5990,17 +5997,281 @@ xt_random:
 ; END random
 
 ; ( Return a random, 16-bit number )
+; BEGIN io-page
+w_iox2dpage:
+	.byte $07
+	.text 'io-page'
+	.fill 9
+	.word w_random
+xt_iox2dpage:
+	.block
+	jmp xt_x28constantx29
+	.word 0001
+	.bend
+; END io-page
+
+; ( The address of the mmu-io-page register )
+; ( -- )
+; BEGIN set-io-text
+w_setx2diox2dtext:
+	.byte $0B
+	.text 'set-io-text'
+	.fill 5
+	.word w_iox2dpage
+xt_setx2diox2dtext:
+	.block
+	jmp i_enter
+	.word xt_2
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word i_exit
+	.bend
+; END set-io-text
+
+; ( Set the I/O page to the text matrix )
+; ( -- )
+; BEGIN set-io-color
+w_setx2diox2dcolor:
+	.byte $0C
+	.text 'set-io-color'
+	.fill 4
+	.word w_setx2diox2dtext
+xt_setx2diox2dcolor:
+	.block
+	jmp i_enter
+	.word xt_x28literalx29
+	.word 3
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word i_exit
+	.bend
+; END set-io-color
+
+; ( Set the I/O page to the color matrix )
+; ( r g b n -- )
+; BEGIN def-text-fg-colo
+w_defx2dtextx2dfgx2dcolor:
+	.byte $10
+	.text 'def-text-fg-colo'
+	.fill 0
+	.word w_setx2diox2dcolor
+xt_defx2dtextx2dfgx2dcolor:
+	.block
+	jmp i_enter
+	.word xt_x28literalx29
+	.word 15
+	.word xt_and
+	.word xt_iox2dpage
+	.word xt_cx40
+	.word xt_x3er
+	.word xt_0
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 4
+	.word xt_x2a
+	.word xt_x28literalx29
+	.word 55296
+	.word xt_x2b
+	.word xt_dup
+	.word xt_x28literalx29
+	.word 3
+	.word xt_x2b
+	.word xt_swap
+	.word xt_x28dox29
+l_302:
+	.word xt_i
+	.word xt_cx21
+	.word xt_x28loopx29
+	.word l_302
+l_303:
+	.word xt_rx3e
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word i_exit
+	.bend
+; END def-text-fg-color
+
+; ( Set the components of text foreground color n to <r, g, b> )
+; ( Make sure the color number is 0 - 15 )
+; ( Save the current I/O page )
+; ( Go to I/O page 0 )
+; ( Compute base address )
+; ( Set each color component )
+; ( Restore the current I/O page )
+; ( r g b n -- )
+; BEGIN def-text-bg-colo
+w_defx2dtextx2dbgx2dcolor:
+	.byte $10
+	.text 'def-text-bg-colo'
+	.fill 0
+	.word w_defx2dtextx2dfgx2dcolor
+xt_defx2dtextx2dbgx2dcolor:
+	.block
+	jmp i_enter
+	.word xt_x28literalx29
+	.word 15
+	.word xt_and
+	.word xt_iox2dpage
+	.word xt_cx40
+	.word xt_x3er
+	.word xt_0
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 4
+	.word xt_x2a
+	.word xt_x28literalx29
+	.word 55360
+	.word xt_x2b
+	.word xt_dup
+	.word xt_x28literalx29
+	.word 3
+	.word xt_x2b
+	.word xt_swap
+	.word xt_x28dox29
+l_304:
+	.word xt_i
+	.word xt_cx21
+	.word xt_x28loopx29
+	.word l_304
+l_305:
+	.word xt_rx3e
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word i_exit
+	.bend
+; END def-text-bg-color
+
+; ( Set the components of text foreground color n to <r, g, b> )
+; ( Make sure the color number is 0 - 15 )
+; ( Save the current I/O page )
+; ( Go to I/O page 0 )
+; ( Compute base address )
+; ( Set each color component )
+; ( Restore the current I/O page )
+; ( r g b -- )
+; BEGIN set-border-color
+w_setx2dborderx2dcolor:
+	.byte $10
+	.text 'set-border-color'
+	.fill 0
+	.word w_defx2dtextx2dbgx2dcolor
+xt_setx2dborderx2dcolor:
+	.block
+	jmp i_enter
+	.word xt_iox2dpage
+	.word xt_cx40
+	.word xt_x3er
+	.word xt_0
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 53253
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 53254
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 53255
+	.word xt_cx21
+	.word xt_rx3e
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word i_exit
+	.bend
+; END set-border-color
+
+; ( Set the color of the border )
+; ( Save the current I/O page )
+; ( Go to I/O page 0 )
+; ( Set the blue component )
+; ( Set the green component )
+; ( Set the red component )
+; ( Restore the current I/O page )
+; ( w h -- )
+; BEGIN set-border-size
+w_setx2dborderx2dsize:
+	.byte $0F
+	.text 'set-border-size'
+	.fill 1
+	.word w_setx2dborderx2dcolor
+xt_setx2dborderx2dsize:
+	.block
+	jmp i_enter
+	.word xt_iox2dpage
+	.word xt_cx40
+	.word xt_x3er
+	.word xt_0
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_over
+	.word xt_over
+	.word xt_or
+	.word xt_x28branch0x29
+	.word l_306
+	.word xt_x28literalx29
+	.word 31
+	.word xt_and
+	.word xt_x28literalx29
+	.word 53257
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 31
+	.word xt_and
+	.word xt_x28literalx29
+	.word 53256
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 53252
+	.word xt_cx40
+	.word xt_x28literalx29
+	.word 1
+	.word xt_or
+	.word xt_x28literalx29
+	.word 53252
+	.word xt_cx21
+	.word xt_x28branchx29
+	.word l_307
+l_306:
+	.word xt_x28literalx29
+	.word 53252
+	.word xt_cx40
+	.word xt_x28literalx29
+	.word 254
+	.word xt_and
+	.word xt_x28literalx29
+	.word 53252
+	.word xt_cx21
+	.word xt_2drop
+l_307:
+	.word xt_rx3e
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word i_exit
+	.bend
+; END set-border-size
+
+; ( Set the color of the border )
+; ( Save the current I/O page )
+; ( Go to I/O page 0 )
+; ( Set the height )
+; ( Set the width )
+; ( Turn on the border )
+; ( Turn off the border )
+; ( Drop size from stack )
+; ( Restore the current I/O page )
 ; BEGIN maze
 w_maze:
 	.byte $04
 	.text 'maze'
 	.fill 12
-	.word w_random
+	.word w_setx2dborderx2dsize
 xt_maze:
 	.block
 	jmp i_enter
 	.word xt_initrandom
-l_304:
+l_308:
 	.word xt_random
 	.word xt_1
 	.word xt_and
@@ -6009,8 +6280,8 @@ l_304:
 	.word xt_x2b
 	.word xt_emit
 	.word xt_x28branchx29
-	.word l_304
-l_305:
+	.word l_308
+l_309:
 	.word i_exit
 	.bend
 ; END maze
@@ -6044,9 +6315,29 @@ xt_cold:
 	.word 48896
 	.word xt_tib
 	.word xt_x21
+	.word xt_decimal
 	.word xt_x28x2ex22x29
 	.ptext "Welcome to MetaForth v00.00.00"
 	.word xt_cr
+	.word xt_x28literalx29
+	.word 255
+	.word xt_x28literalx29
+	.word 255
+	.word xt_0
+	.word xt_x28literalx29
+	.word 15
+	.word xt_defx2dtextx2dfgx2dcolor
+	.word xt_x28literalx29
+	.word 128
+	.word xt_x28literalx29
+	.word 128
+	.word xt_0
+	.word xt_setx2dborderx2dcolor
+	.word xt_x28literalx29
+	.word 10
+	.word xt_x28literalx29
+	.word 10
+	.word xt_setx2dborderx2dsize
 	.word xt_quit
 	.word i_exit
 	.bend

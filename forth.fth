@@ -343,7 +343,6 @@ include" forth_65c02.fth"
     swap                    ( addr2 c )
     enclose                 ( add2 n1 n2 n3 )
     0 here !
-    \ here 32 blanks
     >in +!                  ( addr2 n1 n2 )
     over - >r               ( addr2 n1 : Save n2 - n1)
     r here c!               ( store the character count to the dictionary )
@@ -351,6 +350,8 @@ include" forth_65c02.fth"
     here 1+                 ( addr3 addr4 : Starting address in the dictionary space )
     r>                      ( addr3 addr4 count )
     cmove                   ( copy the word to the dictionary space )
+
+    bl here count + c!      ( Terminate word with a blank )
 ;
 
 ( -- pfa b tf | 0 )
@@ -388,21 +389,23 @@ include" forth_65c02.fth"
     8 base !
 ;
 
+defer .
+
 ( d1 addr1 -- d2 addr2 )
 : (number)
     begin
-        1+ dup >r           ( d1 addr1+1 R: addr1+1 )
+        dup >r              ( d1 addr1 R: addr1 )
         c@                  ( d1 c )
         base @              ( d1 c n )
         digit               ( d1 n2 tf | d1 0)
-        
-        while
-        >r                  ( d1 R: addr1+1 n2 )
-        base @ u*           ( d2 )
-        r>                  ( d2 n2 R: addr1+1 )
-        s>d                 ( d2 d3 )
-        d+                  ( d4 )
-        r>
+    while
+        >r                  ( d1 R: addr1 n2 )
+        base @ u*           ( d2 R: addr1 n2 )
+        r>                  ( d2 n2 R: addr1 )
+        s>d                 ( d2 d3 R: addr1 )
+        d+                  ( d4 R: addr1 )
+        r>                  ( d4 addr1 )
+        1+
     repeat
     r>
 ;
@@ -412,7 +415,7 @@ defer ?error
 ( addr -- d )
 : number
     0 0 rot                 ( d0 addr )
-    dup 1+ c@               ( d0 addr c )
+    dup c@                  ( d0 addr c )
     2dh = if                ( is it the minus sign? )
         1 >r                ( save flag )
     else
@@ -424,19 +427,20 @@ defer ?error
     begin
         dpl !               ( d0 addr )
         (number)            ( d1 addr2 )
-        dup c@              ( d1 addr2 c )
+        dup c@              ( d2 addr2 c )
         bl -
     while
-        dup c@              ( d1 addr2 c )
-        2eh -
-        halt
-        0 ?error
+        dup c@              ( d2 addr2 c )
+        2eh
+         - if
+            fff3h ?error    ( -13 is undefined word error )
+        then
         0
     repeat
-    drop                    ( d1 )
-    r>                      ( d1 f )
+    drop                    ( d2 )
+    r>                      ( d2 f )
     if
-        0 0 2swap d-        ( d2 )
+        0 0 2swap d-        ( d3 )
     then
 ;
 
@@ -567,14 +571,12 @@ defer interpret
 
 ( -- )
 : quit
-    hex
     forth definitions
     0 state !
     begin
         cr
         state @ 0= if
-            ." ok" 
-            cr
+            cr [char] > emit bl emit
         then
         query
         cr
@@ -586,7 +588,7 @@ defer interpret
 : error
     dup 0= not if
         here count type
-        c" ? MSG#" count type .
+        ." ? MSG#" .
     then
     quit
 ;
@@ -613,17 +615,15 @@ defer interpret
                 cfa execute ( Otherwise, execute the word )
             then
         else
-            cr ." not found:" space here count type cr
             ( Not found: maybe it's a number... )
             here number     ( Try to parse it as a number )
             swap drop       ( TODO: handle doubles )
-            \\ state @ if
+            state @ if
                 ( Compiling... compile the number )
                 ( Otherwise, leave the number on the stack )
-            \\    postpone (literal) ,
-            \\    halt
-            \\ then
-            halt
+                postpone (literal) ,
+                halt
+            then
         then
     repeat
 ;
@@ -641,8 +641,12 @@ include" f256jr.fth"
     0 blk !                 ( Initialize the block number to 0 )
     5000h dp !              ( Initialize the dictionary pointer )
     BF00h tib !             ( Initialize the TIB )
+    decimal
 
     ." Welcome to MetaForth v00.00.00" cr
+    255 255 0 15 def-text-fg-color
+    128 128 0 set-border-color
+    10 10 set-border-size
 
     \\ unittest
     \\ ." All unit tests PASSED!" cr

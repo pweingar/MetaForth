@@ -1941,11 +1941,12 @@ loop:
 
     ; We were not able to convert the digit
 
-    stz pstack+5,x          ; Return false
-    stz pstack+4,x
-
+not_found:
     inx                     ; Clean up the stack
     inx
+
+    stz pstack+3,x          ; Return false
+    stz pstack+2,x
 
     jmp next
 
