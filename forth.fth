@@ -25,6 +25,19 @@ include" forth_65c02.fth"
 22 user dpl         ( Pointer to the DPL )
 24 user hld         ( Pointer to the HLD variable )
 26 user handler     ( Pointer to the HANDLER variable for TRY-CATCH )
+28 user csp         ( Pointer to a save location for the return stack pointer )
+
+( -- )
+: [
+    ( Switch state to EXECUTE )
+    0 state !
+; immediate
+
+( -- )
+: ]
+    ( Switch state to COMPILE )
+    c0h state !
+; immediate
 
 ( x -- 0 | x x )
 : ?dup
@@ -603,6 +616,14 @@ defer interpret
 ;
 
 ( -- )
+: ?csp
+    ( Trigger an error if the PSP is not pointing to the place indicated by CSP )
+    csp @ sp@ - if
+        0 25 - error
+    then
+;
+
+( -- )
 : interpret
     begin
     tib @ >in @ + c@ while  ( Repeat while the TIB has characters )
@@ -627,6 +648,37 @@ defer interpret
         then
     repeat
 ;
+
+\\
+\\ Defining words
+\\
+
+( -- )
+: create
+    ( Read the next word and add it )
+    bl word
+    latest ,
+    here current @ !
+;
+
+( -- )
+: :
+    ( Define a word... )
+    sp@ csp !               ( Save the current stack pointer for later verification )
+    current @ context !
+    create                  ( Define the word in the dictionary )
+    ]                       ( Switch to COMPILE mode )
+
+    4ch c,                  ( Set the CFA to JMP xt_enter )
+    postpone enter ,
+;
+
+: ;
+    ?csp                    ( Verify that the stack pointer is the same as when colon was used )
+    postpone exit           ( Compile EXIT )
+    [                       ( Switch to EXECUTE mode )
+; immediate
+
 
 \\
 \\ Boot strapping word...

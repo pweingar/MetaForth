@@ -8,6 +8,32 @@
 
 $cpu$ 65c02
 
+code exit
+    pla             ; ip := pop()
+    sta ip
+    pla
+    sta ip+1
+
+    jmp next        ; jmp next
+end-code
+
+code enter
+    lda ip+1        ; push(ip)
+    pha
+    lda ip
+    pha
+
+    clc             ; ip := wp + 3
+    lda wp
+    adc #3
+    sta ip
+    lda wp+1
+    adc #0
+    sta ip+1
+
+    jmp next
+end-code
+
 ( a-addr -- )
 code testname
     lda pstack+2,x
@@ -1982,3 +2008,4 @@ code pad
     dex
     jmp next
 end-code
+

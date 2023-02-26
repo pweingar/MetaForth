@@ -113,25 +113,7 @@ vstart  .word xt_cold
 
 done    jmp (donep)     ; Quit the interpreter by going to the code at donep
 
-i_exit  pla             ; ip := pop()
-        sta ip
-        pla
-        sta ip+1
 
-        bra next        ; jmp next
-
-i_enter lda ip+1        ; push(ip)
-        pha
-        lda ip
-        pha
-
-        clc             ; ip := wp + 3
-        lda wp
-        adc #3
-        sta ip
-        lda wp+1
-        adc #0
-        sta ip+1
 
         ; jmp next
 

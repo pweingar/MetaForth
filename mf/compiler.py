@@ -135,8 +135,8 @@ class ForthWord(Word):
     def __init__(self, name):
         super().__init__(name)
         self._bytecodes = []
-        self._enter = "i_enter"
-        self._exit = "i_exit"
+        self._enter = "xt_enter"
+        self._exit = "xt_exit"
 
     def compile(self, bytecode):
         self._bytecodes.append(bytecode)

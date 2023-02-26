@@ -2,13 +2,52 @@
 .section code
 ; Start of auto-generated code
 
+; BEGIN exit
+w_exit:
+	.byte $04
+	.text 'exit'
+	.fill 12
+	.word 0
+xt_exit:
+	.block
+	pla             ; ip := pop()
+	sta ip
+	pla
+	sta ip+1
+	jmp next        ; jmp next
+	.bend
+; END exit
+
+; BEGIN enter
+w_enter:
+	.byte $05
+	.text 'enter'
+	.fill 11
+	.word w_exit
+xt_enter:
+	.block
+	lda ip+1        ; push(ip)
+	pha
+	lda ip
+	pha
+	clc             ; ip := wp + 3
+	lda wp
+	adc #3
+	sta ip
+	lda wp+1
+	adc #0
+	sta ip+1
+	jmp next
+	.bend
+; END enter
+
 ; ( a-addr -- )
 ; BEGIN testname
 w_testname:
 	.byte $08
 	.text 'testname'
 	.fill 8
-	.word 0
+	.word w_enter
 xt_testname:
 	.block
 	lda pstack+2,x
@@ -486,7 +525,7 @@ w_unittest:
 	.word w_depth
 xt_unittest:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word l_2
 	.word xt_x28branchx29
@@ -2392,7 +2431,7 @@ l_252:
 	.word xt_x28literalx29
 	.word 65534
 	.word xt_assertx3d
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END unittest
 
@@ -4435,22 +4474,73 @@ xt_handler:
 ; END handler
 
 ; ( Pointer to the HANDLER variable for TRY-CATCH )
+; BEGIN csp
+w_csp:
+	.byte $03
+	.text 'csp'
+	.fill 13
+	.word w_handler
+xt_csp:
+	.block
+	jmp xt_x28userx29
+	.word 28
+	.bend
+; END csp
+
+; ( Pointer to a save location for the return stack pointer )
+; ( -- )
+; BEGIN [
+w_x5b:
+	.byte $C1
+	.text '['
+	.fill 15
+	.word w_csp
+xt_x5b:
+	.block
+	jmp xt_enter
+	.word xt_0
+	.word xt_state
+	.word xt_x21
+	.word xt_exit
+	.bend
+; END [
+
+; ( Switch state to EXECUTE )
+; ( -- )
+; BEGIN ]
+w_x5d:
+	.byte $C1
+	.text ']'
+	.fill 15
+	.word w_x5b
+xt_x5d:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 192
+	.word xt_state
+	.word xt_x21
+	.word xt_exit
+	.bend
+; END ]
+
+; ( Switch state to COMPILE )
 ; ( x -- 0 | x x )
 ; BEGIN ?dup
 w_x3fdup:
 	.byte $04
 	.text '?dup'
 	.fill 12
-	.word w_handler
+	.word w_x5d
 xt_x3fdup:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_dup
 	.word xt_x28branch0x29
 	.word l_178
 	.word xt_dup
 l_178:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END ?dup
 
@@ -4463,12 +4553,12 @@ w_rot:
 	.word w_x3fdup
 xt_rot:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x3er
 	.word xt_swap
 	.word xt_rx3e
 	.word xt_swap
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END rot
 
@@ -4481,10 +4571,10 @@ w_2dup:
 	.word w_rot
 xt_2dup:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_over
 	.word xt_over
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END 2dup
 
@@ -4497,10 +4587,10 @@ w_2drop:
 	.word w_2dup
 xt_2drop:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_drop
 	.word xt_drop
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END 2drop
 
@@ -4513,10 +4603,10 @@ w_x3c:
 	.word w_2drop
 xt_x3c:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x2d
 	.word xt_0x3c
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END <
 
@@ -4529,10 +4619,10 @@ w_x3e:
 	.word w_x3c
 xt_x3e:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x2d
 	.word xt_0x3e
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END >
 
@@ -4545,10 +4635,10 @@ w_x3d:
 	.word w_x3e
 xt_x3d:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x2d
 	.word xt_0x3d
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END =
 
@@ -4561,11 +4651,11 @@ w_dx3c:
 	.word w_x3d
 xt_dx3c:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_dx2d
 	.word xt_drop
 	.word xt_0x3c
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END d<
 
@@ -4578,7 +4668,7 @@ w_abs:
 	.word w_dx3c
 xt_abs:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_dup
 	.word xt_0x3c
 	.word xt_x28branch0x29
@@ -4587,7 +4677,7 @@ xt_abs:
 	.word xt_swap
 	.word xt_x2d
 l_215:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END abs
 
@@ -4600,7 +4690,7 @@ w_dabs:
 	.word w_abs
 xt_dabs:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_over
 	.word xt_0x3c
 	.word xt_x28branch0x29
@@ -4610,7 +4700,7 @@ xt_dabs:
 	.word xt_2swap
 	.word xt_dx2d
 l_222:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END dabs
 
@@ -4625,8 +4715,8 @@ w_x2fmod:
 	.word w_dabs
 xt_x2fmod:
 	.block
-	jmp i_enter
-	.word i_exit
+	jmp xt_enter
+	.word xt_exit
 	.bend
 ; END /mod
 
@@ -4639,11 +4729,11 @@ w_x2f:
 	.word w_x2fmod
 xt_x2f:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x2fmod
 	.word xt_swap
 	.word xt_drop
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END /
 
@@ -4656,10 +4746,10 @@ w_mod:
 	.word w_x2f
 xt_mod:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x2fmod
 	.word xt_drop
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END mod
 
@@ -4672,7 +4762,7 @@ w_max:
 	.word w_mod
 xt_max:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_2dup
 	.word xt_x3c
 	.word xt_x28branch0x29
@@ -4684,7 +4774,7 @@ xt_max:
 l_237:
 	.word xt_drop
 l_238:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END max
 
@@ -4697,7 +4787,7 @@ w_min:
 	.word w_max
 xt_min:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_2dup
 	.word xt_x3e
 	.word xt_x28branch0x29
@@ -4709,7 +4799,7 @@ xt_min:
 l_245:
 	.word xt_drop
 l_246:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END min
 
@@ -4722,11 +4812,11 @@ w_lfa:
 	.word w_min
 xt_lfa:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 5
 	.word xt_x2d
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END lfa
 
@@ -4739,11 +4829,11 @@ w_cfa:
 	.word w_lfa
 xt_cfa:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 3
 	.word xt_x2d
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END cfa
 
@@ -4756,11 +4846,11 @@ w_nfa:
 	.word w_cfa
 xt_nfa:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 22
 	.word xt_x2d
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END nfa
 
@@ -4773,11 +4863,11 @@ w_pfa:
 	.word w_nfa
 xt_pfa:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 22
 	.word xt_x2b
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END pfa
 
@@ -4790,10 +4880,10 @@ w_here:
 	.word w_pfa
 xt_here:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_dp
 	.word xt_x40
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END here
 
@@ -4807,10 +4897,10 @@ w_allot:
 	.word w_here
 xt_allot:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_dp
 	.word xt_x2bx21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END allot
 
@@ -4824,12 +4914,12 @@ w_x2c:
 	.word w_allot
 xt_x2c:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_here
 	.word xt_x21
 	.word xt_2
 	.word xt_allot
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END ,
 
@@ -4844,12 +4934,12 @@ w_cx2c:
 	.word w_x2c
 xt_cx2c:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_here
 	.word xt_cx21
 	.word xt_1
 	.word xt_allot
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END c,
 
@@ -4864,12 +4954,12 @@ w_definitions:
 	.word w_cx2c
 xt_definitions:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_context
 	.word xt_x40
 	.word xt_current
 	.word xt_x21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END definitions
 
@@ -4882,11 +4972,11 @@ w_latest:
 	.word w_definitions
 xt_latest:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_current
 	.word xt_x40
 	.word xt_x40
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END latest
 
@@ -4899,12 +4989,12 @@ w_count:
 	.word w_latest
 xt_count:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_dup
 	.word xt_1x2b
 	.word xt_swap
 	.word xt_cx40
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END count
 
@@ -4920,7 +5010,7 @@ w_type:
 	.word w_count
 xt_type:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x3fdup
 	.word xt_x28branch0x29
 	.word l_253
@@ -4948,7 +5038,7 @@ l_255:
 l_253:
 	.word xt_drop
 l_258:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END type
 
@@ -4963,7 +5053,7 @@ w_x28x2ex22x29:
 	.word w_type
 xt_x28x2ex22x29:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_r
 	.word xt_count
 	.word xt_dup
@@ -4972,7 +5062,7 @@ xt_x28x2ex22x29:
 	.word xt_x2b
 	.word xt_x3er
 	.word xt_type
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END (.")
 
@@ -4990,11 +5080,11 @@ w_space:
 	.word w_x28x2ex22x29
 xt_space:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 32
 	.word xt_emit
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END space
 
@@ -5007,7 +5097,7 @@ w_spaces:
 	.word w_space
 xt_spaces:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_dup
 	.word xt_0x3e
 	.word xt_x28branch0x29
@@ -5024,7 +5114,7 @@ l_261:
 l_259:
 	.word xt_drop
 l_262:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END spaces
 
@@ -5037,7 +5127,7 @@ w_expect:
 	.word w_spaces
 xt_expect:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_over
 	.word xt_x2b
 	.word xt_over
@@ -5095,7 +5185,7 @@ l_265:
 	.word l_263
 l_264:
 	.word xt_drop
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END expect
 
@@ -5126,7 +5216,7 @@ w_query:
 	.word w_expect
 xt_query:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_tib
 	.word xt_x40
 	.word xt_x28literalx29
@@ -5135,7 +5225,7 @@ xt_query:
 	.word xt_0
 	.word xt_x3ein
 	.word xt_x21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END query
 
@@ -5151,10 +5241,10 @@ w_erase:
 	.word w_query
 xt_erase:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_0
 	.word xt_fill
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END erase
 
@@ -5168,10 +5258,10 @@ w_blanks:
 	.word w_erase
 xt_blanks:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_bl
 	.word xt_fill
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END blanks
 
@@ -5185,7 +5275,7 @@ w_word:
 	.word w_blanks
 xt_word:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_tib
 	.word xt_x40
 	.word xt_x3ein
@@ -5214,7 +5304,7 @@ xt_word:
 	.word xt_count
 	.word xt_x2b
 	.word xt_cx21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END word
 
@@ -5241,7 +5331,7 @@ w_x2dfind:
 	.word w_word
 xt_x2dfind:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_bl
 	.word xt_word
 	.word xt_here
@@ -5258,7 +5348,7 @@ xt_x2dfind:
 	.word xt_latest
 	.word xt_x28findx29
 l_269:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END -find
 
@@ -5272,12 +5362,12 @@ w_decimal:
 	.word w_x2dfind
 xt_decimal:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 10
 	.word xt_base
 	.word xt_x21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END decimal
 
@@ -5290,12 +5380,12 @@ w_hex:
 	.word w_decimal
 xt_hex:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 16
 	.word xt_base
 	.word xt_x21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END hex
 
@@ -5308,12 +5398,12 @@ w_octal:
 	.word w_hex
 xt_octal:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 8
 	.word xt_base
 	.word xt_x21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END octal
 
@@ -5325,10 +5415,10 @@ w_x2e:
 	.word w_octal
 xt_x2e:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_sx3ed
 	.word xt_dx2e
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END .
 
@@ -5341,7 +5431,7 @@ w_x28numberx29:
 	.word w_x2e
 xt_x28numberx29:
 	.block
-	jmp i_enter
+	jmp xt_enter
 l_270:
 	.word xt_dup
 	.word xt_x3er
@@ -5364,7 +5454,7 @@ l_270:
 	.word l_270
 l_271:
 	.word xt_rx3e
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END (number)
 
@@ -5386,7 +5476,7 @@ w_x3ferror:
 	.word w_x28numberx29
 xt_x3ferror:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_swap
 	.word xt_x28branch0x29
 	.word l_293
@@ -5396,7 +5486,7 @@ xt_x3ferror:
 l_293:
 	.word xt_drop
 l_294:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END ?error
 
@@ -5409,7 +5499,7 @@ w_number:
 	.word w_x3ferror
 xt_number:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_0
 	.word xt_0
 	.word xt_rot
@@ -5465,7 +5555,7 @@ l_275:
 	.word xt_2swap
 	.word xt_dx2d
 l_277:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END number
 
@@ -5491,11 +5581,11 @@ w_x3cx23:
 	.word w_number
 xt_x3cx23:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_pad
 	.word xt_hld
 	.word xt_x21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END <#
 
@@ -5508,14 +5598,14 @@ w_hold:
 	.word w_x3cx23
 xt_hold:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x2d1
 	.word xt_hld
 	.word xt_x2bx21
 	.word xt_hld
 	.word xt_x40
 	.word xt_cx21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END hold
 
@@ -5528,7 +5618,7 @@ w_x23:
 	.word w_hold
 xt_x23:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_base
 	.word xt_x40
 	.word xt_umx2fmod
@@ -5548,7 +5638,7 @@ l_278:
 	.word 48
 	.word xt_x2b
 	.word xt_hold
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END #
 
@@ -5567,7 +5657,7 @@ w_x23s:
 	.word w_x23
 xt_x23s:
 	.block
-	jmp i_enter
+	jmp xt_enter
 l_279:
 	.word xt_x23
 	.word xt_over
@@ -5577,7 +5667,7 @@ l_279:
 	.word xt_x28branch0x29
 	.word l_279
 l_280:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END #s
 
@@ -5590,7 +5680,7 @@ w_sign:
 	.word w_x23s
 xt_sign:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_rot
 	.word xt_0x3c
 	.word xt_x28branch0x29
@@ -5599,7 +5689,7 @@ xt_sign:
 	.word 45
 	.word xt_hold
 l_281:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END sign
 
@@ -5612,14 +5702,14 @@ w_x23x3e:
 	.word w_sign
 xt_x23x3e:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_2drop
 	.word xt_hld
 	.word xt_x40
 	.word xt_pad
 	.word xt_over
 	.word xt_x2d
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END #>
 
@@ -5632,7 +5722,7 @@ w_dx2er:
 	.word w_x23x3e
 xt_dx2er:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x3er
 	.word xt_over
 	.word xt_swap
@@ -5646,7 +5736,7 @@ xt_dx2er:
 	.word xt_x2d
 	.word xt_spaces
 	.word xt_type
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END d.r
 
@@ -5660,10 +5750,10 @@ w_dx2e:
 	.word w_dx2er
 xt_dx2e:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_0
 	.word xt_dx2er
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END d.
 
@@ -5677,12 +5767,12 @@ w_x2er:
 	.word w_dx2e
 xt_x2er:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x3er
 	.word xt_sx3ed
 	.word xt_rx3e
 	.word xt_dx2er
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END .r
 
@@ -5695,10 +5785,10 @@ w_x3f:
 	.word w_x2er
 xt_x3f:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x40
 	.word xt_x2e
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END ?
 
@@ -5711,7 +5801,7 @@ w_dump:
 	.word w_x3f
 xt_dump:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_0
 	.word xt_x28dox29
 l_282:
@@ -5747,7 +5837,7 @@ l_285:
 	.word l_282
 l_283:
 	.word xt_drop
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END dump
 
@@ -5759,8 +5849,8 @@ w_interpret:
 	.word w_dump
 xt_interpret:
 	.block
-	jmp i_enter
-l_295:
+	jmp xt_enter
+l_296:
 	.word xt_tib
 	.word xt_x40
 	.word xt_x3ein
@@ -5768,26 +5858,26 @@ l_295:
 	.word xt_x2b
 	.word xt_cx40
 	.word xt_x28branch0x29
-	.word l_296
+	.word l_297
 	.word xt_x2dfind
 	.word xt_x28branch0x29
-	.word l_297
+	.word l_298
 	.word xt_state
 	.word xt_x40
 	.word xt_x3c
 	.word xt_x28branch0x29
-	.word l_298
+	.word l_299
 	.word xt_cfa
 	.word xt_x2c
 	.word xt_x28branchx29
-	.word l_299
-l_298:
+	.word l_300
+l_299:
 	.word xt_cfa
 	.word xt_execute
-l_299:
+l_300:
 	.word xt_x28branchx29
-	.word l_300
-l_297:
+	.word l_301
+l_298:
 	.word xt_here
 	.word xt_number
 	.word xt_swap
@@ -5795,18 +5885,18 @@ l_297:
 	.word xt_state
 	.word xt_x40
 	.word xt_x28branch0x29
-	.word l_301
+	.word l_302
 	.word xt_x28literalx29
 	.word xt_x28literalx29
 	.word xt_x2c
 	.word xt_x2c
 	.word xt_halt
+l_302:
 l_301:
-l_300:
 	.word xt_x28branchx29
-	.word l_295
-l_296:
-	.word i_exit
+	.word l_296
+l_297:
+	.word xt_exit
 	.bend
 ; END interpret
 
@@ -5819,7 +5909,7 @@ w_catch:
 	.word w_interpret
 xt_catch:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_spx40
 	.word xt_x3er
 	.word xt_handler
@@ -5835,7 +5925,7 @@ xt_catch:
 	.word xt_rx3e
 	.word xt_drop
 	.word xt_0
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END catch
 
@@ -5855,7 +5945,7 @@ w_throw:
 	.word w_catch
 xt_throw:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x3fdup
 	.word xt_x28branch0x29
 	.word l_286
@@ -5872,7 +5962,7 @@ xt_throw:
 	.word xt_drop
 	.word xt_rx3e
 l_286:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END throw
 
@@ -5890,7 +5980,7 @@ w_quit:
 	.word w_throw
 xt_quit:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_forth
 	.word xt_definitions
 	.word xt_0
@@ -5916,7 +6006,7 @@ l_289:
 	.word xt_x28branchx29
 	.word l_287
 l_288:
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END quit
 
@@ -5929,7 +6019,7 @@ w_error:
 	.word w_quit
 xt_error:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_dup
 	.word xt_0x3d
 	.word xt_not
@@ -5943,11 +6033,38 @@ xt_error:
 	.word xt_x2e
 l_290:
 	.word xt_quit
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END error
 
 ; ( f n -- )
+; ( -- )
+; BEGIN ?csp
+w_x3fcsp:
+	.byte $04
+	.text '?csp'
+	.fill 12
+	.word w_error
+xt_x3fcsp:
+	.block
+	jmp xt_enter
+	.word xt_csp
+	.word xt_x40
+	.word xt_spx40
+	.word xt_x2d
+	.word xt_x28branch0x29
+	.word l_295
+	.word xt_0
+	.word xt_x28literalx29
+	.word 25
+	.word xt_x2d
+	.word xt_error
+l_295:
+	.word xt_exit
+	.bend
+; END ?csp
+
+; ( Trigger an error if the PSP is not pointing to the place indicated by CSP )
 ; ( -- )
 ; ( Repeat while the TIB has characters )
 ; ( Try to look up the word )
@@ -5960,20 +6077,99 @@ l_290:
 ; ( Compiling... compile the number )
 ; ( Otherwise, leave the number on the stack )
 ; ( -- )
+; BEGIN create
+w_create:
+	.byte $06
+	.text 'create'
+	.fill 10
+	.word w_x3fcsp
+xt_create:
+	.block
+	jmp xt_enter
+	.word xt_bl
+	.word xt_word
+	.word xt_latest
+	.word xt_x2c
+	.word xt_here
+	.word xt_current
+	.word xt_x40
+	.word xt_x21
+	.word xt_exit
+	.bend
+; END create
+
+; ( Read the next word and add it )
+; ( -- )
+; BEGIN :
+w_x3a:
+	.byte $01
+	.text ':'
+	.fill 15
+	.word w_create
+xt_x3a:
+	.block
+	jmp xt_enter
+	.word xt_spx40
+	.word xt_csp
+	.word xt_x21
+	.word xt_current
+	.word xt_x40
+	.word xt_context
+	.word xt_x21
+	.word xt_create
+	.word xt_x5d
+	.word xt_x28literalx29
+	.word 76
+	.word xt_cx2c
+	.word xt_x28literalx29
+	.word xt_enter
+	.word xt_x2c
+	.word xt_x2c
+	.word xt_exit
+	.bend
+; END :
+
+; ( Define a word... )
+; ( Save the current stack pointer for later verification )
+; ( Define the word in the dictionary )
+; ( Switch to COMPILE mode )
+; ( Set the CFA to JMP xt_enter )
+; BEGIN ;
+w_x3b:
+	.byte $C1
+	.text ';'
+	.fill 15
+	.word w_x3a
+xt_x3b:
+	.block
+	jmp xt_enter
+	.word xt_x3fcsp
+	.word xt_x28literalx29
+	.word xt_exit
+	.word xt_x2c
+	.word xt_x5b
+	.word xt_exit
+	.bend
+; END ;
+
+; ( Verify that the stack pointer is the same as when colon was used )
+; ( Compile EXIT )
+; ( Switch to EXECUTE mode )
+; ( -- )
 ; BEGIN initrandom
 w_initrandom:
 	.byte $0A
 	.text 'initrandom'
 	.fill 6
-	.word w_error
+	.word w_x3b
 xt_initrandom:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_1
 	.word xt_x28literalx29
 	.word 54950
 	.word xt_cx21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END initrandom
 
@@ -5988,11 +6184,11 @@ w_random:
 	.word w_initrandom
 xt_random:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 54948
 	.word xt_x40
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END random
 
@@ -6020,11 +6216,11 @@ w_setx2diox2dtext:
 	.word w_iox2dpage
 xt_setx2diox2dtext:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_2
 	.word xt_iox2dpage
 	.word xt_cx21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END set-io-text
 
@@ -6038,12 +6234,12 @@ w_setx2diox2dcolor:
 	.word w_setx2diox2dtext
 xt_setx2diox2dcolor:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 3
 	.word xt_iox2dpage
 	.word xt_cx21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END set-io-color
 
@@ -6057,7 +6253,7 @@ w_defx2dtextx2dfgx2dcolor:
 	.word w_setx2diox2dcolor
 xt_defx2dtextx2dfgx2dcolor:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 15
 	.word xt_and
@@ -6079,16 +6275,16 @@ xt_defx2dtextx2dfgx2dcolor:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_302:
+l_303:
 	.word xt_i
 	.word xt_cx21
 	.word xt_x28loopx29
-	.word l_302
-l_303:
+	.word l_303
+l_304:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END def-text-fg-color
 
@@ -6108,7 +6304,7 @@ w_defx2dtextx2dbgx2dcolor:
 	.word w_defx2dtextx2dfgx2dcolor
 xt_defx2dtextx2dbgx2dcolor:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_x28literalx29
 	.word 15
 	.word xt_and
@@ -6130,16 +6326,16 @@ xt_defx2dtextx2dbgx2dcolor:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_304:
+l_305:
 	.word xt_i
 	.word xt_cx21
 	.word xt_x28loopx29
-	.word l_304
-l_305:
+	.word l_305
+l_306:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END def-text-bg-color
 
@@ -6159,7 +6355,7 @@ w_setx2dborderx2dcolor:
 	.word w_defx2dtextx2dbgx2dcolor
 xt_setx2dborderx2dcolor:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_iox2dpage
 	.word xt_cx40
 	.word xt_x3er
@@ -6178,7 +6374,7 @@ xt_setx2dborderx2dcolor:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END set-border-color
 
@@ -6198,7 +6394,7 @@ w_setx2dborderx2dsize:
 	.word w_setx2dborderx2dcolor
 xt_setx2dborderx2dsize:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_iox2dpage
 	.word xt_cx40
 	.word xt_x3er
@@ -6209,7 +6405,7 @@ xt_setx2dborderx2dsize:
 	.word xt_over
 	.word xt_or
 	.word xt_x28branch0x29
-	.word l_306
+	.word l_307
 	.word xt_x28literalx29
 	.word 31
 	.word xt_and
@@ -6232,8 +6428,8 @@ xt_setx2dborderx2dsize:
 	.word 53252
 	.word xt_cx21
 	.word xt_x28branchx29
-	.word l_307
-l_306:
+	.word l_308
+l_307:
 	.word xt_x28literalx29
 	.word 53252
 	.word xt_cx40
@@ -6244,11 +6440,11 @@ l_306:
 	.word 53252
 	.word xt_cx21
 	.word xt_2drop
-l_307:
+l_308:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END set-border-size
 
@@ -6269,9 +6465,9 @@ w_maze:
 	.word w_setx2dborderx2dsize
 xt_maze:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_initrandom
-l_308:
+l_309:
 	.word xt_random
 	.word xt_1
 	.word xt_and
@@ -6280,9 +6476,9 @@ l_308:
 	.word xt_x2b
 	.word xt_emit
 	.word xt_x28branchx29
-	.word l_308
-l_309:
-	.word i_exit
+	.word l_309
+l_310:
+	.word xt_exit
 	.bend
 ; END maze
 
@@ -6295,7 +6491,7 @@ w_cold:
 	.word w_maze
 xt_cold:
 	.block
-	jmp i_enter
+	jmp xt_enter
 	.word xt_forth
 	.word xt_definitions
 	.word xt_s0
@@ -6339,7 +6535,7 @@ xt_cold:
 	.word 10
 	.word xt_setx2dborderx2dsize
 	.word xt_quit
-	.word i_exit
+	.word xt_exit
 	.bend
 ; END cold
 
