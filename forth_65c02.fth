@@ -1998,14 +1998,3 @@ end-code
 { 61h 16 digit --> 10 ffffh }
 { 46h 16 digit --> fh ffffh }
 { 66h 16 digit --> fh ffffh }
-
-( -- addr )
-code pad
-    lda #$90
-    sta pstack+1,x
-    stz pstack,x
-    dex
-    dex
-    jmp next
-end-code
-

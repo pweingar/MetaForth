@@ -27,6 +27,12 @@ include" forth_65c02.fth"
 26 user handler     ( Pointer to the HANDLER variable for TRY-CATCH )
 28 user csp         ( Pointer to a save location for the return stack pointer )
 
+( -- addr )
+: pad
+    ( Return the address of the temporary string buffer )
+    dp @ 0100h +
+;
+
 ( -- )
 : [
     ( Switch state to EXECUTE )
@@ -691,15 +697,11 @@ include" f256jr.fth"
     s0 @ sp!                ( Set the parameter stack pointer to the initial value )
     r0 @ rp!                ( Set the return stack pointer )
     0 blk !                 ( Initialize the block number to 0 )
-    5000h dp !              ( Initialize the dictionary pointer )
-    BF00h tib !             ( Initialize the TIB )
+    0800h dp !              ( Initialize the dictionary pointer )
     decimal
 
     ." Welcome to MetaForth v00.00.00" cr
-    255 255 0 15 def-text-fg-color
-    128 128 0 set-border-color
-    10 10 set-border-size
-
+    
     \\ unittest
     \\ ." All unit tests PASSED!" cr
 

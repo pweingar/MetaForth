@@ -10,12 +10,11 @@
 .cpu "w65c02"
 
 pstack = $0000          ; Location of the "bottom" of the parameter stack
-USERAREA = $A000        ; Area for user variables
+USERAREA = $5000        ; Area for user variables
 
 CHAR_TAB = 9
 
-
-.include "bios65.asm"   ; Include the light BIOS
+.include "sections.asm" ; Define the memory map
 
 .section zp
 ip      .word ?         ; Instruction pointer
@@ -31,7 +30,9 @@ sign    .byte ?         ; A scratch byte to keep track of the sign of a number
 
 .section code
 
-welcome .null "MetaForth v00.00.00",13
+coldstart:
+        jsr ioinit
+        jmp start
 
 ;;
 ;; Initial User Variable values
@@ -44,9 +45,9 @@ init_user:
         .word 0         ; Initial STATE
         .word 0         ; Initial CONTEXT
         .word 0         ; Initial CURRENT
-        .word <>endcode ; Initial DP
+        .word $0800     ; Initial DP
         .word 0         ; Initial >IN
-        .word $bf00     ; Initial TIB
+        .word $3f00     ; Initial TIB
         .word 0         ; Initial SOURCE-ID
         .word 0         ; Initial BLK
         .word $ffff     ; Initial DPL
@@ -74,12 +75,7 @@ user_handler = 26
 ;; Bootstrapping code
 ;;
 
-start   ldx #$ff        ; Initialize the RSP
-        txs
-        
-        ldx #$6e        ; Initialize the PSP
-
-        ; TODO: initialize the USER variables
+start   ldx #$6e        ; Initialize the PSP
 
         ; Initialize IP and start the interpreter
         lda #<vstart
@@ -133,9 +129,6 @@ next    ldy #1          ; wp := (ip)
 
         jmp (wp)        ; jmp (wp)
 
-;;
-;; Words -- This section is machine generated code.
-;;          To modify, update the relevant FTH files and regenerate the assembly
-;;
-
 .send
+
+.include "io.asm"       ; Include the light BIOS

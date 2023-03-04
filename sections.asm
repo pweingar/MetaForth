@@ -8,8 +8,5 @@
 * = $0200           ; Location for standard variables
 .dsection variables
 
-* = $0800           ; Location for runtime code
+* = $4000           ; Location for runtime code
 .dsection code
-
-* = $b000           ; Location of BIOS jump table
-.dsection jumptable

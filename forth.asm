@@ -4216,31 +4216,13 @@ xt_digit:
 	.bend
 ; END digit
 
-; ( -- addr )
-; BEGIN pad
-w_pad:
-	.byte $03
-	.text 'pad'
-	.fill 13
-	.word w_digit
-xt_pad:
-	.block
-	lda #$90
-	sta pstack+1,x
-	stz pstack,x
-	dex
-	dex
-	jmp next
-	.bend
-; END pad
-
 ; ( Define some constants )
 ; BEGIN bs
 w_bs:
 	.byte $02
 	.text 'bs'
 	.fill 14
-	.word w_pad
+	.word w_digit
 xt_bs:
 	.block
 	jmp xt_x28constantx29
@@ -4488,13 +4470,33 @@ xt_csp:
 ; END csp
 
 ; ( Pointer to a save location for the return stack pointer )
+; ( -- addr )
+; BEGIN pad
+w_pad:
+	.byte $03
+	.text 'pad'
+	.fill 13
+	.word w_csp
+xt_pad:
+	.block
+	jmp xt_enter
+	.word xt_dp
+	.word xt_x40
+	.word xt_x28literalx29
+	.word 256
+	.word xt_x2b
+	.word xt_exit
+	.bend
+; END pad
+
+; ( Return the address of the temporary string buffer )
 ; ( -- )
 ; BEGIN [
 w_x5b:
 	.byte $C1
 	.text '['
 	.fill 15
-	.word w_csp
+	.word w_pad
 xt_x5b:
 	.block
 	jmp xt_enter
@@ -6504,36 +6506,13 @@ xt_cold:
 	.word xt_blk
 	.word xt_x21
 	.word xt_x28literalx29
-	.word 20480
+	.word 2048
 	.word xt_dp
-	.word xt_x21
-	.word xt_x28literalx29
-	.word 48896
-	.word xt_tib
 	.word xt_x21
 	.word xt_decimal
 	.word xt_x28x2ex22x29
 	.ptext "Welcome to MetaForth v00.00.00"
 	.word xt_cr
-	.word xt_x28literalx29
-	.word 255
-	.word xt_x28literalx29
-	.word 255
-	.word xt_0
-	.word xt_x28literalx29
-	.word 15
-	.word xt_defx2dtextx2dfgx2dcolor
-	.word xt_x28literalx29
-	.word 128
-	.word xt_x28literalx29
-	.word 128
-	.word xt_0
-	.word xt_setx2dborderx2dcolor
-	.word xt_x28literalx29
-	.word 10
-	.word xt_x28literalx29
-	.word 10
-	.word xt_setx2dborderx2dsize
 	.word xt_quit
 	.word xt_exit
 	.bend
@@ -6543,7 +6522,6 @@ xt_cold:
 ; ( Set the return stack pointer )
 ; ( Initialize the block number to 0 )
 ; ( Initialize the dictionary pointer )
-; ( Initialize the TIB )
 .send
 ; End of auto-generated code
 
