@@ -10,7 +10,7 @@
 .cpu "w65c02"
 
 pstack = $0000          ; Location of the "bottom" of the parameter stack
-USERAREA = $5000        ; Area for user variables
+USERAREA = $1000        ; Area for user variables
 
 CHAR_TAB = 9
 
@@ -45,7 +45,7 @@ init_user:
         .word 0         ; Initial STATE
         .word 0         ; Initial CONTEXT
         .word 0         ; Initial CURRENT
-        .word $0800     ; Initial DP
+        .word $1000     ; Initial DP
         .word 0         ; Initial >IN
         .word $3f00     ; Initial TIB
         .word 0         ; Initial SOURCE-ID

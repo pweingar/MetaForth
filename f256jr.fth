@@ -91,6 +91,6 @@
     
     initrandom
     begin
-        random 1 and [char] a + emit
+        random 1 and BAh + emit
     again
 ;

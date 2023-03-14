@@ -57,7 +57,7 @@ include" forth_65c02.fth"
 ( x1 x2 x3 -- x2 x3 x1 )
 : rot
     >r
-    swap 
+    swap
     r>
     swap
 ;
@@ -200,7 +200,7 @@ include" forth_65c02.fth"
 ;
 
 ( nfa -- pfa )
-: pfa 
+: pfa
     22 +
 ;
 
@@ -252,7 +252,7 @@ include" forth_65c02.fth"
 : type
     ?dup if
         ( n is > 0 )
-        over +          \ start-addr end-addr 
+        over +          \ start-addr end-addr
         swap            \ end-addr start-addr
         do
             i c@        \ get char at current address
@@ -404,7 +404,7 @@ include" forth_65c02.fth"
 ;
 
 ( -- )
-: octal 
+: octal
     8 base !
 ;
 
@@ -441,7 +441,7 @@ defer ?error
         0 >r
         1 +                 ( d0 addr+1 )
     then
-    
+
     -1
     begin
         dpl !               ( d0 addr )
@@ -565,7 +565,7 @@ defer ?error
 defer interpret
 
 ( xt -- exception# | 0 )            \ return addr on stack
-: catch 
+: catch
     sp@ >r              ( xt )      \ save data stack pointer
     handler @ >r        ( xt )      \ and previous handler
     rp@ handler !       ( xt )      \ set current handler
@@ -576,7 +576,7 @@ defer interpret
 ;
 
 ( ??? exception# -- ??? exception# )
-: throw 
+: throw
     ?dup if                 ( exc# )    \ 0 THROW is no-op
         handler @ rp!       ( exc# )    \ restore prev return stack
         r> handler !        ( exc# )    \ restore prev handler
@@ -649,7 +649,6 @@ defer interpret
                 ( Compiling... compile the number )
                 ( Otherwise, leave the number on the stack )
                 postpone (literal) ,
-                halt
             then
         then
     repeat
@@ -662,25 +661,25 @@ defer interpret
 ( -- )
 : create
     ( Read the next word and add it )
-    bl word
-    latest ,
-    here current @ !
+    here                    ( Save start of new word )
+    bl word                 ( Find the word )
+    17 allot                ( Allocate enough room for the dictionary entry )
+    latest ,                ( Link to the previous LATEST )
+    current @ !             ( Make this word the new latest word in the dictionary )
 ;
 
 ( -- )
 : :
     ( Define a word... )
-    sp@ csp !               ( Save the current stack pointer for later verification )
     current @ context !
     create                  ( Define the word in the dictionary )
     ]                       ( Switch to COMPILE mode )
 
     4ch c,                  ( Set the CFA to JMP xt_enter )
-    postpone enter ,
+    postpone enter
 ;
 
 : ;
-    ?csp                    ( Verify that the stack pointer is the same as when colon was used )
     postpone exit           ( Compile EXIT )
     [                       ( Switch to EXECUTE mode )
 ; immediate
@@ -701,7 +700,7 @@ include" f256jr.fth"
     decimal
 
     ." Welcome to MetaForth v00.00.00" cr
-    
+
     \\ unittest
     \\ ." All unit tests PASSED!" cr
 

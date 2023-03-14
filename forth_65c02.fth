@@ -1928,7 +1928,7 @@ char_loop:
     stz pstack+3,x
     sta pstack+2,x
 
-    lda (dst_ptr)           ; Then the length of the word
+    lda (src_ptr)           ; Then the length of the word
     stz pstack+5,x
     sta pstack+4,x
 

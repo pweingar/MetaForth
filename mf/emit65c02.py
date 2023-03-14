@@ -64,7 +64,7 @@ class EmitterC02:
         self.emit_label_declaration(word.get_name_label())
         self._out.write("\t.byte ${:02X}\n".format(len(name) + word.get_flags()))
         self._out.write("\t.text \'{}\'\n".format(name))
-        self._out.write("\t.fill {}\n".format(EmitterC02.MAX_NAME_SIZE - len(name)))
+        self._out.write("\t.fill {},0\n".format(EmitterC02.MAX_NAME_SIZE - len(name)))
         if word.get_link():
             # If there is a linked word, emit the reference link to the word
             self.emit_label_reference(word.get_link().get_name_label())
@@ -85,7 +85,7 @@ class EmitterC02:
         self.emit_label_declaration(word.get_name_label())
         self._out.write("\t.byte ${:02X}\n".format(len(name) + word.get_flags()))
         self._out.write("\t.text \'{}\'\n".format(name))
-        self._out.write("\t.fill {}\n".format(EmitterC02.MAX_NAME_SIZE - len(name)))
+        self._out.write("\t.fill {},0\n".format(EmitterC02.MAX_NAME_SIZE - len(name)))
         if word.get_link():
             # If there is a linked word, emit the reference link to the word
             self.emit_label_reference(word.get_link().get_name_label())

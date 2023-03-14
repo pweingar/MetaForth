@@ -6,7 +6,7 @@
 w_exit:
 	.byte $04
 	.text 'exit'
-	.fill 12
+	.fill 12,0
 	.word 0
 xt_exit:
 	.block
@@ -22,7 +22,7 @@ xt_exit:
 w_enter:
 	.byte $05
 	.text 'enter'
-	.fill 11
+	.fill 11,0
 	.word w_exit
 xt_enter:
 	.block
@@ -46,7 +46,7 @@ xt_enter:
 w_testname:
 	.byte $08
 	.text 'testname'
-	.fill 8
+	.fill 8,0
 	.word w_enter
 xt_testname:
 	.block
@@ -65,7 +65,7 @@ xt_testname:
 w_assertx3d:
 	.byte $07
 	.text 'assert='
-	.fill 9
+	.fill 9,0
 	.word w_testname
 xt_assertx3d:
 	.block
@@ -124,7 +124,7 @@ xt_assertx3d:
 w_halt:
 	.byte $04
 	.text 'halt'
-	.fill 12
+	.fill 12,0
 	.word w_assertx3d
 xt_halt:
 	.block
@@ -189,7 +189,7 @@ xt_halt:
 w_rpx40:
 	.byte $03
 	.text 'rp@'
-	.fill 13
+	.fill 13,0
 	.word w_halt
 xt_rpx40:
 	.block
@@ -212,7 +212,7 @@ xt_rpx40:
 w_rpx21:
 	.byte $03
 	.text 'rp!'
-	.fill 13
+	.fill 13,0
 	.word w_rpx40
 xt_rpx21:
 	.block
@@ -232,7 +232,7 @@ xt_rpx21:
 w_spx40:
 	.byte $03
 	.text 'sp@'
-	.fill 13
+	.fill 13,0
 	.word w_rpx21
 xt_spx40:
 	.block
@@ -251,7 +251,7 @@ xt_spx40:
 w_spx21:
 	.byte $03
 	.text 'sp!'
-	.fill 13
+	.fill 13,0
 	.word w_spx40
 xt_spx21:
 	.block
@@ -266,7 +266,7 @@ xt_spx21:
 w_emit:
 	.byte $04
 	.text 'emit'
-	.fill 12
+	.fill 12,0
 	.word w_spx21
 xt_emit:
 	.block
@@ -285,7 +285,7 @@ xt_emit:
 w_keyx3f:
 	.byte $04
 	.text 'key?'
-	.fill 12
+	.fill 12,0
 	.word w_emit
 xt_keyx3f:
 	.block
@@ -311,7 +311,7 @@ xt_keyx3f:
 w_key:
 	.byte $03
 	.text 'key'
-	.fill 13
+	.fill 13,0
 	.word w_keyx3f
 xt_key:
 	.block
@@ -334,7 +334,7 @@ xt_key:
 w_cr:
 	.byte $02
 	.text 'cr'
-	.fill 14
+	.fill 14,0
 	.word w_key
 xt_cr:
 	.block
@@ -351,7 +351,7 @@ xt_cr:
 w_0:
 	.byte $01
 	.text '0'
-	.fill 15
+	.fill 15,0
 	.word w_cr
 xt_0:
 	.block
@@ -368,7 +368,7 @@ xt_0:
 w_1:
 	.byte $01
 	.text '1'
-	.fill 15
+	.fill 15,0
 	.word w_0
 xt_1:
 	.block
@@ -386,7 +386,7 @@ xt_1:
 w_2:
 	.byte $01
 	.text '2'
-	.fill 15
+	.fill 15,0
 	.word w_1
 xt_2:
 	.block
@@ -404,7 +404,7 @@ xt_2:
 w_x2d1:
 	.byte $02
 	.text '-1'
-	.fill 14
+	.fill 14,0
 	.word w_2
 xt_x2d1:
 	.block
@@ -422,7 +422,7 @@ xt_x2d1:
 w_x2d2:
 	.byte $02
 	.text '-2'
-	.fill 14
+	.fill 14,0
 	.word w_x2d1
 xt_x2d2:
 	.block
@@ -440,7 +440,7 @@ xt_x2d2:
 w_x28literalx29:
 	.byte $09
 	.text '(literal)'
-	.fill 7
+	.fill 7,0
 	.word w_x2d2
 xt_x28literalx29:
 	.block
@@ -467,7 +467,7 @@ xt_x28literalx29:
 w_x28dliteralx29:
 	.byte $0A
 	.text '(dliteral)'
-	.fill 6
+	.fill 6,0
 	.word w_x28literalx29
 xt_x28dliteralx29:
 	.block
@@ -500,7 +500,7 @@ xt_x28dliteralx29:
 w_depth:
 	.byte $05
 	.text 'depth'
-	.fill 11
+	.fill 11,0
 	.word w_x28dliteralx29
 xt_depth:
 	.block
@@ -517,1931 +517,13 @@ xt_depth:
 	.bend
 ; END depth
 
-; BEGIN unittest
-w_unittest:
-	.byte $08
-	.text 'unittest'
-	.fill 8
-	.word w_depth
-xt_unittest:
-	.block
-	jmp xt_enter
-	.word xt_x28literalx29
-	.word l_2
-	.word xt_x28branchx29
-	.word l_3
-l_2:
-	.null "depth --> 0"
-l_3:
-	.word xt_testname
-	.word xt_depth
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_4
-	.word xt_x28branchx29
-	.word l_5
-l_4:
-	.null "0 depth --> 0 1"
-l_5:
-	.word xt_testname
-	.word xt_0
-	.word xt_depth
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_6
-	.word xt_x28branchx29
-	.word l_7
-l_6:
-	.null "1 1 1 depth --> 1 1 1 3"
-l_7:
-	.word xt_testname
-	.word xt_1
-	.word xt_1
-	.word xt_1
-	.word xt_depth
-	.word xt_x28literalx29
-	.word 3
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_8
-	.word xt_x28branchx29
-	.word l_9
-l_8:
-	.null "1 2 drop --> 1"
-l_9:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_drop
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_10
-	.word xt_x28branchx29
-	.word l_11
-l_10:
-	.null "1 2 3 drop --> 1 2"
-l_11:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_x28literalx29
-	.word 3
-	.word xt_drop
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_12
-	.word xt_x28branchx29
-	.word l_13
-l_12:
-	.null "1 dup --> 1 1"
-l_13:
-	.word xt_testname
-	.word xt_1
-	.word xt_dup
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_14
-	.word xt_x28branchx29
-	.word l_15
-l_14:
-	.null "1 2 dup --> 1 2 2"
-l_15:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_dup
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_16
-	.word xt_x28branchx29
-	.word l_17
-l_16:
-	.null "1 2 3 swap --> 1 3 2"
-l_17:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_x28literalx29
-	.word 3
-	.word xt_swap
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 3
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_18
-	.word xt_x28branchx29
-	.word l_19
-l_18:
-	.null "1 2 3 4 2swap --> 3 4 1 2"
-l_19:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x28literalx29
-	.word 4
-	.word xt_2swap
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 4
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 3
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_20
-	.word xt_x28branchx29
-	.word l_21
-l_20:
-	.null "1 2 over --> 1 2 1"
-l_21:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_over
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_22
-	.word xt_x28branchx29
-	.word l_23
-l_22:
-	.null "1 2 3 4 2over --> 1 2 3 4 1 2"
-l_23:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x28literalx29
-	.word 4
-	.word xt_2over
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 4
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 3
-	.word xt_assertx3d
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_24
-	.word xt_x28branchx29
-	.word l_25
-l_24:
-	.null "5555h 0004h ! 0004h @ --> 5555h"
-l_25:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 21845
-	.word xt_x28literalx29
-	.word 4
-	.word xt_x21
-	.word xt_x28literalx29
-	.word 4
-	.word xt_x40
-	.word xt_x28literalx29
-	.word 21845
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_26
-	.word xt_x28branchx29
-	.word l_27
-l_26:
-	.null "aaaah 0004h ! 0004h @ --> aaaah"
-l_27:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 43690
-	.word xt_x28literalx29
-	.word 4
-	.word xt_x21
-	.word xt_x28literalx29
-	.word 4
-	.word xt_x40
-	.word xt_x28literalx29
-	.word 43690
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_28
-	.word xt_x28branchx29
-	.word l_29
-l_28:
-	.null "55h 0003h c! 0003h c@ --> 55h"
-l_29:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 85
-	.word xt_x28literalx29
-	.word 3
-	.word xt_cx21
-	.word xt_x28literalx29
-	.word 3
-	.word xt_cx40
-	.word xt_x28literalx29
-	.word 85
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_30
-	.word xt_x28branchx29
-	.word l_31
-l_30:
-	.null "aah 0003h c! 0003h c@ --> aah"
-l_31:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 170
-	.word xt_x28literalx29
-	.word 3
-	.word xt_cx21
-	.word xt_x28literalx29
-	.word 3
-	.word xt_cx40
-	.word xt_x28literalx29
-	.word 170
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_32
-	.word xt_x28branchx29
-	.word l_33
-l_32:
-	.null "1 0 + --> 1"
-l_33:
-	.word xt_testname
-	.word xt_1
-	.word xt_0
-	.word xt_x2b
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_34
-	.word xt_x28branchx29
-	.word l_35
-l_34:
-	.null "1 1 + --> 2"
-l_35:
-	.word xt_testname
-	.word xt_1
-	.word xt_1
-	.word xt_x2b
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_36
-	.word xt_x28branchx29
-	.word l_37
-l_36:
-	.null "3 10 + --> 13"
-l_37:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x28literalx29
-	.word 10
-	.word xt_x2b
-	.word xt_x28literalx29
-	.word 13
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_38
-	.word xt_x28branchx29
-	.word l_39
-l_38:
-	.null "ffffh 5 + --> 4"
-l_39:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x28literalx29
-	.word 5
-	.word xt_x2b
-	.word xt_x28literalx29
-	.word 4
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_40
-	.word xt_x28branchx29
-	.word l_41
-l_40:
-	.null "1234h 5678h 1111h 1111h d+ --> 2345h 6789h"
-l_41:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 4660
-	.word xt_x28literalx29
-	.word 22136
-	.word xt_x28literalx29
-	.word 4369
-	.word xt_x28literalx29
-	.word 4369
-	.word xt_dx2b
-	.word xt_x28literalx29
-	.word 26505
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 9029
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_42
-	.word xt_x28branchx29
-	.word l_43
-l_42:
-	.null "0000h 1111h 0000h eeefh d+ --> 0001h 0000h"
-l_43:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 0
-	.word xt_x28literalx29
-	.word 4369
-	.word xt_x28literalx29
-	.word 0
-	.word xt_x28literalx29
-	.word 61167
-	.word xt_dx2b
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_44
-	.word xt_x28branchx29
-	.word l_45
-l_44:
-	.null "4 3 - --> 1"
-l_45:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 4
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x2d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_46
-	.word xt_x28branchx29
-	.word l_47
-l_46:
-	.null "3 4 - --> ffffh"
-l_47:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x28literalx29
-	.word 4
-	.word xt_x2d
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_48
-	.word xt_x28branchx29
-	.word l_49
-l_48:
-	.null "10 5 - --> 5"
-l_49:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 10
-	.word xt_x28literalx29
-	.word 5
-	.word xt_x2d
-	.word xt_x28literalx29
-	.word 5
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_50
-	.word xt_x28branchx29
-	.word l_51
-l_50:
-	.null "2 3 u* --> 6"
-l_51:
-	.word xt_testname
-	.word xt_2
-	.word xt_x28literalx29
-	.word 3
-	.word xt_ux2a
-	.word xt_x28literalx29
-	.word 6
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_52
-	.word xt_x28branchx29
-	.word l_53
-l_52:
-	.null "10 4 u* --> 40"
-l_53:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 10
-	.word xt_x28literalx29
-	.word 4
-	.word xt_ux2a
-	.word xt_x28literalx29
-	.word 40
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_54
-	.word xt_x28branchx29
-	.word l_55
-l_54:
-	.null "2 3 * --> 6"
-l_55:
-	.word xt_testname
-	.word xt_2
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x2a
-	.word xt_x28literalx29
-	.word 6
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_56
-	.word xt_x28branchx29
-	.word l_57
-l_56:
-	.null "10 4 * --> 40"
-l_57:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 10
-	.word xt_x28literalx29
-	.word 4
-	.word xt_x2a
-	.word xt_x28literalx29
-	.word 40
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_58
-	.word xt_x28branchx29
-	.word l_59
-l_58:
-	.null "fffeh 3 * --> fffah"
-l_59:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65534
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x2a
-	.word xt_x28literalx29
-	.word 65530
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_60
-	.word xt_x28branchx29
-	.word l_61
-l_60:
-	.null "0 1 3 um/mod --> 1 0"
-l_61:
-	.word xt_testname
-	.word xt_0
-	.word xt_1
-	.word xt_x28literalx29
-	.word 3
-	.word xt_umx2fmod
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_62
-	.word xt_x28branchx29
-	.word l_63
-l_62:
-	.null "0 2 3 um/mod --> 2 0"
-l_63:
-	.word xt_testname
-	.word xt_0
-	.word xt_2
-	.word xt_x28literalx29
-	.word 3
-	.word xt_umx2fmod
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_64
-	.word xt_x28branchx29
-	.word l_65
-l_64:
-	.null "0 3 3 um/mod --> 0 1"
-l_65:
-	.word xt_testname
-	.word xt_0
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x28literalx29
-	.word 3
-	.word xt_umx2fmod
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_66
-	.word xt_x28branchx29
-	.word l_67
-l_66:
-	.null "0 4 3 um/mod --> 1 1"
-l_67:
-	.word xt_testname
-	.word xt_0
-	.word xt_x28literalx29
-	.word 4
-	.word xt_x28literalx29
-	.word 3
-	.word xt_umx2fmod
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_68
-	.word xt_x28branchx29
-	.word l_69
-l_68:
-	.null "0 6 3 um/mod --> 0 2"
-l_69:
-	.word xt_testname
-	.word xt_0
-	.word xt_x28literalx29
-	.word 6
-	.word xt_x28literalx29
-	.word 3
-	.word xt_umx2fmod
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_70
-	.word xt_x28branchx29
-	.word l_71
-l_70:
-	.null "1234h s>d --> 0000h 1234h"
-l_71:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 4660
-	.word xt_sx3ed
-	.word xt_x28literalx29
-	.word 4660
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_72
-	.word xt_x28branchx29
-	.word l_73
-l_72:
-	.null "ffffh s>d --> ffffh ffffh"
-l_73:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_sx3ed
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_74
-	.word xt_x28branchx29
-	.word l_75
-l_74:
-	.null "fffeh s>d --> ffffh fffeh"
-l_75:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65534
-	.word xt_sx3ed
-	.word xt_x28literalx29
-	.word 65534
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_76
-	.word xt_x28branchx29
-	.word l_77
-l_76:
-	.null "1 1+ --> 2"
-l_77:
-	.word xt_testname
-	.word xt_1
-	.word xt_1x2b
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_78
-	.word xt_x28branchx29
-	.word l_79
-l_78:
-	.null "0 1+ --> 1"
-l_79:
-	.word xt_testname
-	.word xt_0
-	.word xt_1x2b
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_80
-	.word xt_x28branchx29
-	.word l_81
-l_80:
-	.null "20 1+ --> 21"
-l_81:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 20
-	.word xt_1x2b
-	.word xt_x28literalx29
-	.word 21
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_82
-	.word xt_x28branchx29
-	.word l_83
-l_82:
-	.null "ffffh 1+ --> 0"
-l_83:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_1x2b
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_84
-	.word xt_x28branchx29
-	.word l_85
-l_84:
-	.null "1 2+ --> 3"
-l_85:
-	.word xt_testname
-	.word xt_1
-	.word xt_2x2b
-	.word xt_x28literalx29
-	.word 3
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_86
-	.word xt_x28branchx29
-	.word l_87
-l_86:
-	.null "0 2+ --> 2"
-l_87:
-	.word xt_testname
-	.word xt_0
-	.word xt_2x2b
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_88
-	.word xt_x28branchx29
-	.word l_89
-l_88:
-	.null "20 2+ --> 22"
-l_89:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 20
-	.word xt_2x2b
-	.word xt_x28literalx29
-	.word 22
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_90
-	.word xt_x28branchx29
-	.word l_91
-l_90:
-	.null "fffeh 2+ --> 0"
-l_91:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65534
-	.word xt_2x2b
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_92
-	.word xt_x28branchx29
-	.word l_93
-l_92:
-	.null "1 1- --> 0"
-l_93:
-	.word xt_testname
-	.word xt_1
-	.word xt_1x2d
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_94
-	.word xt_x28branchx29
-	.word l_95
-l_94:
-	.null "0 1- --> ffffh"
-l_95:
-	.word xt_testname
-	.word xt_0
-	.word xt_1x2d
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_96
-	.word xt_x28branchx29
-	.word l_97
-l_96:
-	.null "20 1- --> 19"
-l_97:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 20
-	.word xt_1x2d
-	.word xt_x28literalx29
-	.word 19
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_98
-	.word xt_x28branchx29
-	.word l_99
-l_98:
-	.null "ffffh 1- --> fffeh"
-l_99:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_1x2d
-	.word xt_x28literalx29
-	.word 65534
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_100
-	.word xt_x28branchx29
-	.word l_101
-l_100:
-	.null "1 2- --> ffffh"
-l_101:
-	.word xt_testname
-	.word xt_1
-	.word xt_2x2d
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_102
-	.word xt_x28branchx29
-	.word l_103
-l_102:
-	.null "0 2- --> fffeh"
-l_103:
-	.word xt_testname
-	.word xt_0
-	.word xt_2x2d
-	.word xt_x28literalx29
-	.word 65534
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_104
-	.word xt_x28branchx29
-	.word l_105
-l_104:
-	.null "20 2- --> 18"
-l_105:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 20
-	.word xt_2x2d
-	.word xt_x28literalx29
-	.word 18
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_106
-	.word xt_x28branchx29
-	.word l_107
-l_106:
-	.null "ffffh 2- --> fffdh"
-l_107:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_2x2d
-	.word xt_x28literalx29
-	.word 65533
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_108
-	.word xt_x28branchx29
-	.word l_109
-l_108:
-	.null "0000h 0000h and --> 0000h"
-l_109:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 0
-	.word xt_x28literalx29
-	.word 0
-	.word xt_and
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_110
-	.word xt_x28branchx29
-	.word l_111
-l_110:
-	.null "0000h ffffh and --> 0000h"
-l_111:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 0
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_and
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_112
-	.word xt_x28branchx29
-	.word l_113
-l_112:
-	.null "ffffh 0000h and --> 0000h"
-l_113:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x28literalx29
-	.word 0
-	.word xt_and
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_114
-	.word xt_x28branchx29
-	.word l_115
-l_114:
-	.null "ffffh ffffh and --> ffffh"
-l_115:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_and
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_116
-	.word xt_x28branchx29
-	.word l_117
-l_116:
-	.null "0000h 0000h or --> 0000h"
-l_117:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 0
-	.word xt_x28literalx29
-	.word 0
-	.word xt_or
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_118
-	.word xt_x28branchx29
-	.word l_119
-l_118:
-	.null "0000h ffffh or --> ffffh"
-l_119:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 0
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_or
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_120
-	.word xt_x28branchx29
-	.word l_121
-l_120:
-	.null "ffffh 0000h or --> ffffh"
-l_121:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x28literalx29
-	.word 0
-	.word xt_or
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_122
-	.word xt_x28branchx29
-	.word l_123
-l_122:
-	.null "ffffh ffffh or --> ffffh"
-l_123:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_or
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_124
-	.word xt_x28branchx29
-	.word l_125
-l_124:
-	.null "0000h 0000h xor --> 0000h"
-l_125:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 0
-	.word xt_x28literalx29
-	.word 0
-	.word xt_xor
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_126
-	.word xt_x28branchx29
-	.word l_127
-l_126:
-	.null "0000h ffffh xor --> ffffh"
-l_127:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 0
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_xor
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_128
-	.word xt_x28branchx29
-	.word l_129
-l_128:
-	.null "ffffh 0000h xor --> ffffh"
-l_129:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x28literalx29
-	.word 0
-	.word xt_xor
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_130
-	.word xt_x28branchx29
-	.word l_131
-l_130:
-	.null "ffffh ffffh xor --> 0000h"
-l_131:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_xor
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_132
-	.word xt_x28branchx29
-	.word l_133
-l_132:
-	.null "0000h not --> ffffh"
-l_133:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 0
-	.word xt_not
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_134
-	.word xt_x28branchx29
-	.word l_135
-l_134:
-	.null "ffffh not --> 0000h"
-l_135:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_not
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_136
-	.word xt_x28branchx29
-	.word l_137
-l_136:
-	.null "0 0< --> 0000h"
-l_137:
-	.word xt_testname
-	.word xt_0
-	.word xt_0x3c
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_138
-	.word xt_x28branchx29
-	.word l_139
-l_138:
-	.null "3 0< --> 0000h"
-l_139:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 3
-	.word xt_0x3c
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_140
-	.word xt_x28branchx29
-	.word l_141
-l_140:
-	.null "ffffh 0< --> ffffh"
-l_141:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_0x3c
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_142
-	.word xt_x28branchx29
-	.word l_143
-l_142:
-	.null "0 0= --> ffffh"
-l_143:
-	.word xt_testname
-	.word xt_0
-	.word xt_0x3d
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_144
-	.word xt_x28branchx29
-	.word l_145
-l_144:
-	.null "3 0= --> 0000h"
-l_145:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 3
-	.word xt_0x3d
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_146
-	.word xt_x28branchx29
-	.word l_147
-l_146:
-	.null "ffffh 0= --> 0000h"
-l_147:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_0x3d
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_148
-	.word xt_x28branchx29
-	.word l_149
-l_148:
-	.null "0 0> --> 0000h"
-l_149:
-	.word xt_testname
-	.word xt_0
-	.word xt_0x3e
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_150
-	.word xt_x28branchx29
-	.word l_151
-l_150:
-	.null "3 0> --> ffffh"
-l_151:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 3
-	.word xt_0x3e
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_152
-	.word xt_x28branchx29
-	.word l_153
-l_152:
-	.null "ffffh 0> --> 0000h"
-l_153:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_0x3e
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_154
-	.word xt_x28branchx29
-	.word l_155
-l_154:
-	.null "cells 2 - 0= --> ffffh"
-l_155:
-	.word xt_testname
-	.word xt_cells
-	.word xt_2
-	.word xt_x2d
-	.word xt_0x3d
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_156
-	.word xt_x28branchx29
-	.word l_157
-l_156:
-	.null "' 1 execute --> 1"
-l_157:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word xt_1
-	.word xt_execute
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_158
-	.word xt_x28branchx29
-	.word l_159
-l_158:
-	.null "1 2 ' + execute --> 3"
-l_159:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_x28literalx29
-	.word xt_x2b
-	.word xt_execute
-	.word xt_x28literalx29
-	.word 3
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_160
-	.word xt_x28branchx29
-	.word l_161
-l_160:
-	.null "30h 10 digit --> 0 ffffh"
-l_161:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 48
-	.word xt_x28literalx29
-	.word 10
-	.word xt_digit
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_162
-	.word xt_x28branchx29
-	.word l_163
-l_162:
-	.null "31h 10 digit --> 1 ffffh"
-l_163:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 49
-	.word xt_x28literalx29
-	.word 10
-	.word xt_digit
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_164
-	.word xt_x28branchx29
-	.word l_165
-l_164:
-	.null "39h 10 digit --> 9 ffffh"
-l_165:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 57
-	.word xt_x28literalx29
-	.word 10
-	.word xt_digit
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 9
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_166
-	.word xt_x28branchx29
-	.word l_167
-l_166:
-	.null "41h 10 digit --> 0"
-l_167:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65
-	.word xt_x28literalx29
-	.word 10
-	.word xt_digit
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_168
-	.word xt_x28branchx29
-	.word l_169
-l_168:
-	.null "61h 10 digit --> 0"
-l_169:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 97
-	.word xt_x28literalx29
-	.word 10
-	.word xt_digit
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_170
-	.word xt_x28branchx29
-	.word l_171
-l_170:
-	.null "41h 16 digit --> 10 ffffh"
-l_171:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65
-	.word xt_x28literalx29
-	.word 16
-	.word xt_digit
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 10
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_172
-	.word xt_x28branchx29
-	.word l_173
-l_172:
-	.null "61h 16 digit --> 10 ffffh"
-l_173:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 97
-	.word xt_x28literalx29
-	.word 16
-	.word xt_digit
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 10
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_174
-	.word xt_x28branchx29
-	.word l_175
-l_174:
-	.null "46h 16 digit --> fh ffffh"
-l_175:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 70
-	.word xt_x28literalx29
-	.word 16
-	.word xt_digit
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 15
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_176
-	.word xt_x28branchx29
-	.word l_177
-l_176:
-	.null "66h 16 digit --> fh ffffh"
-l_177:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 102
-	.word xt_x28literalx29
-	.word 16
-	.word xt_digit
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 15
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_179
-	.word xt_x28branchx29
-	.word l_180
-l_179:
-	.null "0 ?dup --> 0"
-l_180:
-	.word xt_testname
-	.word xt_0
-	.word xt_x3fdup
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_181
-	.word xt_x28branchx29
-	.word l_182
-l_181:
-	.null "1 ?dup --> 1 1"
-l_182:
-	.word xt_testname
-	.word xt_1
-	.word xt_x3fdup
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_183
-	.word xt_x28branchx29
-	.word l_184
-l_183:
-	.null "1 2 3 rot --> 2 3 1"
-l_184:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_x28literalx29
-	.word 3
-	.word xt_rot
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word 3
-	.word xt_assertx3d
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_185
-	.word xt_x28branchx29
-	.word l_186
-l_185:
-	.null "1 2 2dup --> 1 2 1 2"
-l_186:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_2dup
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_187
-	.word xt_x28branchx29
-	.word l_188
-l_187:
-	.null "1 2 3 4 2drop --> 1 2"
-l_188:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x28literalx29
-	.word 4
-	.word xt_2drop
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_189
-	.word xt_x28branchx29
-	.word l_190
-l_189:
-	.null "1 2 < --> ffffh"
-l_190:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_x3c
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_191
-	.word xt_x28branchx29
-	.word l_192
-l_191:
-	.null "2 1 < --> 0000h"
-l_192:
-	.word xt_testname
-	.word xt_2
-	.word xt_1
-	.word xt_x3c
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_193
-	.word xt_x28branchx29
-	.word l_194
-l_193:
-	.null "0 ffffh < --> 0000h"
-l_194:
-	.word xt_testname
-	.word xt_0
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x3c
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_195
-	.word xt_x28branchx29
-	.word l_196
-l_195:
-	.null "ffffh 0 < --> ffffh"
-l_196:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_0
-	.word xt_x3c
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_197
-	.word xt_x28branchx29
-	.word l_198
-l_197:
-	.null "1 2 > --> 0000h"
-l_198:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_x3e
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_199
-	.word xt_x28branchx29
-	.word l_200
-l_199:
-	.null "2 1 > --> ffffh"
-l_200:
-	.word xt_testname
-	.word xt_2
-	.word xt_1
-	.word xt_x3e
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_201
-	.word xt_x28branchx29
-	.word l_202
-l_201:
-	.null "0 ffffh > --> ffffh"
-l_202:
-	.word xt_testname
-	.word xt_0
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x3e
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_203
-	.word xt_x28branchx29
-	.word l_204
-l_203:
-	.null "ffffh 0 > --> 0000h"
-l_204:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_0
-	.word xt_x3e
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_205
-	.word xt_x28branchx29
-	.word l_206
-l_205:
-	.null "1 0 = --> 0000h"
-l_206:
-	.word xt_testname
-	.word xt_1
-	.word xt_0
-	.word xt_x3d
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_207
-	.word xt_x28branchx29
-	.word l_208
-l_207:
-	.null "1 1 = --> ffffh"
-l_208:
-	.word xt_testname
-	.word xt_1
-	.word xt_1
-	.word xt_x3d
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_209
-	.word xt_x28branchx29
-	.word l_210
-l_209:
-	.null "ffffh 0 = --> 0000h"
-l_210:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_0
-	.word xt_x3d
-	.word xt_x28literalx29
-	.word 0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_211
-	.word xt_x28branchx29
-	.word l_212
-l_211:
-	.null "ffffh ffffh = --> ffffh"
-l_212:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x3d
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_213
-	.word xt_x28branchx29
-	.word l_214
-l_213:
-	.null "0 0 = --> ffffh"
-l_214:
-	.word xt_testname
-	.word xt_0
-	.word xt_0
-	.word xt_x3d
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_216
-	.word xt_x28branchx29
-	.word l_217
-l_216:
-	.null "1 abs --> 1"
-l_217:
-	.word xt_testname
-	.word xt_1
-	.word xt_abs
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_218
-	.word xt_x28branchx29
-	.word l_219
-l_218:
-	.null "ffffh abs --> 1"
-l_219:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_abs
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_220
-	.word xt_x28branchx29
-	.word l_221
-l_220:
-	.null "0 abs --> 0"
-l_221:
-	.word xt_testname
-	.word xt_0
-	.word xt_abs
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_223
-	.word xt_x28branchx29
-	.word l_224
-l_223:
-	.null "1 2 dabs --> 1 2"
-l_224:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_dabs
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_225
-	.word xt_x28branchx29
-	.word l_226
-l_225:
-	.null "ffffh ffffh dabs --> 0 1"
-l_226:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_dabs
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_227
-	.word xt_x28branchx29
-	.word l_228
-l_227:
-	.null "0 0 dabs --> 0 0"
-l_228:
-	.word xt_testname
-	.word xt_0
-	.word xt_0
-	.word xt_dabs
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_229
-	.word xt_x28branchx29
-	.word l_230
-l_229:
-	.null "6 3 / --> 2"
-l_230:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 6
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x2f
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_231
-	.word xt_x28branchx29
-	.word l_232
-l_231:
-	.null "10 3 / --> 3"
-l_232:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 10
-	.word xt_x28literalx29
-	.word 3
-	.word xt_x2f
-	.word xt_x28literalx29
-	.word 3
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_233
-	.word xt_x28branchx29
-	.word l_234
-l_233:
-	.null "6 3 mod --> 0"
-l_234:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 6
-	.word xt_x28literalx29
-	.word 3
-	.word xt_mod
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_235
-	.word xt_x28branchx29
-	.word l_236
-l_235:
-	.null "10 3 mod --> 1"
-l_236:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 10
-	.word xt_x28literalx29
-	.word 3
-	.word xt_mod
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_239
-	.word xt_x28branchx29
-	.word l_240
-l_239:
-	.null "1 2 max --> 2"
-l_240:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_max
-	.word xt_2
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_241
-	.word xt_x28branchx29
-	.word l_242
-l_241:
-	.null "3 0 max --> 3"
-l_242:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 3
-	.word xt_0
-	.word xt_max
-	.word xt_x28literalx29
-	.word 3
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_243
-	.word xt_x28branchx29
-	.word l_244
-l_243:
-	.null "fffeh ffffh max --> ffffh"
-l_244:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65534
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_max
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_247
-	.word xt_x28branchx29
-	.word l_248
-l_247:
-	.null "1 2 min --> 1"
-l_248:
-	.word xt_testname
-	.word xt_1
-	.word xt_2
-	.word xt_min
-	.word xt_1
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_249
-	.word xt_x28branchx29
-	.word l_250
-l_249:
-	.null "3 0 min --> 0"
-l_250:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 3
-	.word xt_0
-	.word xt_min
-	.word xt_0
-	.word xt_assertx3d
-	.word xt_x28literalx29
-	.word l_251
-	.word xt_x28branchx29
-	.word l_252
-l_251:
-	.null "fffeh ffffh min --> fffeh"
-l_252:
-	.word xt_testname
-	.word xt_x28literalx29
-	.word 65534
-	.word xt_x28literalx29
-	.word 65535
-	.word xt_min
-	.word xt_x28literalx29
-	.word 65534
-	.word xt_assertx3d
-	.word xt_exit
-	.bend
-; END unittest
-
 ; ( x -- )
 ; BEGIN drop
 w_drop:
 	.byte $04
 	.text 'drop'
-	.fill 12
-	.word w_unittest
+	.fill 12,0
+	.word w_depth
 xt_drop:
 	.block
 	inx
@@ -2455,7 +537,7 @@ xt_drop:
 w_dup:
 	.byte $03
 	.text 'dup'
-	.fill 13
+	.fill 13,0
 	.word w_drop
 xt_dup:
 	.block
@@ -2474,7 +556,7 @@ xt_dup:
 w_swap:
 	.byte $04
 	.text 'swap'
-	.fill 12
+	.fill 12,0
 	.word w_dup
 xt_swap:
 	.block
@@ -2495,7 +577,7 @@ xt_swap:
 w_2swap:
 	.byte $05
 	.text '2swap'
-	.fill 11
+	.fill 11,0
 	.word w_swap
 xt_2swap:
 	.block
@@ -2532,7 +614,7 @@ xt_2swap:
 w_over:
 	.byte $04
 	.text 'over'
-	.fill 12
+	.fill 12,0
 	.word w_2swap
 xt_over:
 	.block
@@ -2551,7 +633,7 @@ xt_over:
 w_2over:
 	.byte $05
 	.text '2over'
-	.fill 11
+	.fill 11,0
 	.word w_over
 xt_2over:
 	.block
@@ -2577,7 +659,7 @@ xt_2over:
 w_x3er:
 	.byte $02
 	.text '>r'
-	.fill 14
+	.fill 14,0
 	.word w_2over
 xt_x3er:
 	.block
@@ -2597,7 +679,7 @@ xt_x3er:
 w_rx3e:
 	.byte $02
 	.text 'r>'
-	.fill 14
+	.fill 14,0
 	.word w_x3er
 xt_rx3e:
 	.block
@@ -2616,7 +698,7 @@ xt_rx3e:
 w_r:
 	.byte $01
 	.text 'r'
-	.fill 15
+	.fill 15,0
 	.word w_rx3e
 xt_r:
 	.block
@@ -2638,7 +720,7 @@ xt_r:
 w_rdrop:
 	.byte $05
 	.text 'rdrop'
-	.fill 11
+	.fill 11,0
 	.word w_r
 xt_rdrop:
 	.block
@@ -2652,7 +734,7 @@ xt_rdrop:
 w_x21:
 	.byte $01
 	.text '!'
-	.fill 15
+	.fill 15,0
 	.word w_rdrop
 xt_x21:
 	.block
@@ -2678,7 +760,7 @@ xt_x21:
 w_x40:
 	.byte $01
 	.text '@'
-	.fill 15
+	.fill 15,0
 	.word w_x21
 xt_x40:
 	.block
@@ -2700,7 +782,7 @@ xt_x40:
 w_cx21:
 	.byte $02
 	.text 'c!'
-	.fill 14
+	.fill 14,0
 	.word w_x40
 xt_cx21:
 	.block
@@ -2719,7 +801,7 @@ xt_cx21:
 w_cx40:
 	.byte $02
 	.text 'c@'
-	.fill 14
+	.fill 14,0
 	.word w_cx21
 xt_cx40:
 	.block
@@ -2735,7 +817,7 @@ xt_cx40:
 w_fill:
 	.byte $04
 	.text 'fill'
-	.fill 12
+	.fill 12,0
 	.word w_cx40
 xt_fill:
 	.block
@@ -2772,7 +854,7 @@ xt_fill:
 w_x2bx21:
 	.byte $02
 	.text '+!'
-	.fill 14
+	.fill 14,0
 	.word w_fill
 xt_x2bx21:
 	.block
@@ -2802,7 +884,7 @@ xt_x2bx21:
 w_enclose:
 	.byte $07
 	.text 'enclose'
-	.fill 9
+	.fill 9,0
 	.word w_x2bx21
 xt_enclose:
 	.block
@@ -2880,7 +962,7 @@ xt_enclose:
 w_cmove:
 	.byte $05
 	.text 'cmove'
-	.fill 11
+	.fill 11,0
 	.word w_enclose
 xt_cmove:
 	.block
@@ -2927,7 +1009,7 @@ xt_cmove:
 w_move:
 	.byte $04
 	.text 'move'
-	.fill 12
+	.fill 12,0
 	.word w_cmove
 xt_move:
 	.block
@@ -3031,7 +1113,7 @@ xt_move:
 w_x2b:
 	.byte $01
 	.text '+'
-	.fill 15
+	.fill 15,0
 	.word w_move
 xt_x2b:
 	.block
@@ -3053,7 +1135,7 @@ xt_x2b:
 w_dx2b:
 	.byte $02
 	.text 'd+'
-	.fill 14
+	.fill 14,0
 	.word w_x2b
 xt_dx2b:
 	.block
@@ -3083,7 +1165,7 @@ xt_dx2b:
 w_dx2d:
 	.byte $02
 	.text 'd-'
-	.fill 14
+	.fill 14,0
 	.word w_dx2b
 xt_dx2d:
 	.block
@@ -3113,7 +1195,7 @@ xt_dx2d:
 w_x2d:
 	.byte $01
 	.text '-'
-	.fill 15
+	.fill 15,0
 	.word w_dx2d
 xt_x2d:
 	.block
@@ -3135,7 +1217,7 @@ xt_x2d:
 w_ux2a:
 	.byte $02
 	.text 'u*'
-	.fill 14
+	.fill 14,0
 	.word w_x2d
 xt_ux2a:
 	.block
@@ -3163,7 +1245,7 @@ xt_ux2a:
 w_x2a:
 	.byte $01
 	.text '*'
-	.fill 15
+	.fill 15,0
 	.word w_ux2a
 xt_x2a:
 	.block
@@ -3191,7 +1273,7 @@ xt_x2a:
 w_ux2ax2dsoft:
 	.byte $07
 	.text 'u*-soft'
-	.fill 9
+	.fill 9,0
 	.word w_x2a
 xt_ux2ax2dsoft:
 	.block
@@ -3232,7 +1314,7 @@ xt_ux2ax2dsoft:
 w_x2ax2dsoft:
 	.byte $06
 	.text '*-soft'
-	.fill 10
+	.fill 10,0
 	.word w_ux2ax2dsoft
 xt_x2ax2dsoft:
 	.block
@@ -3309,7 +1391,7 @@ xt_x2ax2dsoft:
 w_umx2fmod:
 	.byte $06
 	.text 'um/mod'
-	.fill 10
+	.fill 10,0
 	.word w_x2ax2dsoft
 xt_umx2fmod:
 	.block
@@ -3362,7 +1444,7 @@ xt_umx2fmod:
 w_sx3ed:
 	.byte $03
 	.text 's>d'
-	.fill 13
+	.fill 13,0
 	.word w_umx2fmod
 xt_sx3ed:
 	.block
@@ -3389,7 +1471,7 @@ xt_sx3ed:
 w_1x2b:
 	.byte $02
 	.text '1+'
-	.fill 14
+	.fill 14,0
 	.word w_sx3ed
 xt_1x2b:
 	.block
@@ -3406,7 +1488,7 @@ xt_1x2b:
 w_2x2b:
 	.byte $02
 	.text '2+'
-	.fill 14
+	.fill 14,0
 	.word w_1x2b
 xt_2x2b:
 	.block
@@ -3426,7 +1508,7 @@ xt_2x2b:
 w_1x2d:
 	.byte $02
 	.text '1-'
-	.fill 14
+	.fill 14,0
 	.word w_2x2b
 xt_1x2d:
 	.block
@@ -3444,7 +1526,7 @@ xt_1x2d:
 w_2x2d:
 	.byte $02
 	.text '2-'
-	.fill 14
+	.fill 14,0
 	.word w_1x2d
 xt_2x2d:
 	.block
@@ -3464,7 +1546,7 @@ xt_2x2d:
 w_and:
 	.byte $03
 	.text 'and'
-	.fill 13
+	.fill 13,0
 	.word w_2x2d
 xt_and:
 	.block
@@ -3485,7 +1567,7 @@ xt_and:
 w_or:
 	.byte $02
 	.text 'or'
-	.fill 14
+	.fill 14,0
 	.word w_and
 xt_or:
 	.block
@@ -3506,7 +1588,7 @@ xt_or:
 w_xor:
 	.byte $03
 	.text 'xor'
-	.fill 13
+	.fill 13,0
 	.word w_or
 xt_xor:
 	.block
@@ -3527,7 +1609,7 @@ xt_xor:
 w_not:
 	.byte $03
 	.text 'not'
-	.fill 13
+	.fill 13,0
 	.word w_xor
 xt_not:
 	.block
@@ -3546,7 +1628,7 @@ xt_not:
 w_0x3c:
 	.byte $02
 	.text '0<'
-	.fill 14
+	.fill 14,0
 	.word w_not
 xt_0x3c:
 	.block
@@ -3568,7 +1650,7 @@ xt_0x3c:
 w_0x3d:
 	.byte $02
 	.text '0='
-	.fill 14
+	.fill 14,0
 	.word w_0x3c
 xt_0x3d:
 	.block
@@ -3592,7 +1674,7 @@ xt_0x3d:
 w_0x3e:
 	.byte $02
 	.text '0>'
-	.fill 14
+	.fill 14,0
 	.word w_0x3d
 xt_0x3e:
 	.block
@@ -3618,7 +1700,7 @@ xt_0x3e:
 w_x28variablex29:
 	.byte $0A
 	.text '(variable)'
-	.fill 6
+	.fill 6,0
 	.word w_0x3e
 xt_x28variablex29:
 	.block
@@ -3640,7 +1722,7 @@ xt_x28variablex29:
 w_x28constantx29:
 	.byte $0A
 	.text '(constant)'
-	.fill 6
+	.fill 6,0
 	.word w_x28variablex29
 xt_x28constantx29:
 	.block
@@ -3661,7 +1743,7 @@ xt_x28constantx29:
 w_cells:
 	.byte $05
 	.text 'cells'
-	.fill 11
+	.fill 11,0
 	.word w_x28constantx29
 xt_cells:
 	.block
@@ -3675,7 +1757,7 @@ xt_cells:
 w_x28userx29:
 	.byte $06
 	.text '(user)'
-	.fill 10
+	.fill 10,0
 	.word w_cells
 xt_x28userx29:
 	.block
@@ -3699,7 +1781,7 @@ xt_x28userx29:
 w_x28branchx29:
 	.byte $08
 	.text '(branch)'
-	.fill 8
+	.fill 8,0
 	.word w_x28userx29
 xt_x28branchx29:
 	.block
@@ -3719,7 +1801,7 @@ xt_x28branchx29:
 w_x28branch0x29:
 	.byte $09
 	.text '(branch0)'
-	.fill 7
+	.fill 7,0
 	.word w_x28branchx29
 xt_x28branch0x29:
 	.block
@@ -3757,7 +1839,7 @@ xt_x28branch0x29:
 w_x28dox29:
 	.byte $04
 	.text '(do)'
-	.fill 12
+	.fill 12,0
 	.word w_x28branch0x29
 xt_x28dox29:
 	.block
@@ -3782,7 +1864,7 @@ xt_x28dox29:
 w_x3ei:
 	.byte $02
 	.text '>i'
-	.fill 14
+	.fill 14,0
 	.word w_x28dox29
 xt_x3ei:
 	.block
@@ -3812,7 +1894,7 @@ xt_x3ei:
 w_leave:
 	.byte $05
 	.text 'leave'
-	.fill 11
+	.fill 11,0
 	.word w_x3ei
 xt_leave:
 	.block
@@ -3837,7 +1919,7 @@ xt_leave:
 w_x28loopx29:
 	.byte $06
 	.text '(loop)'
-	.fill 10
+	.fill 10,0
 	.word w_leave
 xt_x28loopx29:
 	.block
@@ -3899,7 +1981,7 @@ xt_x28loopx29:
 w_x28x2bloopx29:
 	.byte $07
 	.text '(+loop)'
-	.fill 9
+	.fill 9,0
 	.word w_x28loopx29
 xt_x28x2bloopx29:
 	.block
@@ -3971,7 +2053,7 @@ xt_x28x2bloopx29:
 w_i:
 	.byte $01
 	.text 'i'
-	.fill 15
+	.fill 15,0
 	.word w_x28x2bloopx29
 xt_i:
 	.block
@@ -3997,7 +2079,7 @@ xt_i:
 w_x28ofx29:
 	.byte $04
 	.text '(of)'
-	.fill 12
+	.fill 12,0
 	.word w_i
 xt_x28ofx29:
 	.block
@@ -4040,7 +2122,7 @@ xt_x28ofx29:
 w_execute:
 	.byte $07
 	.text 'execute'
-	.fill 9
+	.fill 9,0
 	.word w_x28ofx29
 xt_execute:
 	.block
@@ -4058,7 +2140,7 @@ xt_execute:
 w_x28vocabularyx29:
 	.byte $0C
 	.text '(vocabulary)'
-	.fill 4
+	.fill 4,0
 	.word w_execute
 xt_x28vocabularyx29:
 	.block
@@ -4085,7 +2167,7 @@ xt_x28vocabularyx29:
 w_forth:
 	.byte $05
 	.text 'forth'
-	.fill 11
+	.fill 11,0
 	.word w_x28vocabularyx29
 xt_forth:
 	.block
@@ -4099,7 +2181,7 @@ xt_forth:
 w_x28findx29:
 	.byte $06
 	.text '(find)'
-	.fill 10
+	.fill 10,0
 	.word w_forth
 xt_x28findx29:
 	.block
@@ -4159,7 +2241,7 @@ xt_x28findx29:
 	lda #1                  ; 1 at top of stack
 	stz pstack+3,x
 	sta pstack+2,x
-	lda (dst_ptr)           ; Then the length of the word
+	lda (src_ptr)           ; Then the length of the word
 	stz pstack+5,x
 	sta pstack+4,x
 	clc                     ; Then the pfa pointer
@@ -4178,7 +2260,7 @@ xt_x28findx29:
 w_digit:
 	.byte $05
 	.text 'digit'
-	.fill 11
+	.fill 11,0
 	.word w_x28findx29
 xt_digit:
 	.block
@@ -4221,7 +2303,7 @@ xt_digit:
 w_bs:
 	.byte $02
 	.text 'bs'
-	.fill 14
+	.fill 14,0
 	.word w_digit
 xt_bs:
 	.block
@@ -4235,7 +2317,7 @@ xt_bs:
 w_nl:
 	.byte $02
 	.text 'nl'
-	.fill 14
+	.fill 14,0
 	.word w_bs
 xt_nl:
 	.block
@@ -4249,7 +2331,7 @@ xt_nl:
 w_bl:
 	.byte $02
 	.text 'bl'
-	.fill 14
+	.fill 14,0
 	.word w_nl
 xt_bl:
 	.block
@@ -4264,7 +2346,7 @@ xt_bl:
 w_s0:
 	.byte $02
 	.text 's0'
-	.fill 14
+	.fill 14,0
 	.word w_bl
 xt_s0:
 	.block
@@ -4278,7 +2360,7 @@ xt_s0:
 w_r0:
 	.byte $02
 	.text 'r0'
-	.fill 14
+	.fill 14,0
 	.word w_s0
 xt_r0:
 	.block
@@ -4292,7 +2374,7 @@ xt_r0:
 w_base:
 	.byte $04
 	.text 'base'
-	.fill 12
+	.fill 12,0
 	.word w_r0
 xt_base:
 	.block
@@ -4306,7 +2388,7 @@ xt_base:
 w_state:
 	.byte $05
 	.text 'state'
-	.fill 11
+	.fill 11,0
 	.word w_base
 xt_state:
 	.block
@@ -4320,7 +2402,7 @@ xt_state:
 w_context:
 	.byte $07
 	.text 'context'
-	.fill 9
+	.fill 9,0
 	.word w_state
 xt_context:
 	.block
@@ -4334,7 +2416,7 @@ xt_context:
 w_current:
 	.byte $07
 	.text 'current'
-	.fill 9
+	.fill 9,0
 	.word w_context
 xt_current:
 	.block
@@ -4348,7 +2430,7 @@ xt_current:
 w_dp:
 	.byte $02
 	.text 'dp'
-	.fill 14
+	.fill 14,0
 	.word w_current
 xt_dp:
 	.block
@@ -4362,7 +2444,7 @@ xt_dp:
 w_x3ein:
 	.byte $03
 	.text '>in'
-	.fill 13
+	.fill 13,0
 	.word w_dp
 xt_x3ein:
 	.block
@@ -4376,7 +2458,7 @@ xt_x3ein:
 w_tib:
 	.byte $03
 	.text 'tib'
-	.fill 13
+	.fill 13,0
 	.word w_x3ein
 xt_tib:
 	.block
@@ -4390,7 +2472,7 @@ xt_tib:
 w_sourcex2did:
 	.byte $09
 	.text 'source-id'
-	.fill 7
+	.fill 7,0
 	.word w_tib
 xt_sourcex2did:
 	.block
@@ -4404,7 +2486,7 @@ xt_sourcex2did:
 w_blk:
 	.byte $03
 	.text 'blk'
-	.fill 13
+	.fill 13,0
 	.word w_sourcex2did
 xt_blk:
 	.block
@@ -4418,7 +2500,7 @@ xt_blk:
 w_dpl:
 	.byte $03
 	.text 'dpl'
-	.fill 13
+	.fill 13,0
 	.word w_blk
 xt_dpl:
 	.block
@@ -4432,7 +2514,7 @@ xt_dpl:
 w_hld:
 	.byte $03
 	.text 'hld'
-	.fill 13
+	.fill 13,0
 	.word w_dpl
 xt_hld:
 	.block
@@ -4446,7 +2528,7 @@ xt_hld:
 w_handler:
 	.byte $07
 	.text 'handler'
-	.fill 9
+	.fill 9,0
 	.word w_hld
 xt_handler:
 	.block
@@ -4460,7 +2542,7 @@ xt_handler:
 w_csp:
 	.byte $03
 	.text 'csp'
-	.fill 13
+	.fill 13,0
 	.word w_handler
 xt_csp:
 	.block
@@ -4475,7 +2557,7 @@ xt_csp:
 w_pad:
 	.byte $03
 	.text 'pad'
-	.fill 13
+	.fill 13,0
 	.word w_csp
 xt_pad:
 	.block
@@ -4495,7 +2577,7 @@ xt_pad:
 w_x5b:
 	.byte $C1
 	.text '['
-	.fill 15
+	.fill 15,0
 	.word w_pad
 xt_x5b:
 	.block
@@ -4513,7 +2595,7 @@ xt_x5b:
 w_x5d:
 	.byte $C1
 	.text ']'
-	.fill 15
+	.fill 15,0
 	.word w_x5b
 xt_x5d:
 	.block
@@ -4532,16 +2614,16 @@ xt_x5d:
 w_x3fdup:
 	.byte $04
 	.text '?dup'
-	.fill 12
+	.fill 12,0
 	.word w_x5d
 xt_x3fdup:
 	.block
 	jmp xt_enter
 	.word xt_dup
 	.word xt_x28branch0x29
-	.word l_178
+	.word l_1
 	.word xt_dup
-l_178:
+l_1:
 	.word xt_exit
 	.bend
 ; END ?dup
@@ -4551,7 +2633,7 @@ l_178:
 w_rot:
 	.byte $03
 	.text 'rot'
-	.fill 13
+	.fill 13,0
 	.word w_x3fdup
 xt_rot:
 	.block
@@ -4569,7 +2651,7 @@ xt_rot:
 w_2dup:
 	.byte $04
 	.text '2dup'
-	.fill 12
+	.fill 12,0
 	.word w_rot
 xt_2dup:
 	.block
@@ -4585,7 +2667,7 @@ xt_2dup:
 w_2drop:
 	.byte $05
 	.text '2drop'
-	.fill 11
+	.fill 11,0
 	.word w_2dup
 xt_2drop:
 	.block
@@ -4601,7 +2683,7 @@ xt_2drop:
 w_x3c:
 	.byte $01
 	.text '<'
-	.fill 15
+	.fill 15,0
 	.word w_2drop
 xt_x3c:
 	.block
@@ -4617,7 +2699,7 @@ xt_x3c:
 w_x3e:
 	.byte $01
 	.text '>'
-	.fill 15
+	.fill 15,0
 	.word w_x3c
 xt_x3e:
 	.block
@@ -4633,7 +2715,7 @@ xt_x3e:
 w_x3d:
 	.byte $01
 	.text '='
-	.fill 15
+	.fill 15,0
 	.word w_x3e
 xt_x3d:
 	.block
@@ -4649,7 +2731,7 @@ xt_x3d:
 w_dx3c:
 	.byte $02
 	.text 'd<'
-	.fill 14
+	.fill 14,0
 	.word w_x3d
 xt_dx3c:
 	.block
@@ -4666,7 +2748,7 @@ xt_dx3c:
 w_abs:
 	.byte $03
 	.text 'abs'
-	.fill 13
+	.fill 13,0
 	.word w_dx3c
 xt_abs:
 	.block
@@ -4674,11 +2756,11 @@ xt_abs:
 	.word xt_dup
 	.word xt_0x3c
 	.word xt_x28branch0x29
-	.word l_215
+	.word l_2
 	.word xt_0
 	.word xt_swap
 	.word xt_x2d
-l_215:
+l_2:
 	.word xt_exit
 	.bend
 ; END abs
@@ -4688,7 +2770,7 @@ l_215:
 w_dabs:
 	.byte $04
 	.text 'dabs'
-	.fill 12
+	.fill 12,0
 	.word w_abs
 xt_dabs:
 	.block
@@ -4696,12 +2778,12 @@ xt_dabs:
 	.word xt_over
 	.word xt_0x3c
 	.word xt_x28branch0x29
-	.word l_222
+	.word l_3
 	.word xt_0
 	.word xt_0
 	.word xt_2swap
 	.word xt_dx2d
-l_222:
+l_3:
 	.word xt_exit
 	.bend
 ; END dabs
@@ -4713,7 +2795,7 @@ l_222:
 w_x2fmod:
 	.byte $04
 	.text '/mod'
-	.fill 12
+	.fill 12,0
 	.word w_dabs
 xt_x2fmod:
 	.block
@@ -4727,7 +2809,7 @@ xt_x2fmod:
 w_x2f:
 	.byte $01
 	.text '/'
-	.fill 15
+	.fill 15,0
 	.word w_x2fmod
 xt_x2f:
 	.block
@@ -4744,7 +2826,7 @@ xt_x2f:
 w_mod:
 	.byte $03
 	.text 'mod'
-	.fill 13
+	.fill 13,0
 	.word w_x2f
 xt_mod:
 	.block
@@ -4760,7 +2842,7 @@ xt_mod:
 w_max:
 	.byte $03
 	.text 'max'
-	.fill 13
+	.fill 13,0
 	.word w_mod
 xt_max:
 	.block
@@ -4768,14 +2850,14 @@ xt_max:
 	.word xt_2dup
 	.word xt_x3c
 	.word xt_x28branch0x29
-	.word l_237
+	.word l_4
 	.word xt_over
 	.word xt_drop
 	.word xt_x28branchx29
-	.word l_238
-l_237:
+	.word l_5
+l_4:
 	.word xt_drop
-l_238:
+l_5:
 	.word xt_exit
 	.bend
 ; END max
@@ -4785,7 +2867,7 @@ l_238:
 w_min:
 	.byte $03
 	.text 'min'
-	.fill 13
+	.fill 13,0
 	.word w_max
 xt_min:
 	.block
@@ -4793,14 +2875,14 @@ xt_min:
 	.word xt_2dup
 	.word xt_x3e
 	.word xt_x28branch0x29
-	.word l_245
+	.word l_6
 	.word xt_over
 	.word xt_drop
 	.word xt_x28branchx29
-	.word l_246
-l_245:
+	.word l_7
+l_6:
 	.word xt_drop
-l_246:
+l_7:
 	.word xt_exit
 	.bend
 ; END min
@@ -4810,7 +2892,7 @@ l_246:
 w_lfa:
 	.byte $03
 	.text 'lfa'
-	.fill 13
+	.fill 13,0
 	.word w_min
 xt_lfa:
 	.block
@@ -4827,7 +2909,7 @@ xt_lfa:
 w_cfa:
 	.byte $03
 	.text 'cfa'
-	.fill 13
+	.fill 13,0
 	.word w_lfa
 xt_cfa:
 	.block
@@ -4844,7 +2926,7 @@ xt_cfa:
 w_nfa:
 	.byte $03
 	.text 'nfa'
-	.fill 13
+	.fill 13,0
 	.word w_cfa
 xt_nfa:
 	.block
@@ -4861,7 +2943,7 @@ xt_nfa:
 w_pfa:
 	.byte $03
 	.text 'pfa'
-	.fill 13
+	.fill 13,0
 	.word w_nfa
 xt_pfa:
 	.block
@@ -4878,7 +2960,7 @@ xt_pfa:
 w_here:
 	.byte $04
 	.text 'here'
-	.fill 12
+	.fill 12,0
 	.word w_pfa
 xt_here:
 	.block
@@ -4895,7 +2977,7 @@ xt_here:
 w_allot:
 	.byte $05
 	.text 'allot'
-	.fill 11
+	.fill 11,0
 	.word w_here
 xt_allot:
 	.block
@@ -4912,7 +2994,7 @@ xt_allot:
 w_x2c:
 	.byte $01
 	.text ','
-	.fill 15
+	.fill 15,0
 	.word w_allot
 xt_x2c:
 	.block
@@ -4932,7 +3014,7 @@ xt_x2c:
 w_cx2c:
 	.byte $02
 	.text 'c,'
-	.fill 14
+	.fill 14,0
 	.word w_x2c
 xt_cx2c:
 	.block
@@ -4952,7 +3034,7 @@ xt_cx2c:
 w_definitions:
 	.byte $0B
 	.text 'definitions'
-	.fill 5
+	.fill 5,0
 	.word w_cx2c
 xt_definitions:
 	.block
@@ -4970,7 +3052,7 @@ xt_definitions:
 w_latest:
 	.byte $06
 	.text 'latest'
-	.fill 10
+	.fill 10,0
 	.word w_definitions
 xt_latest:
 	.block
@@ -4987,7 +3069,7 @@ xt_latest:
 w_count:
 	.byte $05
 	.text 'count'
-	.fill 11
+	.fill 11,0
 	.word w_latest
 xt_count:
 	.block
@@ -5008,38 +3090,38 @@ xt_count:
 w_type:
 	.byte $04
 	.text 'type'
-	.fill 12
+	.fill 12,0
 	.word w_count
 xt_type:
 	.block
 	jmp xt_enter
 	.word xt_x3fdup
 	.word xt_x28branch0x29
-	.word l_253
+	.word l_8
 	.word xt_over
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_254:
+l_9:
 	.word xt_i
 	.word xt_cx40
 	.word xt_x3fdup
 	.word xt_x28branch0x29
-	.word l_256
+	.word l_11
 	.word xt_emit
 	.word xt_x28branchx29
-	.word l_257
-l_256:
+	.word l_12
+l_11:
 	.word xt_leave
-l_257:
+l_12:
 	.word xt_x28loopx29
-	.word l_254
-l_255:
+	.word l_9
+l_10:
 	.word xt_x28branchx29
-	.word l_258
-l_253:
+	.word l_13
+l_8:
 	.word xt_drop
-l_258:
+l_13:
 	.word xt_exit
 	.bend
 ; END type
@@ -5051,7 +3133,7 @@ l_258:
 w_x28x2ex22x29:
 	.byte $04
 	.text '(.")'
-	.fill 12
+	.fill 12,0
 	.word w_type
 xt_x28x2ex22x29:
 	.block
@@ -5078,7 +3160,7 @@ xt_x28x2ex22x29:
 w_space:
 	.byte $05
 	.text 'space'
-	.fill 11
+	.fill 11,0
 	.word w_x28x2ex22x29
 xt_space:
 	.block
@@ -5095,7 +3177,7 @@ xt_space:
 w_spaces:
 	.byte $06
 	.text 'spaces'
-	.fill 10
+	.fill 10,0
 	.word w_space
 xt_spaces:
 	.block
@@ -5103,19 +3185,19 @@ xt_spaces:
 	.word xt_dup
 	.word xt_0x3e
 	.word xt_x28branch0x29
-	.word l_259
+	.word l_14
 	.word xt_0
 	.word xt_x28dox29
-l_260:
+l_15:
 	.word xt_space
 	.word xt_x28loopx29
-	.word l_260
-l_261:
+	.word l_15
+l_16:
 	.word xt_x28branchx29
-	.word l_262
-l_259:
+	.word l_17
+l_14:
 	.word xt_drop
-l_262:
+l_17:
 	.word xt_exit
 	.bend
 ; END spaces
@@ -5125,7 +3207,7 @@ l_262:
 w_expect:
 	.byte $06
 	.text 'expect'
-	.fill 10
+	.fill 10,0
 	.word w_spaces
 xt_expect:
 	.block
@@ -5134,17 +3216,17 @@ xt_expect:
 	.word xt_x2b
 	.word xt_over
 	.word xt_x28dox29
-l_263:
+l_18:
 	.word xt_key
 	.word xt_bs
 	.word xt_x28ofx29
-	.word l_266
+	.word l_21
 	.word xt_dup
 	.word xt_i
 	.word xt_x3d
 	.word xt_not
 	.word xt_x28branch0x29
-	.word l_267
+	.word l_22
 	.word xt_bs
 	.word xt_emit
 	.word xt_bl
@@ -5158,20 +3240,20 @@ l_263:
 	.word xt_i
 	.word xt_2x2d
 	.word xt_x3ei
-l_267:
+l_22:
 	.word xt_x28branchx29
-	.word l_265
-l_266:
+	.word l_20
+l_21:
 	.word xt_nl
 	.word xt_x28ofx29
-	.word l_268
+	.word l_23
 	.word xt_0
 	.word xt_i
 	.word xt_cx21
 	.word xt_leave
 	.word xt_x28branchx29
-	.word l_265
-l_268:
+	.word l_20
+l_23:
 	.word xt_dup
 	.word xt_dup
 	.word xt_i
@@ -5182,10 +3264,10 @@ l_268:
 	.word xt_cx21
 	.word xt_emit
 	.word xt_drop
-l_265:
+l_20:
 	.word xt_x28loopx29
-	.word l_263
-l_264:
+	.word l_18
+l_19:
 	.word xt_drop
 	.word xt_exit
 	.bend
@@ -5214,7 +3296,7 @@ l_264:
 w_query:
 	.byte $05
 	.text 'query'
-	.fill 11
+	.fill 11,0
 	.word w_expect
 xt_query:
 	.block
@@ -5239,7 +3321,7 @@ xt_query:
 w_erase:
 	.byte $05
 	.text 'erase'
-	.fill 11
+	.fill 11,0
 	.word w_query
 xt_erase:
 	.block
@@ -5256,7 +3338,7 @@ xt_erase:
 w_blanks:
 	.byte $06
 	.text 'blanks'
-	.fill 10
+	.fill 10,0
 	.word w_erase
 xt_blanks:
 	.block
@@ -5273,7 +3355,7 @@ xt_blanks:
 w_word:
 	.byte $04
 	.text 'word'
-	.fill 12
+	.fill 12,0
 	.word w_blanks
 xt_word:
 	.block
@@ -5329,7 +3411,7 @@ xt_word:
 w_x2dfind:
 	.byte $05
 	.text '-find'
-	.fill 11
+	.fill 11,0
 	.word w_word
 xt_x2dfind:
 	.block
@@ -5344,12 +3426,12 @@ xt_x2dfind:
 	.word xt_dup
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_269
+	.word l_24
 	.word xt_drop
 	.word xt_here
 	.word xt_latest
 	.word xt_x28findx29
-l_269:
+l_24:
 	.word xt_exit
 	.bend
 ; END -find
@@ -5360,7 +3442,7 @@ l_269:
 w_decimal:
 	.byte $07
 	.text 'decimal'
-	.fill 9
+	.fill 9,0
 	.word w_x2dfind
 xt_decimal:
 	.block
@@ -5378,7 +3460,7 @@ xt_decimal:
 w_hex:
 	.byte $03
 	.text 'hex'
-	.fill 13
+	.fill 13,0
 	.word w_decimal
 xt_hex:
 	.block
@@ -5396,7 +3478,7 @@ xt_hex:
 w_octal:
 	.byte $05
 	.text 'octal'
-	.fill 11
+	.fill 11,0
 	.word w_hex
 xt_octal:
 	.block
@@ -5413,7 +3495,7 @@ xt_octal:
 w_x2e:
 	.byte $01
 	.text '.'
-	.fill 15
+	.fill 15,0
 	.word w_octal
 xt_x2e:
 	.block
@@ -5429,12 +3511,12 @@ xt_x2e:
 w_x28numberx29:
 	.byte $08
 	.text '(number)'
-	.fill 8
+	.fill 8,0
 	.word w_x2e
 xt_x28numberx29:
 	.block
 	jmp xt_enter
-l_270:
+l_25:
 	.word xt_dup
 	.word xt_x3er
 	.word xt_cx40
@@ -5442,7 +3524,7 @@ l_270:
 	.word xt_x40
 	.word xt_digit
 	.word xt_x28branch0x29
-	.word l_271
+	.word l_26
 	.word xt_x3er
 	.word xt_base
 	.word xt_x40
@@ -5453,8 +3535,8 @@ l_270:
 	.word xt_rx3e
 	.word xt_1x2b
 	.word xt_x28branchx29
-	.word l_270
-l_271:
+	.word l_25
+l_26:
 	.word xt_rx3e
 	.word xt_exit
 	.bend
@@ -5474,20 +3556,20 @@ l_271:
 w_x3ferror:
 	.byte $06
 	.text '?error'
-	.fill 10
+	.fill 10,0
 	.word w_x28numberx29
 xt_x3ferror:
 	.block
 	jmp xt_enter
 	.word xt_swap
 	.word xt_x28branch0x29
-	.word l_293
+	.word l_48
 	.word xt_error
 	.word xt_x28branchx29
-	.word l_294
-l_293:
+	.word l_49
+l_48:
 	.word xt_drop
-l_294:
+l_49:
 	.word xt_exit
 	.bend
 ; END ?error
@@ -5497,7 +3579,7 @@ l_294:
 w_number:
 	.byte $06
 	.text 'number'
-	.fill 10
+	.fill 10,0
 	.word w_x3ferror
 xt_number:
 	.block
@@ -5511,19 +3593,19 @@ xt_number:
 	.word 45
 	.word xt_x3d
 	.word xt_x28branch0x29
-	.word l_272
+	.word l_27
 	.word xt_1
 	.word xt_x3er
 	.word xt_x28branchx29
-	.word l_273
-l_272:
+	.word l_28
+l_27:
 	.word xt_0
 	.word xt_x3er
 	.word xt_1
 	.word xt_x2b
-l_273:
+l_28:
 	.word xt_x2d1
-l_274:
+l_29:
 	.word xt_dpl
 	.word xt_x21
 	.word xt_x28numberx29
@@ -5532,31 +3614,31 @@ l_274:
 	.word xt_bl
 	.word xt_x2d
 	.word xt_x28branch0x29
-	.word l_275
+	.word l_30
 	.word xt_dup
 	.word xt_cx40
 	.word xt_x28literalx29
 	.word 46
 	.word xt_x2d
 	.word xt_x28branch0x29
-	.word l_276
+	.word l_31
 	.word xt_x28literalx29
 	.word 65523
 	.word xt_x3ferror
-l_276:
+l_31:
 	.word xt_0
 	.word xt_x28branchx29
-	.word l_274
-l_275:
+	.word l_29
+l_30:
 	.word xt_drop
 	.word xt_rx3e
 	.word xt_x28branch0x29
-	.word l_277
+	.word l_32
 	.word xt_0
 	.word xt_0
 	.word xt_2swap
 	.word xt_dx2d
-l_277:
+l_32:
 	.word xt_exit
 	.bend
 ; END number
@@ -5579,7 +3661,7 @@ l_277:
 w_x3cx23:
 	.byte $02
 	.text '<#'
-	.fill 14
+	.fill 14,0
 	.word w_number
 xt_x3cx23:
 	.block
@@ -5596,7 +3678,7 @@ xt_x3cx23:
 w_hold:
 	.byte $04
 	.text 'hold'
-	.fill 12
+	.fill 12,0
 	.word w_x3cx23
 xt_hold:
 	.block
@@ -5616,7 +3698,7 @@ xt_hold:
 w_x23:
 	.byte $01
 	.text '#'
-	.fill 15
+	.fill 15,0
 	.word w_hold
 xt_x23:
 	.block
@@ -5631,11 +3713,11 @@ xt_x23:
 	.word xt_over
 	.word xt_x3c
 	.word xt_x28branch0x29
-	.word l_278
+	.word l_33
 	.word xt_x28literalx29
 	.word 7
 	.word xt_x2b
-l_278:
+l_33:
 	.word xt_x28literalx29
 	.word 48
 	.word xt_x2b
@@ -5655,20 +3737,20 @@ l_278:
 w_x23s:
 	.byte $02
 	.text '#s'
-	.fill 14
+	.fill 14,0
 	.word w_x23
 xt_x23s:
 	.block
 	jmp xt_enter
-l_279:
+l_34:
 	.word xt_x23
 	.word xt_over
 	.word xt_over
 	.word xt_or
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_279
-l_280:
+	.word l_34
+l_35:
 	.word xt_exit
 	.bend
 ; END #s
@@ -5678,7 +3760,7 @@ l_280:
 w_sign:
 	.byte $04
 	.text 'sign'
-	.fill 12
+	.fill 12,0
 	.word w_x23s
 xt_sign:
 	.block
@@ -5686,11 +3768,11 @@ xt_sign:
 	.word xt_rot
 	.word xt_0x3c
 	.word xt_x28branch0x29
-	.word l_281
+	.word l_36
 	.word xt_x28literalx29
 	.word 45
 	.word xt_hold
-l_281:
+l_36:
 	.word xt_exit
 	.bend
 ; END sign
@@ -5700,7 +3782,7 @@ l_281:
 w_x23x3e:
 	.byte $02
 	.text '#>'
-	.fill 14
+	.fill 14,0
 	.word w_sign
 xt_x23x3e:
 	.block
@@ -5720,7 +3802,7 @@ xt_x23x3e:
 w_dx2er:
 	.byte $03
 	.text 'd.r'
-	.fill 13
+	.fill 13,0
 	.word w_x23x3e
 xt_dx2er:
 	.block
@@ -5748,7 +3830,7 @@ xt_dx2er:
 w_dx2e:
 	.byte $02
 	.text 'd.'
-	.fill 14
+	.fill 14,0
 	.word w_dx2er
 xt_dx2e:
 	.block
@@ -5765,7 +3847,7 @@ xt_dx2e:
 w_x2er:
 	.byte $02
 	.text '.r'
-	.fill 14
+	.fill 14,0
 	.word w_dx2e
 xt_x2er:
 	.block
@@ -5783,7 +3865,7 @@ xt_x2er:
 w_x3f:
 	.byte $01
 	.text '?'
-	.fill 15
+	.fill 15,0
 	.word w_x2er
 xt_x3f:
 	.block
@@ -5799,14 +3881,14 @@ xt_x3f:
 w_dump:
 	.byte $04
 	.text 'dump'
-	.fill 12
+	.fill 12,0
 	.word w_x3f
 xt_dump:
 	.block
 	jmp xt_enter
 	.word xt_0
 	.word xt_x28dox29
-l_282:
+l_37:
 	.word xt_cr
 	.word xt_dup
 	.word xt_0
@@ -5821,7 +3903,7 @@ l_282:
 	.word 8
 	.word xt_0
 	.word xt_x28dox29
-l_284:
+l_39:
 	.word xt_dup
 	.word xt_x40
 	.word xt_0
@@ -5831,13 +3913,13 @@ l_284:
 	.word xt_dx2er
 	.word xt_2x2b
 	.word xt_x28loopx29
-	.word l_284
-l_285:
+	.word l_39
+l_40:
 	.word xt_x28literalx29
 	.word 8
 	.word xt_x28x2bloopx29
-	.word l_282
-l_283:
+	.word l_37
+l_38:
 	.word xt_drop
 	.word xt_exit
 	.bend
@@ -5847,12 +3929,12 @@ l_283:
 w_interpret:
 	.byte $09
 	.text 'interpret'
-	.fill 7
+	.fill 7,0
 	.word w_dump
 xt_interpret:
 	.block
 	jmp xt_enter
-l_296:
+l_51:
 	.word xt_tib
 	.word xt_x40
 	.word xt_x3ein
@@ -5860,26 +3942,26 @@ l_296:
 	.word xt_x2b
 	.word xt_cx40
 	.word xt_x28branch0x29
-	.word l_297
+	.word l_52
 	.word xt_x2dfind
 	.word xt_x28branch0x29
-	.word l_298
+	.word l_53
 	.word xt_state
 	.word xt_x40
 	.word xt_x3c
 	.word xt_x28branch0x29
-	.word l_299
+	.word l_54
 	.word xt_cfa
 	.word xt_x2c
 	.word xt_x28branchx29
-	.word l_300
-l_299:
+	.word l_55
+l_54:
 	.word xt_cfa
 	.word xt_execute
-l_300:
+l_55:
 	.word xt_x28branchx29
-	.word l_301
-l_298:
+	.word l_56
+l_53:
 	.word xt_here
 	.word xt_number
 	.word xt_swap
@@ -5887,17 +3969,16 @@ l_298:
 	.word xt_state
 	.word xt_x40
 	.word xt_x28branch0x29
-	.word l_302
+	.word l_57
 	.word xt_x28literalx29
 	.word xt_x28literalx29
 	.word xt_x2c
 	.word xt_x2c
-	.word xt_halt
-l_302:
-l_301:
+l_57:
+l_56:
 	.word xt_x28branchx29
-	.word l_296
-l_297:
+	.word l_51
+l_52:
 	.word xt_exit
 	.bend
 ; END interpret
@@ -5907,7 +3988,7 @@ l_297:
 w_catch:
 	.byte $05
 	.text 'catch'
-	.fill 11
+	.fill 11,0
 	.word w_interpret
 xt_catch:
 	.block
@@ -5943,14 +4024,14 @@ xt_catch:
 w_throw:
 	.byte $05
 	.text 'throw'
-	.fill 11
+	.fill 11,0
 	.word w_catch
 xt_throw:
 	.block
 	jmp xt_enter
 	.word xt_x3fdup
 	.word xt_x28branch0x29
-	.word l_286
+	.word l_41
 	.word xt_handler
 	.word xt_x40
 	.word xt_rpx21
@@ -5963,7 +4044,7 @@ xt_throw:
 	.word xt_spx21
 	.word xt_drop
 	.word xt_rx3e
-l_286:
+l_41:
 	.word xt_exit
 	.bend
 ; END throw
@@ -5978,7 +4059,7 @@ l_286:
 w_quit:
 	.byte $04
 	.text 'quit'
-	.fill 12
+	.fill 12,0
 	.word w_throw
 xt_quit:
 	.block
@@ -5988,26 +4069,26 @@ xt_quit:
 	.word xt_0
 	.word xt_state
 	.word xt_x21
-l_287:
+l_42:
 	.word xt_cr
 	.word xt_state
 	.word xt_x40
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_289
+	.word l_44
 	.word xt_cr
 	.word xt_x28literalx29
 	.word 62
 	.word xt_emit
 	.word xt_bl
 	.word xt_emit
-l_289:
+l_44:
 	.word xt_query
 	.word xt_cr
 	.word xt_interpret
 	.word xt_x28branchx29
-	.word l_287
-l_288:
+	.word l_42
+l_43:
 	.word xt_exit
 	.bend
 ; END quit
@@ -6017,7 +4098,7 @@ l_288:
 w_error:
 	.byte $05
 	.text 'error'
-	.fill 11
+	.fill 11,0
 	.word w_quit
 xt_error:
 	.block
@@ -6026,14 +4107,14 @@ xt_error:
 	.word xt_0x3d
 	.word xt_not
 	.word xt_x28branch0x29
-	.word l_290
+	.word l_45
 	.word xt_here
 	.word xt_count
 	.word xt_type
 	.word xt_x28x2ex22x29
 	.ptext "? MSG#"
 	.word xt_x2e
-l_290:
+l_45:
 	.word xt_quit
 	.word xt_exit
 	.bend
@@ -6045,7 +4126,7 @@ l_290:
 w_x3fcsp:
 	.byte $04
 	.text '?csp'
-	.fill 12
+	.fill 12,0
 	.word w_error
 xt_x3fcsp:
 	.block
@@ -6055,13 +4136,13 @@ xt_x3fcsp:
 	.word xt_spx40
 	.word xt_x2d
 	.word xt_x28branch0x29
-	.word l_295
+	.word l_50
 	.word xt_0
 	.word xt_x28literalx29
 	.word 25
 	.word xt_x2d
 	.word xt_error
-l_295:
+l_50:
 	.word xt_exit
 	.bend
 ; END ?csp
@@ -6083,16 +4164,19 @@ l_295:
 w_create:
 	.byte $06
 	.text 'create'
-	.fill 10
+	.fill 10,0
 	.word w_x3fcsp
 xt_create:
 	.block
 	jmp xt_enter
+	.word xt_here
 	.word xt_bl
 	.word xt_word
+	.word xt_x28literalx29
+	.word 17
+	.word xt_allot
 	.word xt_latest
 	.word xt_x2c
-	.word xt_here
 	.word xt_current
 	.word xt_x40
 	.word xt_x21
@@ -6101,19 +4185,21 @@ xt_create:
 ; END create
 
 ; ( Read the next word and add it )
+; ( Save start of new word )
+; ( Find the word )
+; ( Allocate enough room for the dictionary entry )
+; ( Link to the previous LATEST )
+; ( Make this word the new latest word in the dictionary )
 ; ( -- )
 ; BEGIN :
 w_x3a:
 	.byte $01
 	.text ':'
-	.fill 15
+	.fill 15,0
 	.word w_create
 xt_x3a:
 	.block
 	jmp xt_enter
-	.word xt_spx40
-	.word xt_csp
-	.word xt_x21
 	.word xt_current
 	.word xt_x40
 	.word xt_context
@@ -6126,13 +4212,11 @@ xt_x3a:
 	.word xt_x28literalx29
 	.word xt_enter
 	.word xt_x2c
-	.word xt_x2c
 	.word xt_exit
 	.bend
 ; END :
 
 ; ( Define a word... )
-; ( Save the current stack pointer for later verification )
 ; ( Define the word in the dictionary )
 ; ( Switch to COMPILE mode )
 ; ( Set the CFA to JMP xt_enter )
@@ -6140,12 +4224,11 @@ xt_x3a:
 w_x3b:
 	.byte $C1
 	.text ';'
-	.fill 15
+	.fill 15,0
 	.word w_x3a
 xt_x3b:
 	.block
 	jmp xt_enter
-	.word xt_x3fcsp
 	.word xt_x28literalx29
 	.word xt_exit
 	.word xt_x2c
@@ -6154,7 +4237,6 @@ xt_x3b:
 	.bend
 ; END ;
 
-; ( Verify that the stack pointer is the same as when colon was used )
 ; ( Compile EXIT )
 ; ( Switch to EXECUTE mode )
 ; ( -- )
@@ -6162,7 +4244,7 @@ xt_x3b:
 w_initrandom:
 	.byte $0A
 	.text 'initrandom'
-	.fill 6
+	.fill 6,0
 	.word w_x3b
 xt_initrandom:
 	.block
@@ -6182,7 +4264,7 @@ xt_initrandom:
 w_random:
 	.byte $06
 	.text 'random'
-	.fill 10
+	.fill 10,0
 	.word w_initrandom
 xt_random:
 	.block
@@ -6199,7 +4281,7 @@ xt_random:
 w_iox2dpage:
 	.byte $07
 	.text 'io-page'
-	.fill 9
+	.fill 9,0
 	.word w_random
 xt_iox2dpage:
 	.block
@@ -6214,7 +4296,7 @@ xt_iox2dpage:
 w_setx2diox2dtext:
 	.byte $0B
 	.text 'set-io-text'
-	.fill 5
+	.fill 5,0
 	.word w_iox2dpage
 xt_setx2diox2dtext:
 	.block
@@ -6232,7 +4314,7 @@ xt_setx2diox2dtext:
 w_setx2diox2dcolor:
 	.byte $0C
 	.text 'set-io-color'
-	.fill 4
+	.fill 4,0
 	.word w_setx2diox2dtext
 xt_setx2diox2dcolor:
 	.block
@@ -6251,7 +4333,7 @@ xt_setx2diox2dcolor:
 w_defx2dtextx2dfgx2dcolor:
 	.byte $10
 	.text 'def-text-fg-colo'
-	.fill 0
+	.fill 0,0
 	.word w_setx2diox2dcolor
 xt_defx2dtextx2dfgx2dcolor:
 	.block
@@ -6277,12 +4359,12 @@ xt_defx2dtextx2dfgx2dcolor:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_303:
+l_58:
 	.word xt_i
 	.word xt_cx21
 	.word xt_x28loopx29
-	.word l_303
-l_304:
+	.word l_58
+l_59:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -6302,7 +4384,7 @@ l_304:
 w_defx2dtextx2dbgx2dcolor:
 	.byte $10
 	.text 'def-text-bg-colo'
-	.fill 0
+	.fill 0,0
 	.word w_defx2dtextx2dfgx2dcolor
 xt_defx2dtextx2dbgx2dcolor:
 	.block
@@ -6328,12 +4410,12 @@ xt_defx2dtextx2dbgx2dcolor:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_305:
+l_60:
 	.word xt_i
 	.word xt_cx21
 	.word xt_x28loopx29
-	.word l_305
-l_306:
+	.word l_60
+l_61:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -6353,7 +4435,7 @@ l_306:
 w_setx2dborderx2dcolor:
 	.byte $10
 	.text 'set-border-color'
-	.fill 0
+	.fill 0,0
 	.word w_defx2dtextx2dbgx2dcolor
 xt_setx2dborderx2dcolor:
 	.block
@@ -6392,7 +4474,7 @@ xt_setx2dborderx2dcolor:
 w_setx2dborderx2dsize:
 	.byte $0F
 	.text 'set-border-size'
-	.fill 1
+	.fill 1,0
 	.word w_setx2dborderx2dcolor
 xt_setx2dborderx2dsize:
 	.block
@@ -6407,7 +4489,7 @@ xt_setx2dborderx2dsize:
 	.word xt_over
 	.word xt_or
 	.word xt_x28branch0x29
-	.word l_307
+	.word l_62
 	.word xt_x28literalx29
 	.word 31
 	.word xt_and
@@ -6430,8 +4512,8 @@ xt_setx2dborderx2dsize:
 	.word 53252
 	.word xt_cx21
 	.word xt_x28branchx29
-	.word l_308
-l_307:
+	.word l_63
+l_62:
 	.word xt_x28literalx29
 	.word 53252
 	.word xt_cx40
@@ -6442,7 +4524,7 @@ l_307:
 	.word 53252
 	.word xt_cx21
 	.word xt_2drop
-l_308:
+l_63:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -6463,23 +4545,23 @@ l_308:
 w_maze:
 	.byte $04
 	.text 'maze'
-	.fill 12
+	.fill 12,0
 	.word w_setx2dborderx2dsize
 xt_maze:
 	.block
 	jmp xt_enter
 	.word xt_initrandom
-l_309:
+l_64:
 	.word xt_random
 	.word xt_1
 	.word xt_and
 	.word xt_x28literalx29
-	.word 205
+	.word 186
 	.word xt_x2b
 	.word xt_emit
 	.word xt_x28branchx29
-	.word l_309
-l_310:
+	.word l_64
+l_65:
 	.word xt_exit
 	.bend
 ; END maze
@@ -6489,7 +4571,7 @@ l_310:
 w_cold:
 	.byte $04
 	.text 'cold'
-	.fill 12
+	.fill 12,0
 	.word w_maze
 xt_cold:
 	.block

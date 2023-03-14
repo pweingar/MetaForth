@@ -2,6 +2,16 @@
 # Unit test code
 #
 
+_testing_enabled = False
+
+def enable_tests(enable):
+    """Set if tests are enabled"""
+    _testing_enabled = enable
+
+def is_testing_enabled():
+    """Return TRUE if testing is enabled"""
+    return _testing_enabled
+
 class SimpleTest:
     """A unit test"""
 

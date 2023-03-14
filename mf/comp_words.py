@@ -295,43 +295,44 @@ def exec_lbrace(c):
                 name = name + token + " "
                 expected_values.append(token)
 
-    # Compile the test
-    test_word = c.get_test_word()
+    if testing.is_testing_enabled():
+        # Compile the test
+        test_word = c.get_test_word()
 
-    # Compile setting the name of the test
-    text_label = c.gen_label()
-    jump_label = c.gen_label()
-    test_word.compile(compiler.LabelReference("xt_(literal)"))
-    test_word.compile(compiler.LabelReference(text_label))
-    test_word.compile(compiler.LabelReference("xt_(branch)"))
-    test_word.compile(compiler.LabelReference(jump_label))
-    test_word.compile(compiler.LabelDeclaration(text_label))
-    test_word.compile(compiler.LiteralString(name.strip()))
-    test_word.compile(compiler.LabelDeclaration(jump_label))
-    test_word.compile(compiler.LabelReference("xt_testname"))
+        # Compile setting the name of the test
+        text_label = c.gen_label()
+        jump_label = c.gen_label()
+        test_word.compile(compiler.LabelReference("xt_(literal)"))
+        test_word.compile(compiler.LabelReference(text_label))
+        test_word.compile(compiler.LabelReference("xt_(branch)"))
+        test_word.compile(compiler.LabelReference(jump_label))
+        test_word.compile(compiler.LabelDeclaration(text_label))
+        test_word.compile(compiler.LiteralString(name.strip()))
+        test_word.compile(compiler.LabelDeclaration(jump_label))
+        test_word.compile(compiler.LabelReference("xt_testname"))
 
-    # Compile each of the test words
-    state = 0
-    for token in operations:
-        if state == 0:
-            if token == "\'":
-                # If we have seen ', switch to state 1
-                state = 1
-            else:
-                # Otherwise, just compile the token
-                c.compile_token(test_word, token)
-        
-        elif state == 1:
-            # We have seen a tick... compile a literal of the current token
-            state = 0
-            test_word.compile(compiler.LabelReference("xt_(literal)"))
-            test_word.compile(compiler.LabelReference("xt_{}".format(token)))
+        # Compile each of the test words
+        state = 0
+        for token in operations:
+            if state == 0:
+                if token == "\'":
+                    # If we have seen ', switch to state 1
+                    state = 1
+                else:
+                    # Otherwise, just compile the token
+                    c.compile_token(test_word, token)
+            
+            elif state == 1:
+                # We have seen a tick... compile a literal of the current token
+                state = 0
+                test_word.compile(compiler.LabelReference("xt_(literal)"))
+                test_word.compile(compiler.LabelReference("xt_{}".format(token)))
 
-    # Compile each value assertion
-    while len(expected_values) > 0:
-        expected_value = expected_values.pop()
-        c.compile_token(test_word, expected_value)
-        test_word.compile(compiler.LabelReference("xt_assert="))
+        # Compile each value assertion
+        while len(expected_values) > 0:
+            expected_value = expected_values.pop()
+            c.compile_token(test_word, expected_value)
+            test_word.compile(compiler.LabelReference("xt_assert="))
 
 def exec_lp(c):
     """Process a comment"""
