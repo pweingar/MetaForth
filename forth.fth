@@ -727,6 +727,72 @@ defer interpret
 ;
 
 \\
+\\ Control Flow
+\\
+
+( n -- )
+: ?control
+    ( Validate that N is the top of the return stack )
+    - 0 22 - ?error
+;
+
+( -- )
+: begin
+    ( Start a loop... end with again or repeat )
+    
+    here                ( Save the location of the loop return point )
+    1                   ( Push 1 as a marker for BEGIN )
+; immediate
+
+( -- )
+: again
+    ( Jump back to the begin point )
+
+    1 ?control          ( Validate we're in a BEGIN loop )
+    postpone (branch)   ( Compile BRANCH into the current word )
+    ,                   ( Pull the address of the BEGIN and compile it for BRANCH )
+; immediate
+
+( -- )
+: until
+    ( Check TOS, if 0, branch back to the BEGIN )
+
+    1 ?control          ( Validate we're in a BEGIN loop )
+    postpone (branch0)  ( Compile BRANCH0 into the current word )
+    ,                   ( Pull the address of the BEGIN and compile it for BRANCH )
+; immediate
+
+( f -- )
+: if
+    ( Start a basic conditional )
+
+    postpone (branch0)  ( Compile BRANCH0 to the word )
+    here                ( Save the location of the jump address )
+    0 ,                 ( Compile a dummy jump address )
+    2                   ( Save the indicator for an IF/ELSE )
+; immediate
+
+( -- )
+: else
+    ( Start the false condition block )
+
+    2 ?control          ( Validate that we are in an IF/ELSE )
+    postpone (branch)   ( Compile the branch to go to the end of the IF... ELSE... THEN )
+    here swap
+    0 ,                 ( Compile a dummy jump address )
+    here swap !         ( Update the IF jump address to here )
+    2                   ( Save the indicator for an IF/ELSE )
+; immediate
+
+( -- )
+: then
+    ( Close out an IF... ELSE... THEN clause )
+
+    2 ?control          ( Validate that we are in an IF/ELSE )
+    here swap !         ( Update the IF jump address to here )
+; immediate
+
+\\
 \\ Defining words
 \\
 

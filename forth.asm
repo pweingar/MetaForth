@@ -4448,13 +4448,182 @@ l_62:
 ; ( TODO: handle doubles )
 ; ( Compiling... compile the number )
 ; ( Otherwise, leave the number on the stack )
+; ( n -- )
+; BEGIN ?control
+w_x3fcontrol:
+	.byte $08
+	.text '?control'
+	.fill 8,0
+	.word w_x3fcsp
+xt_x3fcontrol:
+	.block
+	jmp xt_enter
+	.word xt_x2d
+	.word xt_0
+	.word xt_x28literalx29
+	.word 22
+	.word xt_x2d
+	.word xt_x3ferror
+	.word xt_exit
+	.bend
+; END ?control
+
+; ( Validate that N is the top of the return stack )
+; ( -- )
+; BEGIN begin
+w_begin:
+	.byte $C5
+	.text 'begin'
+	.fill 11,0
+	.word w_x3fcontrol
+xt_begin:
+	.block
+	jmp xt_enter
+	.word xt_here
+	.word xt_1
+	.word xt_exit
+	.bend
+; END begin
+
+; ( Start a loop... end with again or repeat )
+; ( Save the location of the loop return point )
+; ( Push 1 as a marker for BEGIN )
+; ( -- )
+; BEGIN again
+w_again:
+	.byte $C5
+	.text 'again'
+	.fill 11,0
+	.word w_begin
+xt_again:
+	.block
+	jmp xt_enter
+	.word xt_1
+	.word xt_x3fcontrol
+	.word xt_x28literalx29
+	.word xt_x28branchx29
+	.word xt_x2c
+	.word xt_x2c
+	.word xt_exit
+	.bend
+; END again
+
+; ( Jump back to the begin point )
+; ( Validate we're in a BEGIN loop )
+; ( Compile BRANCH into the current word )
+; ( Pull the address of the BEGIN and compile it for BRANCH )
+; ( -- )
+; BEGIN until
+w_until:
+	.byte $C5
+	.text 'until'
+	.fill 11,0
+	.word w_again
+xt_until:
+	.block
+	jmp xt_enter
+	.word xt_1
+	.word xt_x3fcontrol
+	.word xt_x28literalx29
+	.word xt_x28branch0x29
+	.word xt_x2c
+	.word xt_x2c
+	.word xt_exit
+	.bend
+; END until
+
+; ( Check TOS, if 0, branch back to the BEGIN )
+; ( Validate we're in a BEGIN loop )
+; ( Compile BRANCH0 into the current word )
+; ( Pull the address of the BEGIN and compile it for BRANCH )
+; ( f -- )
+; BEGIN if
+w_if:
+	.byte $C2
+	.text 'if'
+	.fill 14,0
+	.word w_until
+xt_if:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word xt_x28branch0x29
+	.word xt_x2c
+	.word xt_here
+	.word xt_0
+	.word xt_x2c
+	.word xt_2
+	.word xt_exit
+	.bend
+; END if
+
+; ( Start a basic conditional )
+; ( Compile BRANCH0 to the word )
+; ( Save the location of the jump address )
+; ( Compile a dummy jump address )
+; ( Save the indicator for an IF/ELSE )
+; ( -- )
+; BEGIN else
+w_else:
+	.byte $C4
+	.text 'else'
+	.fill 12,0
+	.word w_if
+xt_else:
+	.block
+	jmp xt_enter
+	.word xt_2
+	.word xt_x3fcontrol
+	.word xt_x28literalx29
+	.word xt_x28branchx29
+	.word xt_x2c
+	.word xt_here
+	.word xt_swap
+	.word xt_0
+	.word xt_x2c
+	.word xt_here
+	.word xt_swap
+	.word xt_x21
+	.word xt_2
+	.word xt_exit
+	.bend
+; END else
+
+; ( Start the false condition block )
+; ( Validate that we are in an IF/ELSE )
+; ( Compile the branch to go to the end of the IF... ELSE... THEN )
+; ( Compile a dummy jump address )
+; ( Update the IF jump address to here )
+; ( Save the indicator for an IF/ELSE )
+; ( -- )
+; BEGIN then
+w_then:
+	.byte $C4
+	.text 'then'
+	.fill 12,0
+	.word w_else
+xt_then:
+	.block
+	jmp xt_enter
+	.word xt_2
+	.word xt_x3fcontrol
+	.word xt_here
+	.word xt_swap
+	.word xt_x21
+	.word xt_exit
+	.bend
+; END then
+
+; ( Close out an IF... ELSE... THEN clause )
+; ( Validate that we are in an IF/ELSE )
+; ( Update the IF jump address to here )
 ; ( -- )
 ; BEGIN create
 w_create:
 	.byte $06
 	.text 'create'
 	.fill 10,0
-	.word w_x3fcsp
+	.word w_then
 xt_create:
 	.block
 	jmp xt_enter
