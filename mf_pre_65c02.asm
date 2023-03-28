@@ -98,7 +98,7 @@ init_user_loop:
         cpy #(init_user_end - init_user)
         bne init_user_loop
 
-        jmp next
+        jmp xt_next
 
 vstart  .word xt_cold
         .word xt_halt
@@ -108,26 +108,6 @@ vstart  .word xt_cold
 ;; 
 
 done    jmp (donep)     ; Quit the interpreter by going to the code at donep
-
-
-
-        ; jmp next
-
-next    ldy #1          ; wp := (ip)
-        lda (ip)
-        sta wp
-        lda (ip),y
-        sta wp+1
-
-        clc             ; ip := ip + 2
-        lda ip
-        adc #2
-        sta ip
-        lda ip+1
-        adc #0
-        sta ip+1
-
-        jmp (wp)        ; jmp (wp)
 
 .send
 

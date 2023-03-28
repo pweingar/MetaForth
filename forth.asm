@@ -2,19 +2,43 @@
 .section code
 ; Start of auto-generated code
 
+; BEGIN next
+w_next:
+	.byte $04
+	.text 'next'
+	.fill 12,0
+	.word 0
+xt_next:
+	.block
+	ldy #1          ; wp := (ip)
+	lda (ip)
+	sta wp
+	lda (ip),y
+	sta wp+1
+	clc             ; ip := ip + 2
+	lda ip
+	adc #2
+	sta ip
+	lda ip+1
+	adc #0
+	sta ip+1
+	jmp (wp)        ; jmp (wp)
+	.bend
+; END next
+
 ; BEGIN exit
 w_exit:
 	.byte $04
 	.text 'exit'
 	.fill 12,0
-	.word 0
+	.word w_next
 xt_exit:
 	.block
 	pla             ; ip := pop()
 	sta ip
 	pla
 	sta ip+1
-	jmp next        ; jmp next
+	jmp xt_next
 	.bend
 ; END exit
 
@@ -37,9 +61,45 @@ xt_enter:
 	lda wp+1
 	adc #0
 	sta ip+1
-	jmp next
+	jmp xt_next
 	.bend
 ; END enter
+
+; BEGIN dodoes
+w_dodoes:
+	.byte $06
+	.text 'dodoes'
+	.fill 10,0
+	.word w_enter
+xt_dodoes:
+	.block
+	clc             ; push PFA to parameter stack
+	lda wp
+	adc #3
+	sta pstack,x
+	lda wp+1
+	adc #0
+	sta pstack+1,x
+	dex
+	dex
+	clc             ; Address of high level code into tmp
+	pla
+	adc #1
+	sta tmp
+	pla
+	adc #0
+	sta tmp+1
+	lda ip+1        ; push ip to return stack
+	pha
+	lda ip
+	pha
+	lda tmp         ; ip := tmp
+	sta ip
+	lda tmp+1
+	sta ip+1
+	jmp xt_next
+	.bend
+; END dodoes
 
 ; ( a-addr -- )
 ; BEGIN testname
@@ -47,7 +107,7 @@ w_testname:
 	.byte $08
 	.text 'testname'
 	.fill 8,0
-	.word w_enter
+	.word w_dodoes
 xt_testname:
 	.block
 	lda pstack+2,x
@@ -56,7 +116,7 @@ xt_testname:
 	sta test+1
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END testname
 
@@ -79,7 +139,7 @@ xt_assertx3d:
 	clc
 	adc #4
 	tax
-	jmp next            ; And continue
+	jmp xt_next            ; And continue
 	fail:
 	lda #<leadin        ; Print the failure message
 	sta src_ptr
@@ -203,7 +263,7 @@ xt_rpx40:
 	sta pstack,x        ; Save it to the parameter stack
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END rp@
 
@@ -223,7 +283,7 @@ xt_rpx21:
 	ldx savex           ; Restore the parameter stack pointer
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END rp!
 
@@ -242,7 +302,7 @@ xt_spx40:
 	sta pstack,x        ; And push it to the stack
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END sp@
 
@@ -257,7 +317,7 @@ xt_spx21:
 	.block
 	lda pstack+2,x      ; Get the address from the stack
 	tax                 ; And set the stack pointer
-	jmp next
+	jmp xt_next
 	.bend
 ; END sp!
 
@@ -276,7 +336,7 @@ xt_emit:
 	plx
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END emit
 
@@ -302,7 +362,7 @@ xt_keyx3f:
 	done:
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END key?
 
@@ -325,7 +385,7 @@ xt_key:
 	stz pstack+1,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END key
 
@@ -342,7 +402,7 @@ xt_cr:
 	lda #$0d
 	jsr conout
 	plx
-	jmp next
+	jmp xt_next
 	.bend
 ; END cr
 
@@ -359,7 +419,7 @@ xt_0:
 	stz pstack,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END 0
 
@@ -377,7 +437,7 @@ xt_1:
 	sta pstack,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END 1
 
@@ -395,7 +455,7 @@ xt_2:
 	sta pstack,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END 2
 
@@ -413,7 +473,7 @@ xt_x2d1:
 	sta pstack,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END -1
 
@@ -431,7 +491,7 @@ xt_x2d2:
 	sta pstack,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END -2
 
@@ -458,7 +518,7 @@ xt_x28literalx29:
 	lda ip+1
 	adc #0
 	sta ip+1
-	jmp next
+	jmp xt_next
 	.bend
 ; END (literal)
 
@@ -491,7 +551,7 @@ xt_x28dliteralx29:
 	lda ip+1
 	adc #0
 	sta ip+1
-	jmp next
+	jmp xt_next
 	.bend
 ; END (dliteral)
 
@@ -513,7 +573,7 @@ xt_depth:
 	sta pstack,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END depth
 
@@ -528,7 +588,7 @@ xt_drop:
 	.block
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END drop
 
@@ -547,7 +607,7 @@ xt_dup:
 	sta pstack+1,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END dup
 
@@ -568,7 +628,7 @@ xt_swap:
 	ldy pstack+5,x
 	sty pstack+3,x
 	sta pstack+5,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END swap
 
@@ -605,7 +665,7 @@ xt_2swap:
 	sta pstack+8,x
 	pla
 	sta pstack+9,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END 2swap
 
@@ -624,7 +684,7 @@ xt_over:
 	sta pstack+1,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END over
 
@@ -649,7 +709,7 @@ xt_2over:
 	sta pstack+3,x
 	lda pstack+10,x
 	sta pstack+2,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END 2over
 
@@ -669,7 +729,7 @@ xt_x3er:
 	pha
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END >r
 
@@ -689,7 +749,7 @@ xt_rx3e:
 	sta pstack+1,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END r>
 
@@ -711,7 +771,7 @@ xt_r:
 	pha
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END r
 
@@ -751,7 +811,7 @@ xt_x21:
 	inx
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END !
 
@@ -773,7 +833,7 @@ xt_x40:
 	sta pstack+2,x
 	lda (tmp),y
 	sta pstack+3,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END @
 
@@ -792,7 +852,7 @@ xt_cx21:
 	inx
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END c!
 
@@ -808,7 +868,7 @@ xt_cx40:
 	lda (pstack+2,x)
 	sta pstack+2,x
 	stz pstack+3,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END c@
 
@@ -845,7 +905,7 @@ xt_fill:
 	txa                     ; Clean up the parameter stack
 	adc #6
 	tax
-	jmp next
+	jmp xt_next
 	.bend
 ; END fill
 
@@ -875,7 +935,7 @@ xt_x2bx21:
 	inx
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END +!
 
@@ -916,7 +976,7 @@ xt_enclose:
 	lda (src_ptr),y         ; Get the character
 	bne chk_delim1          ; NUL? No:; check it against the delimiter
 	none:
-	jmp next                ; Yes: we want to return 0s
+	jmp xt_next                ; Yes: we want to return 0s
 	chk_delim1:
 	cmp tmp                 ; Is it the delimiter?
 	beq skip2               ; Yes: skip the character
@@ -949,11 +1009,11 @@ xt_enclose:
 	sty pstack+4,x          ; Save the offset of the delimiter in n2
 	iny
 	sty pstack+2,x          ; And the offset +1 to n3
-	jmp next                ; And we're done
+	jmp xt_next                ; And we're done
 	found_nul:                  ; We did not find a delimiter... reached NUL or end of buffer
 	sty pstack+4,x          ; Save the offset of the delimiter in n2
 	sty pstack+2,x          ; And to n3
-	jmp next                ; And we're done
+	jmp xt_next                ; And we're done
 	.bend
 ; END enclose
 
@@ -1000,7 +1060,7 @@ xt_cmove:
 	bra loop                ; And continue the loop
 	done:
 	ldx savex
-	jmp next
+	jmp xt_next
 	.bend
 ; END cmove
 
@@ -1126,7 +1186,7 @@ xt_x2b:
 	sta pstack+5,x
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END +
 
@@ -1156,7 +1216,7 @@ xt_dx2b:
 	inx
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END d+
 
@@ -1186,7 +1246,7 @@ xt_dx2d:
 	inx
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END d-
 
@@ -1208,7 +1268,7 @@ xt_x2d:
 	sta pstack+5,x
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END -
 
@@ -1236,7 +1296,7 @@ xt_ux2a:
 	sta pstack+3,x
 	lda $de04
 	sta pstack+2,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END u*
 
@@ -1264,7 +1324,7 @@ xt_x2a:
 	sta pstack+3,x
 	lda $de0c
 	sta pstack+2,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END *
 
@@ -1305,7 +1365,7 @@ xt_ux2ax2dsoft:
 	sta pstack+5,x
 	inx             ; Clean up parameter stack
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END u*-soft
 
@@ -1382,7 +1442,7 @@ xt_x2ax2dsoft:
 	sbc pstack+3,x
 	sta pstack+3,x
 	done:
-	jmp next
+	jmp xt_next
 	.bend
 ; END *-soft
 
@@ -1435,7 +1495,7 @@ xt_umx2fmod:
 	done:
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END um/mod
 
@@ -1457,12 +1517,12 @@ xt_sx3ed:
 	bmi is_neg
 	stz pstack+4,x
 	stz pstack+5,x
-	jmp next
+	jmp xt_next
 	is_neg:
 	lda #$ff
 	sta pstack+4,x
 	sta pstack+5,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END s>d
 
@@ -1479,7 +1539,7 @@ xt_1x2b:
 	bne skip
 	inc pstack+3,x
 	skip:
-	jmp next
+	jmp xt_next
 	.bend
 ; END 1+
 
@@ -1499,7 +1559,7 @@ xt_2x2b:
 	lda pstack+3,x
 	adc #0
 	sta pstack+3,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END 2+
 
@@ -1517,7 +1577,7 @@ xt_1x2d:
 	dec pstack+3,x
 	l1:
 	dec pstack+2,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END 1-
 
@@ -1537,7 +1597,7 @@ xt_2x2d:
 	lda pstack+3,x
 	sbc #0
 	sta pstack+3,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END 2-
 
@@ -1558,7 +1618,7 @@ xt_and:
 	sta pstack+5,x
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END and
 
@@ -1579,7 +1639,7 @@ xt_or:
 	sta pstack+5,x
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END or
 
@@ -1600,7 +1660,7 @@ xt_xor:
 	sta pstack+5,x
 	inx
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END xor
 
@@ -1619,7 +1679,7 @@ xt_not:
 	lda pstack+3,x
 	eor #$ff
 	sta pstack+3,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END not
 
@@ -1636,12 +1696,12 @@ xt_0x3c:
 	bmi istrue
 	stz pstack+2,x
 	stz pstack+3,x
-	jmp next
+	jmp xt_next
 	istrue:
 	lda #$ff
 	sta pstack+2,x
 	sta pstack+3,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END 0<
 
@@ -1661,11 +1721,11 @@ xt_0x3d:
 	lda #$ff
 	sta pstack+2,x
 	sta pstack+3,x
-	jmp next
+	jmp xt_next
 	isfalse:
 	stz pstack+2,x
 	stz pstack+3,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END 0=
 
@@ -1687,11 +1747,11 @@ xt_0x3e:
 	lda #$ff
 	sta pstack+2,x
 	sta pstack+3,x
-	jmp next
+	jmp xt_next
 	isfalse:
 	stz pstack+2,x
 	stz pstack+3,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END 0>
 
@@ -1713,7 +1773,7 @@ xt_x28variablex29:
 	sta pstack+1,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END (variable)
 
@@ -1734,7 +1794,7 @@ xt_x28constantx29:
 	sta pstack+1,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END (constant)
 
@@ -1772,7 +1832,7 @@ xt_x28userx29:
 	sta pstack+1,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END (user)
 
@@ -1792,7 +1852,7 @@ xt_x28branchx29:
 	sta ip+1
 	lda tmp
 	sta ip
-	jmp next
+	jmp xt_next
 	.bend
 ; END (branch)
 
@@ -1829,7 +1889,7 @@ xt_x28branch0x29:
 	done:
 	inx                 ; clean up the parameter stack
 	inx
-	jmp next
+	jmp xt_next
 	.bend
 ; END (branch0)
 
@@ -1855,7 +1915,7 @@ xt_x28dox29:
 	txa
 	adc #4
 	tax
-	jmp next
+	jmp xt_next
 	.bend
 ; END (do)
 
@@ -1885,7 +1945,7 @@ xt_x3ei:
 	lda tmp
 	sta current
 	ldx savex
-	jmp next
+	jmp xt_next
 	.bend
 ; END >i
 
@@ -1909,7 +1969,7 @@ xt_leave:
 	lda current
 	sta limit
 	ldx savex
-	jmp next
+	jmp xt_next
 	.bend
 ; END leave
 
@@ -1971,7 +2031,7 @@ xt_x28loopx29:
 	sta ip
 	done:
 	ldx savex           ; Restore the parameter stack pointer
-	jmp next
+	jmp xt_next
 	.bend
 ; END (loop)
 
@@ -2043,7 +2103,7 @@ xt_x28x2bloopx29:
 	sta ip
 	done:
 	ldx savex           ; Restore the parameter stack pointer
-	jmp next
+	jmp xt_next
 	.bend
 ; END (+loop)
 
@@ -2070,7 +2130,7 @@ xt_i:
 	sta pstack,x
 	dex
 	dex
-	jmp next
+	jmp xt_next
 	.bend
 ; END i
 
@@ -2101,7 +2161,7 @@ xt_x28ofx29:
 	lda ip+1
 	adc #0
 	sta ip+1
-	jmp next
+	jmp xt_next
 	; No... pop n2 off of stack and jump past END-OF
 	not_eq:
 	inx                 ; Remove n2 from stack
@@ -2113,7 +2173,7 @@ xt_x28ofx29:
 	sta ip+1
 	lda tmp
 	sta ip
-	jmp next
+	jmp xt_next
 	.bend
 ; END (of)
 
@@ -2159,7 +2219,7 @@ xt_x28vocabularyx29:
 	lda wp+1
 	adc #0
 	sta (tmp),y
-	jmp next
+	jmp xt_next
 	.bend
 ; END (vocabulary)
 
@@ -2204,7 +2264,7 @@ xt_x28findx29:
 	inx
 	stz pstack+3,x          ; And return 0
 	stz pstack+2,x
-	jmp next
+	jmp xt_next
 	not_eod:
 	lda (src_ptr)           ; Get the size of the word in the dictionary
 	and #$3f                ; Filter out the flags
@@ -2251,7 +2311,7 @@ xt_x28findx29:
 	lda src_ptr+1
 	adc #0
 	sta pstack+7,x
-	jmp next
+	jmp xt_next
 	.bend
 ; END (find)
 
@@ -2285,26 +2345,60 @@ xt_digit:
 	inx
 	stz pstack+3,x          ; Return false
 	stz pstack+2,x
-	jmp next
+	jmp xt_next
 	found:
 	stz pstack+5,x          ; Return the value of the digit
 	sty pstack+4,x
 	lda #$ff                ; And the true flag
 	sta pstack+3,x
 	sta pstack+2,x
-	jmp next
+	jmp xt_next
 	digits:
 	.text "0123456789ABCDEF"
 	.bend
 ; END digit
 
+; ( -- c )
+; BEGIN jump-instruction
+w_jumpx2dinstruction:
+	.byte $10
+	.text 'jump-instruction'
+	.fill 0,0
+	.word w_digit
+xt_jumpx2dinstruction:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 76
+	.word xt_exit
+	.bend
+; END jump-instruction
+
+; ( Push the code for a jump instruction )
+; ( -- c )
+; BEGIN call-instruction
+w_callx2dinstruction:
+	.byte $10
+	.text 'call-instruction'
+	.fill 0,0
+	.word w_jumpx2dinstruction
+xt_callx2dinstruction:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 32
+	.word xt_exit
+	.bend
+; END call-instruction
+
+; ( Push the code for a call instruction )
 ; ( Define some constants )
 ; BEGIN bs
 w_bs:
 	.byte $02
 	.text 'bs'
 	.fill 14,0
-	.word w_digit
+	.word w_callx2dinstruction
 xt_bs:
 	.block
 	jmp xt_x28constantx29
@@ -2932,7 +3026,7 @@ xt_nfa:
 	.block
 	jmp xt_enter
 	.word xt_x28literalx29
-	.word 22
+	.word 23
 	.word xt_x2d
 	.word xt_exit
 	.bend
@@ -2949,19 +3043,37 @@ xt_pfa:
 	.block
 	jmp xt_enter
 	.word xt_x28literalx29
-	.word 22
+	.word 23
 	.word xt_x2b
 	.word xt_exit
 	.bend
 ; END pfa
 
+; ( n1 -- n2 )
+; BEGIN nfa>cfa
+w_nfax3ecfa:
+	.byte $07
+	.text 'nfa>cfa'
+	.fill 9,0
+	.word w_pfa
+xt_nfax3ecfa:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 19
+	.word xt_x2b
+	.word xt_exit
+	.bend
+; END nfa>cfa
+
+; ( Convert the NFA to the CFA )
 ; ( -- addr )
 ; BEGIN here
 w_here:
 	.byte $04
 	.text 'here'
 	.fill 12,0
-	.word w_pfa
+	.word w_nfax3ecfa
 xt_here:
 	.block
 	jmp xt_enter
@@ -3150,6 +3262,7 @@ xt_x28x2ex22x29:
 	.bend
 ; END (.")
 
+; ( Code behind ." )
 ; ( Get the pointer to the counted string to print )
 ; ( Get the length and address of the string )
 ; ( Get the offset we need to add to the return point )
@@ -3563,13 +3676,13 @@ xt_x3ferror:
 	jmp xt_enter
 	.word xt_swap
 	.word xt_x28branch0x29
-	.word l_48
+	.word l_60
 	.word xt_error
 	.word xt_x28branchx29
-	.word l_49
-l_48:
+	.word l_61
+l_60:
 	.word xt_drop
-l_49:
+l_61:
 	.word xt_exit
 	.bend
 ; END ?error
@@ -3925,16 +4038,192 @@ l_38:
 	.bend
 ; END dump
 
+; ( n1 n2 n3 -- f )
+; BEGIN between
+w_between:
+	.byte $07
+	.text 'between'
+	.fill 9,0
+	.word w_dump
+xt_between:
+	.block
+	jmp xt_enter
+	.word xt_x3er
+	.word xt_over
+	.word xt_x3er
+	.word xt_x3c
+	.word xt_x28branch0x29
+	.word l_41
+	.word xt_rx3e
+	.word xt_drop
+	.word xt_rx3e
+	.word xt_drop
+	.word xt_0
+	.word xt_x28branchx29
+	.word l_42
+l_41:
+	.word xt_rx3e
+	.word xt_rx3e
+	.word xt_x3e
+	.word xt_not
+l_42:
+	.word xt_exit
+	.bend
+; END between
+
+; ( Return true if n2 <= n1 <= n3 )
+; ( Save n3 )
+; ( Save a copy of n1 )
+; ( Is n1 < n2 )
+; ( Drop copy of n1 )
+; ( Drop n3 )
+; ( Return false )
+; ( Return true if n3 >= n1? )
+; ( c -- f )
+; BEGIN isprint
+w_isprint:
+	.byte $07
+	.text 'isprint'
+	.fill 9,0
+	.word w_between
+xt_isprint:
+	.block
+	jmp xt_enter
+	.word xt_dup
+	.word xt_x28literalx29
+	.word 32
+	.word xt_x28literalx29
+	.word 126
+	.word xt_between
+	.word xt_x28branch0x29
+	.word l_43
+	.word xt_drop
+	.word xt_x28literalx29
+	.word 65535
+	.word xt_x28branchx29
+	.word l_44
+l_43:
+	.word xt_x28literalx29
+	.word 160
+	.word xt_x28literalx29
+	.word 255
+	.word xt_between
+l_44:
+	.word xt_exit
+	.bend
+; END isprint
+
+; ( Return true if character is printable )
+; ( Return true if character betwen 0x20 and 0x7e )
+; ( Return true if character betwen 0xA0 and 0xFF )
+; ( c -- )
+; BEGIN cprint
+w_cprint:
+	.byte $06
+	.text 'cprint'
+	.fill 10,0
+	.word w_isprint
+xt_cprint:
+	.block
+	jmp xt_enter
+	.word xt_dup
+	.word xt_isprint
+	.word xt_x28branch0x29
+	.word l_45
+	.word xt_emit
+	.word xt_x28branchx29
+	.word l_46
+l_45:
+	.word xt_drop
+	.word xt_x28literalx29
+	.word 46
+	.word xt_emit
+l_46:
+	.word xt_exit
+	.bend
+; END cprint
+
+; ( Print a byte... replace non-printable characters with a dot )
+; ( addr n -- )
+; BEGIN cdump
+w_cdump:
+	.byte $05
+	.text 'cdump'
+	.fill 11,0
+	.word w_cprint
+xt_cdump:
+	.block
+	jmp xt_enter
+	.word xt_over
+	.word xt_x2b
+	.word xt_over
+	.word xt_x28dox29
+l_47:
+	.word xt_cr
+	.word xt_i
+	.word xt_sx3ed
+	.word xt_x28literalx29
+	.word 5
+	.word xt_dx2er
+	.word xt_x28literalx29
+	.word 58
+	.word xt_emit
+	.word xt_space
+	.word xt_i
+	.word xt_x28literalx29
+	.word 8
+	.word xt_0
+	.word xt_x28dox29
+l_49:
+	.word xt_dup
+	.word xt_i
+	.word xt_x2b
+	.word xt_cx40
+	.word xt_sx3ed
+	.word xt_2
+	.word xt_dx2er
+	.word xt_x28literalx29
+	.word 32
+	.word xt_emit
+	.word xt_x28loopx29
+	.word l_49
+l_50:
+	.word xt_2
+	.word xt_spaces
+	.word xt_i
+	.word xt_x28literalx29
+	.word 8
+	.word xt_0
+	.word xt_x28dox29
+l_51:
+	.word xt_dup
+	.word xt_i
+	.word xt_x2b
+	.word xt_cx40
+	.word xt_cprint
+	.word xt_x28loopx29
+	.word l_51
+l_52:
+	.word xt_x28literalx29
+	.word 8
+	.word xt_x28x2bloopx29
+	.word l_47
+l_48:
+	.word xt_drop
+	.word xt_exit
+	.bend
+; END cdump
+
 ; BEGIN interpret
 w_interpret:
 	.byte $09
 	.text 'interpret'
 	.fill 7,0
-	.word w_dump
+	.word w_cdump
 xt_interpret:
 	.block
 	jmp xt_enter
-l_51:
+l_63:
 	.word xt_tib
 	.word xt_x40
 	.word xt_x3ein
@@ -3942,26 +4231,26 @@ l_51:
 	.word xt_x2b
 	.word xt_cx40
 	.word xt_x28branch0x29
-	.word l_52
+	.word l_64
 	.word xt_x2dfind
 	.word xt_x28branch0x29
-	.word l_53
+	.word l_65
 	.word xt_state
 	.word xt_x40
 	.word xt_x3c
 	.word xt_x28branch0x29
-	.word l_54
+	.word l_66
 	.word xt_cfa
 	.word xt_x2c
 	.word xt_x28branchx29
-	.word l_55
-l_54:
+	.word l_67
+l_66:
 	.word xt_cfa
 	.word xt_execute
-l_55:
+l_67:
 	.word xt_x28branchx29
-	.word l_56
-l_53:
+	.word l_68
+l_65:
 	.word xt_here
 	.word xt_number
 	.word xt_swap
@@ -3969,16 +4258,16 @@ l_53:
 	.word xt_state
 	.word xt_x40
 	.word xt_x28branch0x29
-	.word l_57
+	.word l_69
 	.word xt_x28literalx29
 	.word xt_x28literalx29
 	.word xt_x2c
 	.word xt_x2c
-l_57:
-l_56:
+l_69:
+l_68:
 	.word xt_x28branchx29
-	.word l_51
-l_52:
+	.word l_63
+l_64:
 	.word xt_exit
 	.bend
 ; END interpret
@@ -4031,7 +4320,7 @@ xt_throw:
 	jmp xt_enter
 	.word xt_x3fdup
 	.word xt_x28branch0x29
-	.word l_41
+	.word l_53
 	.word xt_handler
 	.word xt_x40
 	.word xt_rpx21
@@ -4044,7 +4333,7 @@ xt_throw:
 	.word xt_spx21
 	.word xt_drop
 	.word xt_rx3e
-l_41:
+l_53:
 	.word xt_exit
 	.bend
 ; END throw
@@ -4069,26 +4358,26 @@ xt_quit:
 	.word xt_0
 	.word xt_state
 	.word xt_x21
-l_42:
+l_54:
 	.word xt_cr
 	.word xt_state
 	.word xt_x40
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_44
+	.word l_56
 	.word xt_cr
 	.word xt_x28literalx29
 	.word 62
 	.word xt_emit
 	.word xt_bl
 	.word xt_emit
-l_44:
+l_56:
 	.word xt_query
 	.word xt_cr
 	.word xt_interpret
 	.word xt_x28branchx29
-	.word l_42
-l_43:
+	.word l_54
+l_55:
 	.word xt_exit
 	.bend
 ; END quit
@@ -4107,14 +4396,14 @@ xt_error:
 	.word xt_0x3d
 	.word xt_not
 	.word xt_x28branch0x29
-	.word l_45
+	.word l_57
 	.word xt_here
 	.word xt_count
 	.word xt_type
 	.word xt_x28x2ex22x29
 	.ptext "? MSG#"
 	.word xt_x2e
-l_45:
+l_57:
 	.word xt_quit
 	.word xt_exit
 	.bend
@@ -4136,13 +4425,13 @@ xt_x3fcsp:
 	.word xt_spx40
 	.word xt_x2d
 	.word xt_x28branch0x29
-	.word l_50
+	.word l_62
 	.word xt_0
 	.word xt_x28literalx29
 	.word 25
 	.word xt_x2d
 	.word xt_error
-l_50:
+l_62:
 	.word xt_exit
 	.bend
 ; END ?csp
@@ -4180,6 +4469,11 @@ xt_create:
 	.word xt_current
 	.word xt_x40
 	.word xt_x21
+	.word xt_jumpx2dinstruction
+	.word xt_cx2c
+	.word xt_x28literalx29
+	.word xt_enter
+	.word xt_x2c
 	.word xt_exit
 	.bend
 ; END create
@@ -4206,26 +4500,95 @@ xt_x3a:
 	.word xt_x21
 	.word xt_create
 	.word xt_x5d
-	.word xt_x28literalx29
-	.word 76
-	.word xt_cx2c
-	.word xt_x28literalx29
-	.word xt_enter
-	.word xt_x2c
 	.word xt_exit
 	.bend
 ; END :
 
 ; ( Define a word... )
+; ( Make the definition context the same as the current search list )
 ; ( Define the word in the dictionary )
 ; ( Switch to COMPILE mode )
-; ( Set the CFA to JMP xt_enter )
+; ( -- )
+; BEGIN (;code)
+w_x28x3bcodex29:
+	.byte $07
+	.text '(;code)'
+	.fill 9,0
+	.word w_x3a
+xt_x28x3bcodex29:
+	.block
+	jmp xt_enter
+	.word xt_latest
+	.word xt_nfax3ecfa
+	.word xt_dup
+	.word xt_jumpx2dinstruction
+	.word xt_swap
+	.word xt_cx21
+	.word xt_1x2b
+	.word xt_rx3e
+	.word xt_swap
+	.word xt_x21
+	.word xt_exit
+	.bend
+; END (;code)
+
+; ( Execution phase of ;code )
+; ( Get the CFA of the word being defined )
+; ( Start the CFA field )
+; ( Store the address of the machine language in the CFA )
+; ( -- )
+; BEGIN ;code
+w_x3bcode:
+	.byte $C5
+	.text ';code'
+	.fill 11,0
+	.word w_x28x3bcodex29
+xt_x3bcode:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word xt_x28x3bcodex29
+	.word xt_x2c
+	.word xt_x5b
+	.word xt_exit
+	.bend
+; END ;code
+
+; ( Enter assembly code mode )
+; ( Compile the code to set the CFA )
+; ( Drop out of COMPILE mode )
+; ( -- )
+; BEGIN does>
+w_doesx3e:
+	.byte $C5
+	.text 'does>'
+	.fill 11,0
+	.word w_x3bcode
+xt_doesx3e:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word xt_x28x3bcodex29
+	.word xt_x2c
+	.word xt_callx2dinstruction
+	.word xt_cx2c
+	.word xt_x28literalx29
+	.word xt_dodoes
+	.word xt_x2c
+	.word xt_exit
+	.bend
+; END does>
+
+; ( Start high level definition of execution phase of word )
+; ( Switch to machine code )
+; ( Compile a call to DODOES )
+; ( -- )
 ; BEGIN ;
 w_x3b:
 	.byte $C1
 	.text ';'
 	.fill 15,0
-	.word w_x3a
+	.word w_doesx3e
 xt_x3b:
 	.block
 	jmp xt_enter
@@ -4237,15 +4600,37 @@ xt_x3b:
 	.bend
 ; END ;
 
+; ( Close a colon or DOES> defined word )
 ; ( Compile EXIT )
 ; ( Switch to EXECUTE mode )
+; ( -- )
+; BEGIN end-code
+w_endx2dcode:
+	.byte $08
+	.text 'end-code'
+	.fill 8,0
+	.word w_x3b
+xt_endx2dcode:
+	.block
+	jmp xt_enter
+	.word xt_jumpx2dinstruction
+	.word xt_cx2c
+	.word xt_x28literalx29
+	.word xt_next
+	.word xt_x2c
+	.word xt_exit
+	.bend
+; END end-code
+
+; ( Close out a CODE word definition )
+; ( Compile a JMP NEXT )
 ; ( -- )
 ; BEGIN initrandom
 w_initrandom:
 	.byte $0A
 	.text 'initrandom'
 	.fill 6,0
-	.word w_x3b
+	.word w_endx2dcode
 xt_initrandom:
 	.block
 	jmp xt_enter
@@ -4359,12 +4744,12 @@ xt_defx2dtextx2dfgx2dcolor:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_58:
+l_70:
 	.word xt_i
 	.word xt_cx21
 	.word xt_x28loopx29
-	.word l_58
-l_59:
+	.word l_70
+l_71:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -4410,12 +4795,12 @@ xt_defx2dtextx2dbgx2dcolor:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_60:
+l_72:
 	.word xt_i
 	.word xt_cx21
 	.word xt_x28loopx29
-	.word l_60
-l_61:
+	.word l_72
+l_73:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -4489,7 +4874,7 @@ xt_setx2dborderx2dsize:
 	.word xt_over
 	.word xt_or
 	.word xt_x28branch0x29
-	.word l_62
+	.word l_74
 	.word xt_x28literalx29
 	.word 31
 	.word xt_and
@@ -4512,8 +4897,8 @@ xt_setx2dborderx2dsize:
 	.word 53252
 	.word xt_cx21
 	.word xt_x28branchx29
-	.word l_63
-l_62:
+	.word l_75
+l_74:
 	.word xt_x28literalx29
 	.word 53252
 	.word xt_cx40
@@ -4524,7 +4909,7 @@ l_62:
 	.word 53252
 	.word xt_cx21
 	.word xt_2drop
-l_63:
+l_75:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -4551,7 +4936,7 @@ xt_maze:
 	.block
 	jmp xt_enter
 	.word xt_initrandom
-l_64:
+l_76:
 	.word xt_random
 	.word xt_1
 	.word xt_and
@@ -4560,8 +4945,8 @@ l_64:
 	.word xt_x2b
 	.word xt_emit
 	.word xt_x28branchx29
-	.word l_64
-l_65:
+	.word l_76
+l_77:
 	.word xt_exit
 	.bend
 ; END maze

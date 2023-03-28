@@ -8,13 +8,31 @@
 
 $cpu$ 65c02
 
+code next
+    ldy #1          ; wp := (ip)
+    lda (ip)
+    sta wp
+    lda (ip),y
+    sta wp+1
+
+    clc             ; ip := ip + 2
+    lda ip
+    adc #2
+    sta ip
+    lda ip+1
+    adc #0
+    sta ip+1
+
+    jmp (wp)        ; jmp (wp)
+end-code
+
 code exit
     pla             ; ip := pop()
     sta ip
     pla
     sta ip+1
 
-    jmp next        ; jmp next
+    jmp xt_next
 end-code
 
 code enter
@@ -31,7 +49,39 @@ code enter
     adc #0
     sta ip+1
 
-    jmp next
+    jmp xt_next
+end-code
+
+code dodoes
+    clc             ; push PFA to parameter stack
+    lda wp
+    adc #3
+    sta pstack,x
+    lda wp+1
+    adc #0
+    sta pstack+1,x
+    dex
+    dex
+
+    clc             ; Address of high level code into tmp
+    pla
+    adc #1
+    sta tmp
+    pla
+    adc #0
+    sta tmp+1
+
+    lda ip+1        ; push ip to return stack
+    pha
+    lda ip
+    pha
+
+    lda tmp         ; ip := tmp
+    sta ip
+    lda tmp+1
+    sta ip+1
+
+    jmp xt_next
 end-code
 
 ( a-addr -- )
@@ -42,7 +92,7 @@ code testname
     sta test+1
     inx
     inx
-    jmp next
+    jmp xt_next
 end-code
 
 ( x1 x2 -- )
@@ -59,7 +109,7 @@ code assert=
     adc #4
     tax
 
-    jmp next            ; And continue
+    jmp xt_next            ; And continue
 
 fail:
     lda #<leadin        ; Print the failure message
@@ -193,7 +243,7 @@ code rp@
     dex
     dex
   
-    jmp next
+    jmp xt_next
 end-code
 
 ( addr -- )
@@ -206,7 +256,7 @@ code rp!
     inx
     inx
 
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- addr )
@@ -217,14 +267,14 @@ code sp@
     sta pstack,x        ; And push it to the stack
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( addr -- )
 code sp!
     lda pstack+2,x      ; Get the address from the stack
     tax                 ; And set the stack pointer
-    jmp next
+    jmp xt_next
 end-code
 
 ( c -- )
@@ -236,7 +286,7 @@ code emit
 
     inx
     inx
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- f )
@@ -257,7 +307,7 @@ waiting:
 done:
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- c )
@@ -273,7 +323,7 @@ wait:
     stz pstack+1,x
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- )
@@ -282,7 +332,7 @@ code cr
     lda #$0d
     jsr conout
     plx
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- 0 )
@@ -291,7 +341,7 @@ code 0
     stz pstack,x
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- 1 )
@@ -301,7 +351,7 @@ code 1
     sta pstack,x
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- 2 )
@@ -311,7 +361,7 @@ code 2
     sta pstack,x
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- -1 )
@@ -321,7 +371,7 @@ code -1
     sta pstack,x
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- -2 )
@@ -331,7 +381,7 @@ code -2
     sta pstack,x
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- x )
@@ -352,7 +402,7 @@ code (literal)
     adc #0
     sta ip+1
 
-    jmp next
+    jmp xt_next
 end-code 
 
 ( -- d )
@@ -380,7 +430,7 @@ code (dliteral)
     adc #0
     sta ip+1
 
-    jmp next
+    jmp xt_next
 end-code 
 
 ( .. x_n -- n )
@@ -394,7 +444,7 @@ code depth
     sta pstack,x
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 { depth --> 0 }
 { 0 depth --> 0 1 }
@@ -404,7 +454,7 @@ end-code
 code drop
     inx
     inx
-    jmp next
+    jmp xt_next
 end-code
 { 1 2 drop --> 1 }
 { 1 2 3 drop --> 1 2 }
@@ -417,7 +467,7 @@ code dup
     sta pstack+1,x
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 { 1 dup --> 1 1 }
 { 1 2 dup --> 1 2 2 }
@@ -432,7 +482,7 @@ code swap
     ldy pstack+5,x
     sty pstack+3,x
     sta pstack+5,x
-    jmp next
+    jmp xt_next
 end-code
 { 1 2 3 swap --> 1 3 2 }
 
@@ -465,7 +515,7 @@ code 2swap
     pla
     sta pstack+9,x
     
-    jmp next
+    jmp xt_next
 end-code
 { 1 2 3 4 2swap --> 3 4 1 2 }
 
@@ -477,7 +527,7 @@ code over
     sta pstack+1,x
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 { 1 2 over --> 1 2 1 }
 
@@ -497,7 +547,7 @@ code 2over
     lda pstack+10,x
     sta pstack+2,x
     
-    jmp next
+    jmp xt_next
 end-code
 { 1 2 3 4 2over --> 1 2 3 4 1 2 }
 
@@ -509,7 +559,7 @@ code >r
     pha
     inx
     inx
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- x ) ( R: x -- )
@@ -520,7 +570,7 @@ code r>
     sta pstack+1,x
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- x )
@@ -534,7 +584,7 @@ code r
     pha
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( r: x -- )
@@ -560,7 +610,7 @@ code !
     inx
     inx
     inx
-    jmp next
+    jmp xt_next
 end-code
 
 ( a-addr -- x )
@@ -576,7 +626,7 @@ code @
     lda (tmp),y
     sta pstack+3,x
 
-    jmp next
+    jmp xt_next
 end-code
 { 5555h 0004h ! 0004h @ --> 5555h }
 { aaaah 0004h ! 0004h @ --> aaaah }
@@ -590,7 +640,7 @@ code c!
     inx
     inx
 
-    jmp next
+    jmp xt_next
 end-code
 
 ( a-addr -- c )
@@ -599,7 +649,7 @@ code c@
     sta pstack+2,x
     stz pstack+3,x
 
-    jmp next
+    jmp xt_next
 end-code
 { 55h 0003h c! 0003h c@ --> 55h }
 { aah 0003h c! 0003h c@ --> aah }
@@ -635,7 +685,7 @@ done:
     txa                     ; Clean up the parameter stack
     adc #6
     tax
-    jmp next
+    jmp xt_next
 end-code
 
 ( n a-addr -- )
@@ -659,7 +709,7 @@ done:
     inx
     inx
 
-    jmp next
+    jmp xt_next
 end-code
 
 ( addr c -- addr n1 n2 n3 )
@@ -698,7 +748,7 @@ loop1:
     lda (src_ptr),y         ; Get the character
     bne chk_delim1          ; NUL? No:; check it against the delimiter
 none:
-    jmp next                ; Yes: we want to return 0s
+    jmp xt_next                ; Yes: we want to return 0s
 
 chk_delim1:
     cmp tmp                 ; Is it the delimiter?
@@ -741,12 +791,12 @@ found_delim:                ; We found a delimiter
     sty pstack+4,x          ; Save the offset of the delimiter in n2
     iny
     sty pstack+2,x          ; And the offset +1 to n3
-    jmp next                ; And we're done
+    jmp xt_next                ; And we're done
 
 found_nul:                  ; We did not find a delimiter... reached NUL or end of buffer
     sty pstack+4,x          ; Save the offset of the delimiter in n2
     sty pstack+2,x          ; And to n3
-    jmp next                ; And we're done   
+    jmp xt_next                ; And we're done   
 end-code
 
 ( src-addr dst-addr u -- )
@@ -793,7 +843,7 @@ copy:
 
 done:
     ldx savex
-    jmp next
+    jmp xt_next
 end-code
 
 ( addr1 addr2 u -- )
@@ -920,7 +970,7 @@ code +
     sta pstack+5,x
     inx
     inx
-    jmp next    
+    jmp xt_next    
 end-code
 { 1 0 + --> 1 }
 { 1 1 + --> 2 }
@@ -951,7 +1001,7 @@ code d+
     inx
     inx
 
-    jmp next
+    jmp xt_next
 end-code
 { 1234h 5678h 1111h 1111h d+ --> 2345h 6789h }
 { 0000h 1111h 0000h eeefh d+ --> 0001h 0000h }
@@ -980,7 +1030,7 @@ code d-
     inx
     inx
     
-    jmp next
+    jmp xt_next
 end-code
 
 ( n1 n2 -- n3 )
@@ -994,7 +1044,7 @@ code -
     sta pstack+5,x
     inx
     inx
-    jmp next    
+    jmp xt_next    
 end-code
 { 4 3 - --> 1 }
 { 3 4 - --> ffffh }
@@ -1022,7 +1072,7 @@ code u*
     lda $de04
     sta pstack+2,x
 
-    jmp next
+    jmp xt_next
 end-code
 { 2 3 u* --> 6 }
 { 10 4 u* --> 40 }
@@ -1049,7 +1099,7 @@ code *
     lda $de0c
     sta pstack+2,x
 
-    jmp next
+    jmp xt_next
 end-code
 { 2 3 * --> 6 }
 { 10 4 * --> 40 }
@@ -1088,7 +1138,7 @@ l2:
     inx             ; Clean up parameter stack
     inx
 
-    jmp next
+    jmp xt_next
 end-code
 
 ( n1 n2 -- n3 )
@@ -1168,7 +1218,7 @@ l2:
     sta pstack+3,x
 
 done:
-    jmp next
+    jmp xt_next
 end-code
 
 ( ud1 n1 -- n2 n3 )
@@ -1219,7 +1269,7 @@ done:
     inx
     inx
 
-    jmp next
+    jmp xt_next
 end-code
 { 0 1 3 um/mod --> 1 0 }
 { 0 2 3 um/mod --> 2 0 }
@@ -1240,13 +1290,13 @@ code s>d
     
     stz pstack+4,x
     stz pstack+5,x
-    jmp next
+    jmp xt_next
 
 is_neg:
     lda #$ff
     sta pstack+4,x
     sta pstack+5,x
-    jmp next
+    jmp xt_next
 end-code
 { 1234h s>d --> 0000h 1234h }
 { ffffh s>d --> ffffh ffffh }
@@ -1258,7 +1308,7 @@ code 1+
     bne skip
     inc pstack+3,x
 skip:
-    jmp next
+    jmp xt_next
 end-code
 { 1 1+ --> 2 }
 { 0 1+ --> 1 }
@@ -1274,7 +1324,7 @@ code 2+
     lda pstack+3,x
     adc #0
     sta pstack+3,x
-    jmp next
+    jmp xt_next
 end-code
 { 1 2+ --> 3 }
 { 0 2+ --> 2 }
@@ -1288,7 +1338,7 @@ code 1-
     dec pstack+3,x
 l1:
     dec pstack+2,x
-    jmp next
+    jmp xt_next
 end-code
 { 1 1- --> 0 }
 { 0 1- --> ffffh }
@@ -1304,7 +1354,7 @@ code 2-
     lda pstack+3,x
     sbc #0
     sta pstack+3,x
-    jmp next
+    jmp xt_next
 end-code
 { 1 2- --> ffffh }
 { 0 2- --> fffeh }
@@ -1322,7 +1372,7 @@ code and
 
     inx
     inx
-    jmp next
+    jmp xt_next
 end-code
 { 0000h 0000h and --> 0000h }
 { 0000h ffffh and --> 0000h }
@@ -1340,7 +1390,7 @@ code or
 
     inx
     inx
-    jmp next
+    jmp xt_next
 end-code
 { 0000h 0000h or --> 0000h }
 { 0000h ffffh or --> ffffh }
@@ -1358,7 +1408,7 @@ code xor
 
     inx
     inx
-    jmp next
+    jmp xt_next
 end-code
 { 0000h 0000h xor --> 0000h }
 { 0000h ffffh xor --> ffffh }
@@ -1373,7 +1423,7 @@ code not
     lda pstack+3,x
     eor #$ff
     sta pstack+3,x
-    jmp next
+    jmp xt_next
 end-code
 { 0000h not --> ffffh }
 { ffffh not --> 0000h }
@@ -1384,13 +1434,13 @@ code 0<
     bmi istrue
     stz pstack+2,x
     stz pstack+3,x
-    jmp next
+    jmp xt_next
 
 istrue:
     lda #$ff
     sta pstack+2,x
     sta pstack+3,x
-    jmp next
+    jmp xt_next
 end-code
 { 0 0< --> 0000h }
 { 3 0< --> 0000h }
@@ -1405,12 +1455,12 @@ code 0=
     lda #$ff
     sta pstack+2,x
     sta pstack+3,x
-    jmp next
+    jmp xt_next
 
 isfalse:
     stz pstack+2,x
     stz pstack+3,x
-    jmp next
+    jmp xt_next
 end-code
 { 0 0= --> ffffh }
 { 3 0= --> 0000h }
@@ -1428,12 +1478,12 @@ istrue:
     lda #$ff
     sta pstack+2,x
     sta pstack+3,x
-    jmp next
+    jmp xt_next
 
 isfalse:
     stz pstack+2,x
     stz pstack+3,x
-    jmp next
+    jmp xt_next
 end-code
 { 0 0> --> 0000h }
 { 3 0> --> ffffh }
@@ -1456,7 +1506,7 @@ code (variable)
     dex
     dex
 
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- x )
@@ -1471,7 +1521,7 @@ code (constant)
     dex
     dex
 
-    jmp next
+    jmp xt_next
 end-code 
 
 ( -- n )
@@ -1493,7 +1543,7 @@ code (user)
     dex
     dex
 
-    jmp next
+    jmp xt_next
 end-code 
 
 \\
@@ -1510,7 +1560,7 @@ code (branch)
     lda tmp
     sta ip
 
-    jmp next
+    jmp xt_next
 end-code 
 
 ( f -- )
@@ -1543,7 +1593,7 @@ done:
     inx                 ; clean up the parameter stack
     inx
 
-    jmp next
+    jmp xt_next
 end-code 
 
 ( limit initial -- ) ( R: -- current limit )
@@ -1563,7 +1613,7 @@ code (do)
     adc #4
     tax
 
-    jmp next
+    jmp xt_next
 end-code
 
 ( n -- )
@@ -1590,7 +1640,7 @@ current     .word ?
     sta current
 
     ldx savex
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- )
@@ -1609,7 +1659,7 @@ current     .word ?
     sta limit
 
     ldx savex
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- ) ( R: x*i current limit -- x*i current limit | x*i )
@@ -1669,7 +1719,7 @@ dobranch:
 
 done:
     ldx savex           ; Restore the parameter stack pointer
-    jmp next
+    jmp xt_next
 end-code
 
 ( n -- ) ( R: x*i current limit -- x*i current limit | x*i )
@@ -1740,7 +1790,7 @@ dobranch:
 
 done:
     ldx savex           ; Restore the parameter stack pointer
-    jmp next
+    jmp xt_next
 end-code
 
 ( -- current ) ( R: x*i current limit -- x*i current limit )
@@ -1763,7 +1813,7 @@ current     .word ?
 
     dex
     dex
-    jmp next
+    jmp xt_next
 end-code
 
 ( x*i n1 n2 -- x*i | x*i n1 )
@@ -1789,7 +1839,7 @@ code (of)
     adc #0
     sta ip+1
 
-    jmp next
+    jmp xt_next
 
     ; No... pop n2 off of stack and jump past END-OF
 not_eq:
@@ -1804,7 +1854,7 @@ not_eq:
     lda tmp
     sta ip
 
-    jmp next
+    jmp xt_next
 end-code
 
 ( i*x xt -- j*y )
@@ -1844,7 +1894,7 @@ code (vocabulary)
     adc #0
     sta (tmp),y
     
-    jmp next
+    jmp xt_next
 end-code
 
 code forth
@@ -1879,7 +1929,7 @@ loop:
 
     stz pstack+3,x          ; And return 0
     stz pstack+2,x
-    jmp next
+    jmp xt_next
 
 not_eod:
     lda (src_ptr)           ; Get the size of the word in the dictionary
@@ -1940,7 +1990,7 @@ char_loop:
     adc #0
     sta pstack+7,x
 
-    jmp next
+    jmp xt_next
 end-code
 
 ( c n1 -- n2 tf | 0)
@@ -1974,7 +2024,7 @@ not_found:
     stz pstack+3,x          ; Return false
     stz pstack+2,x
 
-    jmp next
+    jmp xt_next
 
 found:
     stz pstack+5,x          ; Return the value of the digit
@@ -1984,7 +2034,7 @@ found:
     sta pstack+3,x
     sta pstack+2,x
 
-    jmp next
+    jmp xt_next
 
 digits:
     .text "0123456789ABCDEF"
@@ -1998,3 +2048,15 @@ end-code
 { 61h 16 digit --> 10 ffffh }
 { 46h 16 digit --> fh ffffh }
 { 66h 16 digit --> fh ffffh }
+
+( -- c )
+: jump-instruction
+    ( Push the code for a jump instruction )
+    4ch
+;
+
+( -- c )
+: call-instruction
+    ( Push the code for a call instruction )
+    20h
+;

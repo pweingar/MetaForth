@@ -52,6 +52,11 @@
     ,           ( Compile the 16-bit operand )
 ;
 
+: adc.()
+    ( Compile the ADC () operation )
+    72h asm.zp
+;
+
 : adc.(x),
     ( Compile the ADC (X) operation )
     61h asm.zp
@@ -84,6 +89,11 @@
     ( Compile the and,Y operation )
     39h c,
     ,           ( Compile the 16-bit operand )
+;
+
+: and.(),
+    ( Compile the and () operation )
+    32h asm.zp
 ;
 
 : and.(x),
@@ -196,9 +206,94 @@
     00h c,
 ;
 
-\\ TODO: Compare instructions
+\\ Compare instructions
 
-\\ TODO: DEC
+: cmp.#,
+    ( Compile the CMP # operation )
+    c9h c,
+    ,
+;
+
+: cmp,
+    ( Compile the CMP absolute or ZP operation )
+    c5h cdh asm.zp.abs
+;
+
+: cmp.x,
+    ( Compile the CMP,X absolute or ZP operation )
+    d5h ddh asm.zp.abs
+;
+
+: cmp.y,
+    ( Compile the CMP,Y operation )
+    c9h c,
+    ,           ( Compile the 16-bit operand )
+;
+
+: cmp.(),
+    ( Compile the CMP () operation )
+    d2h asm.zp
+;
+
+: cmp.(x),
+    ( Compile the CMP (X) operation )
+    c1h asm.zp
+;
+
+: cmp.()y,
+    ( Compile the CMP (),Y operation )
+    d1h asm.zp
+;
+
+: cpx.#,
+    ( Compile the CPX # operation )
+    e0h c,
+    ,
+;
+
+: cpx,
+    ( Compile the CPX absolute or ZP operation )
+    e4h ech asm.zp.abs
+;
+
+: cpy.#,
+    ( Compile the CPY # operation )
+    c0h c,
+    ,
+;
+
+: cpy,
+    ( Compile the CPY absolute or ZP operation )
+    c4h cch asm.zp.abs
+;
+
+\\ Decrement Instructions
+
+: dec.a,
+    ( Compile the DEC A operation )
+    3ah c,
+;
+
+: dex,
+    ( Compile the DEX operation )
+    cah c,
+;
+
+: dey,
+    ( Compile the DEY operation )
+    88h c,
+;
+
+: dec,
+    ( Compile the DEC absolute or ZP operation )
+    c6h ceh asm.zp.abs
+;
+
+: dec.x,
+    ( Compile the DEC,X absolute or ZP operation )
+    d6h deh asm.zp.abs
+;
+
 
 \\ TODO: EOR
 
@@ -237,4 +332,29 @@
 : sed,
     ( Compile the SED instruction )
     f8h c,
+;
+
+\ JMP
+
+: jmp,
+    ( Compile a JMP absolute )
+    4ch c, ,
+;
+
+: jmp.(),
+    ( Compile a JMP indirect )
+    6ch c, ,
+;
+
+: jmp.(x),
+    ( Compile a JMP indexed indirect )
+    7ch c, ,
+;
+
+\ Helpful words...
+
+( -- )
+: next,
+    ( Compile the NEXT word )
+    ' next jmp,
 ;

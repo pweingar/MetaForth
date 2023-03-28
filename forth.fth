@@ -196,12 +196,18 @@ include" forth_65c02.fth"
 
 ( pfa -- nfa )
 : nfa
-    22 -
+    23 -
 ;
 
 ( nfa -- pfa )
 : pfa
-    22 +
+    23 +
+;
+
+( n1 -- n2 )
+: nfa>cfa
+    ( Convert the NFA to the CFA )
+    19 +
 ;
 
 ( -- addr )
@@ -274,6 +280,7 @@ include" forth_65c02.fth"
 
 ( c-addr -- )
 : (.")
+    ( Code behind ." )
     r               ( Get the pointer to the counted string to print )
     count           ( Get the length and address of the string )
     dup 1+          ( Get the offset we need to add to the return point )
@@ -558,6 +565,71 @@ defer ?error
     drop
 ;
 
+( n1 n2 n3 -- f )
+: between
+    ( Return true if n2 <= n1 <= n3 )
+    >r                  ( Save n3 )
+    over >r             ( Save a copy of n1 )
+    < if
+        ( Is n1 < n2 )
+        r> drop         ( Drop copy of n1 )
+        r> drop         ( Drop n3 )
+        0               ( Return false )
+    else
+        r> r>
+        ( Return true if n3 >= n1? )
+        > not
+    then
+;
+
+( c -- f )
+: isprint
+    ( Return true if character is printable )
+    dup
+    20h 7eh between if
+        ( Return true if character betwen 0x20 and 0x7e )
+        drop
+        ffffh
+    else
+        ( Return true if character betwen 0xA0 and 0xFF )
+        a0h ffh between
+    then
+;
+
+( c -- )
+: cprint
+    ( Print a byte... replace non-printable characters with a dot )
+    dup isprint if
+        emit
+    else
+        drop
+        [char] . emit
+    then
+;
+
+( addr n -- )
+: cdump
+    over +
+    over do
+        cr
+        i s>d 5 d.r
+        [char] : emit space
+
+        i
+        8 0 do
+            dup i + c@ s>d 2 d.r 20h emit
+        loop
+
+        2 spaces
+
+        i
+        8 0 do
+            dup i + c@ cprint
+        loop
+    8 +loop
+    drop
+;
+
 \\
 \\ Text interpreter
 \\
@@ -663,27 +735,57 @@ defer interpret
     ( Read the next word and add it )
     here                    ( Save start of new word )
     bl word                 ( Find the word )
-    17 allot                ( Allocate enough room for the dictionary entry )
+    11h allot               ( Allocate enough room for the dictionary entry )
     latest ,                ( Link to the previous LATEST )
     current @ !             ( Make this word the new latest word in the dictionary )
+    jump-instruction c,
+    postpone enter
 ;
 
 ( -- )
 : :
     ( Define a word... )
-    current @ context !
-    create                  ( Define the word in the dictionary )
-    ]                       ( Switch to COMPILE mode )
-
-    4ch c,                  ( Set the CFA to JMP xt_enter )
-    postpone enter
+    current @ context !         ( Make the definition context the same as the current search list )
+    create                      ( Define the word in the dictionary )
+    ]                           ( Switch to COMPILE mode )
 ;
 
-: ;
-    postpone exit           ( Compile EXIT )
-    [                       ( Switch to EXECUTE mode )
+( -- )
+: (;code)
+    ( Execution phase of ;code )
+    latest nfa>cfa dup          ( Get the CFA of the word being defined )
+    jump-instruction swap c!    ( Start the CFA field )
+    1+ r> swap !                ( Store the address of the machine language in the CFA )
+;
+
+( -- )
+: ;code
+    ( Enter assembly code mode )
+    postpone (;code)            ( Compile the code to set the CFA )
+    [                           ( Drop out of COMPILE mode )
 ; immediate
 
+( -- )
+: does>
+    ( Start high level definition of execution phase of word )
+    postpone (;code)            ( Switch to machine code )
+    call-instruction c,
+    postpone dodoes             ( Compile a call to DODOES )
+; immediate 
+
+( -- )
+: ;
+    ( Close a colon or DOES> defined word )
+    postpone exit               ( Compile EXIT )
+    [                           ( Switch to EXECUTE mode )
+; immediate
+
+( -- )
+: end-code
+    ( Close out a CODE word definition )
+    jump-instruction c,
+    postpone next               ( Compile a JMP NEXT )
+;
 
 \\
 \\ Boot strapping word...
