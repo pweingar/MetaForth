@@ -3676,13 +3676,13 @@ xt_x3ferror:
 	jmp xt_enter
 	.word xt_swap
 	.word xt_x28branch0x29
-	.word l_60
+	.word l_62
 	.word xt_error
 	.word xt_x28branchx29
-	.word l_61
-l_60:
+	.word l_63
+l_62:
 	.word xt_drop
-l_61:
+l_63:
 	.word xt_exit
 	.bend
 ; END ?error
@@ -4214,16 +4214,76 @@ l_48:
 	.bend
 ; END cdump
 
+; BEGIN ."
+w_x2ex22:
+	.byte $C2
+	.text '."'
+	.fill 14,0
+	.word w_cdump
+xt_x2ex22:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 34
+	.word xt_state
+	.word xt_x40
+	.word xt_x28branch0x29
+	.word l_53
+	.word xt_x28literalx29
+	.word xt_x28x2ex22x29
+	.word xt_x2c
+	.word xt_word
+	.word xt_here
+	.word xt_cx40
+	.word xt_1x2b
+	.word xt_allot
+	.word xt_x28branchx29
+	.word l_54
+l_53:
+	.word xt_word
+	.word xt_here
+l_54:
+	.word xt_exit
+	.bend
+; END ."
+
+; ( Print a string ." )
+; ( Double quote for the delimiter )
+; ( If compiling... )
+; ( Compile call to print string utility for ." )
+; ( Grab the input up to the double quote )
+; ( Get the size of the string input )
+; ( Allocate room for it and the size byte )
+; ( else... we're executing )
+; ( Grab the input up to the double quote )
+; ( Pointer to the string )
+; BEGIN (
+w_x28:
+	.byte $C1
+	.text '('
+	.fill 15,0
+	.word w_x2ex22
+xt_x28:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 41
+	.word xt_word
+	.word xt_exit
+	.bend
+; END (
+
+; ( Process a comment )
 ; BEGIN interpret
 w_interpret:
 	.byte $09
 	.text 'interpret'
 	.fill 7,0
-	.word w_cdump
+	.word w_x28
 xt_interpret:
 	.block
 	jmp xt_enter
-l_63:
+l_65:
 	.word xt_tib
 	.word xt_x40
 	.word xt_x3ein
@@ -4231,26 +4291,26 @@ l_63:
 	.word xt_x2b
 	.word xt_cx40
 	.word xt_x28branch0x29
-	.word l_64
+	.word l_66
 	.word xt_x2dfind
 	.word xt_x28branch0x29
-	.word l_65
+	.word l_67
 	.word xt_state
 	.word xt_x40
 	.word xt_x3c
 	.word xt_x28branch0x29
-	.word l_66
+	.word l_68
 	.word xt_cfa
 	.word xt_x2c
 	.word xt_x28branchx29
-	.word l_67
-l_66:
+	.word l_69
+l_68:
 	.word xt_cfa
 	.word xt_execute
-l_67:
+l_69:
 	.word xt_x28branchx29
-	.word l_68
-l_65:
+	.word l_70
+l_67:
 	.word xt_here
 	.word xt_number
 	.word xt_swap
@@ -4258,16 +4318,16 @@ l_65:
 	.word xt_state
 	.word xt_x40
 	.word xt_x28branch0x29
-	.word l_69
+	.word l_71
 	.word xt_x28literalx29
 	.word xt_x28literalx29
 	.word xt_x2c
 	.word xt_x2c
-l_69:
-l_68:
+l_71:
+l_70:
 	.word xt_x28branchx29
-	.word l_63
-l_64:
+	.word l_65
+l_66:
 	.word xt_exit
 	.bend
 ; END interpret
@@ -4320,7 +4380,7 @@ xt_throw:
 	jmp xt_enter
 	.word xt_x3fdup
 	.word xt_x28branch0x29
-	.word l_53
+	.word l_55
 	.word xt_handler
 	.word xt_x40
 	.word xt_rpx21
@@ -4333,7 +4393,7 @@ xt_throw:
 	.word xt_spx21
 	.word xt_drop
 	.word xt_rx3e
-l_53:
+l_55:
 	.word xt_exit
 	.bend
 ; END throw
@@ -4358,26 +4418,26 @@ xt_quit:
 	.word xt_0
 	.word xt_state
 	.word xt_x21
-l_54:
+l_56:
 	.word xt_cr
 	.word xt_state
 	.word xt_x40
 	.word xt_0x3d
 	.word xt_x28branch0x29
-	.word l_56
+	.word l_58
 	.word xt_cr
 	.word xt_x28literalx29
 	.word 62
 	.word xt_emit
 	.word xt_bl
 	.word xt_emit
-l_56:
+l_58:
 	.word xt_query
 	.word xt_cr
 	.word xt_interpret
 	.word xt_x28branchx29
-	.word l_54
-l_55:
+	.word l_56
+l_57:
 	.word xt_exit
 	.bend
 ; END quit
@@ -4396,14 +4456,14 @@ xt_error:
 	.word xt_0x3d
 	.word xt_not
 	.word xt_x28branch0x29
-	.word l_57
+	.word l_59
 	.word xt_here
 	.word xt_count
 	.word xt_type
 	.word xt_x28x2ex22x29
 	.ptext "? MSG#"
 	.word xt_x2e
-l_57:
+l_59:
 	.word xt_quit
 	.word xt_exit
 	.bend
@@ -4425,13 +4485,13 @@ xt_x3fcsp:
 	.word xt_spx40
 	.word xt_x2d
 	.word xt_x28branch0x29
-	.word l_62
+	.word l_64
 	.word xt_0
 	.word xt_x28literalx29
 	.word 25
 	.word xt_x2d
 	.word xt_error
-l_62:
+l_64:
 	.word xt_exit
 	.bend
 ; END ?csp
@@ -4913,12 +4973,12 @@ xt_defx2dtextx2dfgx2dcolor:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_70:
+l_72:
 	.word xt_i
 	.word xt_cx21
 	.word xt_x28loopx29
-	.word l_70
-l_71:
+	.word l_72
+l_73:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -4964,12 +5024,12 @@ xt_defx2dtextx2dbgx2dcolor:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_72:
+l_74:
 	.word xt_i
 	.word xt_cx21
 	.word xt_x28loopx29
-	.word l_72
-l_73:
+	.word l_74
+l_75:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -5043,7 +5103,7 @@ xt_setx2dborderx2dsize:
 	.word xt_over
 	.word xt_or
 	.word xt_x28branch0x29
-	.word l_74
+	.word l_76
 	.word xt_x28literalx29
 	.word 31
 	.word xt_and
@@ -5066,8 +5126,8 @@ xt_setx2dborderx2dsize:
 	.word 53252
 	.word xt_cx21
 	.word xt_x28branchx29
-	.word l_75
-l_74:
+	.word l_77
+l_76:
 	.word xt_x28literalx29
 	.word 53252
 	.word xt_cx40
@@ -5078,7 +5138,7 @@ l_74:
 	.word 53252
 	.word xt_cx21
 	.word xt_2drop
-l_75:
+l_77:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -5105,7 +5165,7 @@ xt_maze:
 	.block
 	jmp xt_enter
 	.word xt_initrandom
-l_76:
+l_78:
 	.word xt_random
 	.word xt_1
 	.word xt_and
@@ -5114,8 +5174,8 @@ l_76:
 	.word xt_x2b
 	.word xt_emit
 	.word xt_x28branchx29
-	.word l_76
-l_77:
+	.word l_78
+l_79:
 	.word xt_exit
 	.bend
 ; END maze

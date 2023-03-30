@@ -10,6 +10,7 @@
 .cpu "w65c02"
 
 pstack = $0000          ; Location of the "bottom" of the parameter stack
+rstack = $0100          ; Location of the "bottom" of the return stack
 USERAREA = $1000        ; Area for user variables
 
 CHAR_TAB = 9

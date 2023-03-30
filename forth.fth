@@ -630,9 +630,30 @@ defer ?error
     drop
 ;
 
+\\ More I/O
+
+: ."
+    ( Print a string ." )
+    22h                     ( Double quote for the delimiter )
+    state @ if              ( If compiling... )
+        postpone (.")       ( Compile call to print string utility for ." )
+        word                ( Grab the input up to the double quote )
+        here c@             ( Get the size of the string input )
+        1+ allot            ( Allocate room for it and the size byte )
+    else                    ( else... we're executing )
+        word                ( Grab the input up to the double quote )
+        here                ( Pointer to the string )
+    then
+; immediate
+
 \\
 \\ Text interpreter
 \\
+
+: (
+    ( Process a comment )
+    [char] ) word
+; immediate
 
 defer interpret
 
