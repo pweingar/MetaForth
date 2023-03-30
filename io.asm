@@ -313,7 +313,7 @@ loop2:      lda (src_ptr),y
             lda dst_ptr             ; Clear the destination line
             sta cur_line
             lda dst_ptr+1
-            sta cur_line
+            sta cur_line+1
             jsr clrline
 
             pla                     ; Restore the original I/O page

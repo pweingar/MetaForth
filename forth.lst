@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.55.2200 listing file
 ; 64tass --mw65c02 --intel-hex -o forth.hex --list=forth.lst forth.asm
-; Thu Mar 30 15:20:50 2023
+; Thu Mar 30 15:31:04 2023
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -901,7 +901,7 @@
 .41cf	a5 35		lda $35		            lda dst_ptr             ; Clear the destination line
 .41d1	85 31		sta $31		            sta cur_line
 .41d3	a5 36		lda $36		            lda dst_ptr+1
-.41d5	85 31		sta $31		            sta cur_line
+.41d5	85 32		sta $32		            sta cur_line+1
 .41d7	20 e6 41	jsr $41e6	            jsr clrline
 .41da	68		pla		            pla                     ; Restore the original I/O page
 .41db	85 01		sta $01		            sta MMU_IO_CTRL
