@@ -3370,9 +3370,9 @@ xt_ux2a:
 	sta $de02
 	inx
 	inx
-	lda $de05       ; Read the coprocessor unsigned multiplication result
+	lda $de11       ; Read the coprocessor unsigned multiplication result
 	sta pstack+3,x
-	lda $de04
+	lda $de10
 	sta pstack+2,x
 	jmp xt_next
 	.bend
@@ -3387,22 +3387,9 @@ w_x2a:
 	.word w_ux2a
 xt_x2a:
 	.block
-	stz MMU_IO_CTRL ; Go to I/O page #0
-	lda pstack+5,x  ; Set coprocessor unsigned A argument
-	sta $de09
-	lda pstack+4,x
-	sta $de08
-	lda pstack+3,x  ; Set coprocessor unsigned B argument
-	sta $de0b
-	lda pstack+2,x
-	sta $de0a
-	inx
-	inx
-	lda $de0d       ; Read the coprocessor unsigned multiplication result
-	sta pstack+3,x
-	lda $de0c
-	sta pstack+2,x
-	jmp xt_next
+	jmp xt_enter
+	.word xt_ux2a
+	.word xt_exit
 	.bend
 ; END *
 
@@ -3535,20 +3522,20 @@ xt_x2fmod:
 	.block
 	stz MMU_IO_CTRL ; Go to I/O page #0
 	lda pstack+5,x  ; Set coprocessor signed numerator
-	sta $de1b
+	sta $de07
 	lda pstack+4,x
-	sta $de1a
+	sta $de06
 	lda pstack+3,x  ; Set coprocessor signed denominator
-	sta $de19
+	sta $de05
 	lda pstack+2,x
-	sta $de18
-	lda $de1f		; Set the remainder
+	sta $de04
+	lda $de17		; Set the remainder
 	sta pstack+5,x
-	lda $de1e
+	lda $de16
 	sta pstack+4,x
-	lda $de1d		; Set the quotient
+	lda $de15		; Set the quotient
 	sta pstack+3,x
-	lda $de1c
+	lda $de14
 	sta pstack+2,x
 	jmp xt_next
 	.bend
@@ -5431,12 +5418,7 @@ xt_expect:
 	.word xt_over
 	.word xt_x28dox29
 l_263:
-	.word xt_x28literalx29
-	.word 46
-	.word xt_emit
 	.word xt_key
-	.word xt_dup
-	.word xt_emit
 	.word xt_bs
 	.word xt_x28ofx29
 	.word l_266
@@ -7370,16 +7352,10 @@ xt_cold:
 	.word xt_x28x2ex22x29
 	.ptext "Welcome to MetaForth v00.00.00"
 	.word xt_cr
+	.word xt_unittest
 	.word xt_x28x2ex22x29
-	.ptext "?"
-l_329:
-	.word xt_key
-	.word xt_x28x2ex22x29
-	.ptext "."
-	.word xt_emit
-	.word xt_x28branchx29
-	.word l_329
-l_330:
+	.ptext "All unit tests PASSED!"
+	.word xt_cr
 	.word xt_quit
 	.word xt_exit
 	.bend

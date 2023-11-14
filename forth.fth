@@ -305,9 +305,7 @@ include" forth_65c02.fth"
     over +                      ( addr addr-end )
     over                        ( addr-end addr )
     do
-		[char] . emit
         key                     ( addr c )
-		dup emit
         case
             bs of               ( Handle the backspace key )
                 dup             ( addr addr )
@@ -883,15 +881,8 @@ include" f256jr.fth"
 
     ." Welcome to MetaForth v00.00.00" cr
 
-    \\ unittest
-    \\ ." All unit tests PASSED!" cr
-
-	." ? "
-	begin
-		key
-		." ."
-		emit
-	again
+ 	unittest
+    ." All unit tests PASSED!" cr
 
     quit
 ;
