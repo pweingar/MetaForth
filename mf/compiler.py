@@ -344,30 +344,25 @@ class Compiler:
                 # There is an IMMEDIATE compiler word
                 self._compiler_words[token].execute(self)
 
-            elif token in self._object_words.keys():
-                # Word is defined... compile it in the current word
-                target_word = self._object_words[token]
-                word.compile(LabelReference(target_word.get_xt_label()))
-
             else:
-                match = re.match(r'^(\d+)$', token)
+                match = re.match(r'^(\-?\d+)$', token)
                 if match:
                     # Matched a decimal number
                     word.compile(LabelReference("xt_(literal)"))
                     word.compile(Literal(int(match.group(1))))
                     return
 
-                match = re.match(r'^([0-9a-fA-F]+)h$', token)
+                match = re.match(r'^(\-?[0-9a-fA-F]+)h$', token)
                 if match:
                     # Matched a hex number
                     word.compile(LabelReference("xt_(literal)"))
                     word.compile(Literal(int(match.group(1), 16)))
                     return
 
-                else:
-                    # The word is not defined... this is an error
-                    self.error("Unknown word: {}".format(token))
-
+                # We assume that the word is defined... the assembler will warn of undefined words
+                # This allows Metaforth to avoid forward reference issues. It's not strictly Forthian.
+                word.compile(LabelReference("xt_{}".format(token)))
+                             
         else:
             # There is not a current word... don't know how this happens, but it's an error
             self.error("Not defining a word.")

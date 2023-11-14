@@ -1082,14 +1082,14 @@ code *
     stz MMU_IO_CTRL ; Go to I/O page #0
 
     lda pstack+5,x  ; Set coprocessor unsigned A argument
-    sta $de05
+    sta $de09
     lda pstack+4,x
-    sta $de04
+    sta $de08
 
     lda pstack+3,x  ; Set coprocessor unsigned B argument
-    sta $de07
+    sta $de0b
     lda pstack+2,x
-    sta $de06
+    sta $de0a
 
     inx
     inx
@@ -1218,6 +1218,33 @@ l2:
     sta pstack+3,x
 
 done:
+    jmp xt_next
+end-code
+
+( n1 n2 -- n3 n4 )
+code /mod
+	stz MMU_IO_CTRL ; Go to I/O page #0
+
+    lda pstack+5,x  ; Set coprocessor signed numerator
+    sta $de1b
+    lda pstack+4,x
+    sta $de1a
+
+    lda pstack+3,x  ; Set coprocessor signed denominator
+    sta $de19
+    lda pstack+2,x
+    sta $de18
+
+    lda $de1f		; Set the remainder
+    sta pstack+5,x
+    lda $de1e
+    sta pstack+4,x
+
+    lda $de1d		; Set the quotient
+    sta pstack+3,x
+    lda $de1c
+    sta pstack+2,x
+
     jmp xt_next
 end-code
 

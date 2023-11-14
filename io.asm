@@ -29,7 +29,7 @@ curs_color  .byte ?                 ; Current color for printing
 curs_x      .byte ?                 ; Current column for the text cursor
 curs_y      .byte ?                 ; Current row for the text cursor
 old_y       .byte ?                 ; Previous cursor row
-curs_width  .byte ?                 ; Width of the screen in text columns
+curs_width  .byte ?                 ; Width  of the screen in text columns
 curs_height .byte ?                 ; Height of the screen in text columns
 .send
 
@@ -127,6 +127,7 @@ constat:    .proc
 ; Wait for a keypress and return the ASCII value in A
 ;
 conin:      .proc
+			jsr kernel.Yield
             jsr kernel.NextEvent            ; Grab the event
             bcs conin
 

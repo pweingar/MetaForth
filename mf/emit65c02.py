@@ -35,7 +35,10 @@ class EmitterC02:
 
     def emit_literal(self, value):
         """Emit a literal value."""
-        self._out.write("\t.word {}\n".format(value))
+        if (int(value) < 0):
+            self._out.write("\t.sint {}\n".format(value))
+        else:
+            self._out.write("\t.word {}\n".format(value))
 
     def emit_literal_string(self, value):
         """Emit a literal string value."""

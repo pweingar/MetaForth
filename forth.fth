@@ -138,10 +138,6 @@ include" forth_65c02.fth"
 { ffffh ffffh dabs --> 0 1 }
 { 0 0 dabs --> 0 0 }
 
-( n1 n2 -- n3 n4 )
-: /mod
-;
-
 ( n1 n2 -- n3 )
 : /
     /mod swap drop
@@ -309,7 +305,9 @@ include" forth_65c02.fth"
     over +                      ( addr addr-end )
     over                        ( addr-end addr )
     do
+		[char] . emit
         key                     ( addr c )
+		dup emit
         case
             bs of               ( Handle the backspace key )
                 dup             ( addr addr )
@@ -415,8 +413,6 @@ include" forth_65c02.fth"
     8 base !
 ;
 
-defer .
-
 ( d1 addr1 -- d2 addr2 )
 : (number)
     begin
@@ -435,8 +431,6 @@ defer .
     repeat
     r>
 ;
-
-defer ?error
 
 ( addr -- d )
 : number
@@ -609,23 +603,26 @@ defer ?error
 
 ( addr n -- )
 : cdump
-    over +
-    over do
-        cr
+    over +                                      ( addr addr+n )
+    over do                                     ( addr addr+n addr )
+        cr                                      ( addr )
         i s>d 5 d.r
         [char] : emit space
 
-        i
+        i                                       ( addr addr1 )
         8 0 do
-            dup i + c@ s>d 2 d.r 20h emit
+            dup                                 ( addr addr1 addr1 )
+            i +                                 ( addr addr1 addr2 )
+            c@ s>d 2 d.r 20h emit
         loop
 
         2 spaces
 
-        i
         8 0 do
             dup i + c@ cprint
         loop
+
+        drop                                    ( addr )
     8 +loop
     drop
 ;
@@ -634,16 +631,10 @@ defer ?error
 
 : ."
     ( Print a string ." )
-    22h                     ( Double quote for the delimiter )
-    state @ if              ( If compiling... )
-        postpone (.")       ( Compile call to print string utility for ." )
-        word                ( Grab the input up to the double quote )
-        here c@             ( Get the size of the string input )
-        1+ allot            ( Allocate room for it and the size byte )
-    else                    ( else... we're executing )
-        word                ( Grab the input up to the double quote )
-        here                ( Pointer to the string )
-    then
+    postpone (.")       ( Compile call to print string utility for ." )
+    22h word            ( Grab the input up to the double quote )
+    here c@             ( Get the size of the string input )
+    1+ allot            ( Allocate room for it and the size byte )
 ; immediate
 
 \\
@@ -654,8 +645,6 @@ defer ?error
     ( Process a comment )
     [char] ) word
 ; immediate
-
-defer interpret
 
 ( xt -- exception# | 0 )            \ return addr on stack
 : catch
@@ -874,6 +863,10 @@ defer interpret
     postpone next               ( Compile a JMP NEXT )
 ;
 
+: greeting
+    ." hello" cr
+;
+
 \\
 \\ Boot strapping word...
 \\
@@ -892,6 +885,13 @@ include" f256jr.fth"
 
     \\ unittest
     \\ ." All unit tests PASSED!" cr
+
+	." ? "
+	begin
+		key
+		." ."
+		emit
+	again
 
     quit
 ;
