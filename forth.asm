@@ -6709,13 +6709,74 @@ xt_until:
 ; ( Validate we're in a BEGIN loop )
 ; ( Compile BRANCH0 into the current word )
 ; ( Pull the address of the BEGIN and compile it for BRANCH )
+; BEGIN do
+w_do:
+	.byte $C2
+	.text 'do'
+	.fill 14,0
+	.word w_until
+xt_do:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word xt_x28dox29
+	.word xt_x2c
+	.word xt_here
+	.word xt_x28literalx29
+	.word 3
+	.word xt_exit
+	.bend
+; END do
+
+; BEGIN loop
+w_loop:
+	.byte $C4
+	.text 'loop'
+	.fill 12,0
+	.word w_do
+xt_loop:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 3
+	.word xt_x3fcontrol
+	.word xt_x28literalx29
+	.word xt_x28loopx29
+	.word xt_x2c
+	.word xt_x2c
+	.word xt_exit
+	.bend
+; END loop
+
+; ( Pull the address of the DO and compile it for BRANCH )
+; BEGIN +loop
+w_x2bloop:
+	.byte $C5
+	.text '+loop'
+	.fill 11,0
+	.word w_loop
+xt_x2bloop:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 3
+	.word xt_x3fcontrol
+	.word xt_x28literalx29
+	.word xt_x28x2bloopx29
+	.word xt_x2c
+	.word xt_x2c
+	.word xt_exit
+	.bend
+; END +loop
+
+; ( Pull the address of the DO and compile it for BRANCH )
 ; ( f -- )
 ; BEGIN if
 w_if:
 	.byte $C2
 	.text 'if'
 	.fill 14,0
-	.word w_until
+	.word w_x2bloop
 xt_if:
 	.block
 	jmp xt_enter
@@ -6988,13 +7049,40 @@ xt_greeting:
 	.bend
 ; END greeting
 
+; BEGIN [char]
+w_x5bcharx5d:
+	.byte $C6
+	.text '[char]'
+	.fill 10,0
+	.word w_greeting
+xt_x5bcharx5d:
+	.block
+	jmp xt_enter
+	.word xt_bl
+	.word xt_word
+	.word xt_here
+	.word xt_1x2b
+	.word xt_cx40
+	.word xt_state
+	.word xt_x40
+	.word xt_x28branch0x29
+	.word l_317
+	.word xt_x28literalx29
+	.word xt_x28literalx29
+	.word xt_x2c
+	.word xt_x2c
+l_317:
+	.word xt_exit
+	.bend
+; END [char]
+
 ; ( -- )
 ; BEGIN initrandom
 w_initrandom:
 	.byte $0A
 	.text 'initrandom'
 	.fill 6,0
-	.word w_greeting
+	.word w_x5bcharx5d
 xt_initrandom:
 	.block
 	jmp xt_enter
@@ -7111,12 +7199,12 @@ xt_defx2dtextx2dfgx2dcolor:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_317:
+l_318:
 	.word xt_i
 	.word xt_cx21
 	.word xt_x28loopx29
-	.word l_317
-l_318:
+	.word l_318
+l_319:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -7163,12 +7251,12 @@ xt_defx2dtextx2dbgx2dcolor:
 	.word xt_x2b
 	.word xt_swap
 	.word xt_x28dox29
-l_319:
+l_320:
 	.word xt_i
 	.word xt_cx21
 	.word xt_x28loopx29
-	.word l_319
-l_320:
+	.word l_320
+l_321:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -7244,7 +7332,7 @@ xt_setx2dborderx2dsize:
 	.word xt_over
 	.word xt_or
 	.word xt_x28branch0x29
-	.word l_321
+	.word l_322
 	.word xt_x28literalx29
 	.word 31
 	.word xt_and
@@ -7267,8 +7355,8 @@ xt_setx2dborderx2dsize:
 	.word 53252
 	.word xt_cx21
 	.word xt_x28branchx29
-	.word l_322
-l_321:
+	.word l_323
+l_322:
 	.word xt_x28literalx29
 	.word 53252
 	.word xt_cx40
@@ -7279,7 +7367,7 @@ l_321:
 	.word 53252
 	.word xt_cx21
 	.word xt_2drop
-l_322:
+l_323:
 	.word xt_rx3e
 	.word xt_iox2dpage
 	.word xt_cx21
@@ -7306,7 +7394,7 @@ xt_maze:
 	.block
 	jmp xt_enter
 	.word xt_initrandom
-l_323:
+l_324:
 	.word xt_random
 	.word xt_x28literalx29
 	.word 1
@@ -7316,8 +7404,8 @@ l_323:
 	.word xt_x2b
 	.word xt_emit
 	.word xt_x28branchx29
-	.word l_323
-l_324:
+	.word l_324
+l_325:
 	.word xt_exit
 	.bend
 ; END maze

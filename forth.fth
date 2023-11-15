@@ -770,6 +770,24 @@ include" forth_65c02.fth"
     ,                   ( Pull the address of the BEGIN and compile it for BRANCH )
 ; immediate
 
+: do
+	postpone (do)
+	here
+	3
+; immediate
+
+: loop
+    3 ?control
+	postpone (loop)
+	,                   ( Pull the address of the DO and compile it for BRANCH )
+; immediate
+
+: +loop
+    3 ?control
+	postpone (+loop)
+	,                   ( Pull the address of the DO and compile it for BRANCH )
+; immediate
+
 ( f -- )
 : if
     ( Start a basic conditional )
@@ -864,6 +882,15 @@ include" forth_65c02.fth"
 : greeting
     ." hello" cr
 ;
+
+: [char]
+	bl word
+	here 1+
+	c@
+	state @ if
+		postpone (literal) ,
+	then
+; immediate
 
 \\
 \\ Boot strapping word...
