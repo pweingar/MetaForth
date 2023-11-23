@@ -1,5 +1,6 @@
 import compiler
 import testing
+import comp_vm
 
 #
 # Define the code for all the compiler words for MetaForth
@@ -9,6 +10,75 @@ import testing
 
 LOOP_TYPE_BEGIN = 1
 LOOP_TYPE_DO = 2
+
+def exec_comp_string(c):
+    """Process the [" word."""
+    value = c.read_to("\"")
+    comp_vm.vm_push(value)
+
+def exec_comp_equal(c):
+    """Process the [=] word."""
+    comp_vm.vm_push(comp_vm.vm_pop() == comp_vm.vm_pop())
+        
+def exec_comp_get_value(c):
+    """Process the [get-value] word"""
+    name = c.next_token()
+    comp_vm.vm_push(comp_vm.vm_get_value(name))
+    
+def exec_comp_set_value(c):
+    """Process the [set-value] word"""
+    name = c.next_token()
+    comp_vm.vm_set_value(name, comp_vm.vm_pop())
+
+def exec_comp_defined(c):
+    """Process the [DEFINED] word."""
+    name = c.next_token()
+    comp_vm.vm_push(comp_vm.vm_defined(name))
+    
+def exec_comp_if(c):
+    """Process the [IF] word."""
+
+    value = comp_vm.vm_pop()
+    if value == 0:
+        
+		# Skip to our [else]
+        nesting = 1
+        while nesting > 0:
+            token = c.next_token()
+        
+		    # Skip over nested [if]...[then]
+            if token == "[if]":
+                nesting = nesting + 1
+                
+            elif token == "[then]":
+                nesting = nesting - 1
+                
+            elif (token == "[else]") and (nesting == 1):
+                # We have found our [else]... start processing tokens normally
+                return
+                
+    else:
+        # Do nothing... we want to process the true clause
+        return
+        
+def exec_comp_else(c):
+    """Process the [else] word."""
+    nesting = 1
+    
+	# Eat tokens until we get to our matching [then]
+    while nesting > 0:
+        token = c.next_token()
+        
+		# Skip over nested [if]...[then]
+        if token == "[if]":
+            nesting = nesting + 1
+            
+        elif token == "[then]":
+            nesting = nesting - 1
+            
+def exec_comp_then(c):
+    """Process the [THEN] word... does nothing"""
+    return
 
 def exec_char(c):
     """Process the [char] word"""
@@ -36,7 +106,7 @@ def exec_end_case(c):
     end_case_label = c.pop_label()
     current_word.compile(compiler.LabelReference("xt_drop"))
     current_word.compile(compiler.LabelDeclaration(end_case_label))
-    print("end-case {}".format(end_case_label))
+    # print("end-case {}".format(end_case_label))
 
 def exec_of(c):
     """Process an OF clause"""
@@ -250,7 +320,7 @@ def exec_colon(c):
     new_word = compiler.ForthWord(name)
     c.add_word(new_word)
     c.set_state(compiler.Compiler.STATE_COMPILING)
-    print("Defined {}".format(name))
+    # print("Defined {}".format(name))
 
 def exec_semi(c):
     """Ends a definition and goes back to the running state"""
@@ -380,3 +450,11 @@ def register_all(c):
     c.register(compiler.CompilerWord("end-case", exec_end_case, True))
     c.register(compiler.CompilerWord("of", exec_of, True))
     c.register(compiler.CompilerWord("endof", exec_endof, True))
+    c.register(compiler.CompilerWord("[defined]", exec_comp_defined, True))
+    c.register(compiler.CompilerWord("[if]", exec_comp_if, True))
+    c.register(compiler.CompilerWord("[else]", exec_comp_else, True))
+    c.register(compiler.CompilerWord("[then]", exec_comp_then, True))
+    c.register(compiler.CompilerWord("[set-value]", exec_comp_set_value, True))
+    c.register(compiler.CompilerWord("[get-value]", exec_comp_get_value, True))
+    c.register(compiler.CompilerWord("[=]", exec_comp_equal, True))
+    c.register(compiler.CompilerWord("[\"", exec_comp_string, True))

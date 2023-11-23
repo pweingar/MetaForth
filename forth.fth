@@ -1,4 +1,11 @@
-include" forth_65c02.fth"
+[get-value] target [" f256" [=] [if]
+	.( Building MetaForth for the F256 computers. )
+	
+	[" f256" [set-value] cpu
+	.( Setting the CPU to the 65C02 )
+
+	include" forth_65c02.fth"
+[then]
 
 \\
 \\ Common words
@@ -869,7 +876,9 @@ include" forth_65c02.fth"
 \\ Boot strapping word...
 \\
 
-include" f256jr.fth"
+[defined] target_f256 [if]
+	include" f256jr.fth"
+[then]
 
 : cold
     forth definitions

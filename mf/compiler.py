@@ -1,6 +1,7 @@
 import re
 import sys
 import comp_words
+import comp_vm
 import tokens
 import emit65c02
 
@@ -427,6 +428,8 @@ class Compiler:
         emitter.emit_include(self._epilog)
 
 if __name__ == "__main__":
+    comp_vm.vm_set_value("target", "f256")
+    
     c = Compiler()
     comp_words.register_all(c)
     c.process_file("forth.fth")
