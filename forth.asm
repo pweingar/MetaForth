@@ -6709,13 +6709,74 @@ xt_until:
 ; ( Validate we're in a BEGIN loop )
 ; ( Compile BRANCH0 into the current word )
 ; ( Pull the address of the BEGIN and compile it for BRANCH )
+; BEGIN do
+w_do:
+	.byte $C2
+	.text 'do'
+	.fill 14,0
+	.word w_until
+xt_do:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word xt_x28dox29
+	.word xt_x2c
+	.word xt_here
+	.word xt_x28literalx29
+	.word 3
+	.word xt_exit
+	.bend
+; END do
+
+; BEGIN loop
+w_loop:
+	.byte $C4
+	.text 'loop'
+	.fill 12,0
+	.word w_do
+xt_loop:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 3
+	.word xt_x3fcontrol
+	.word xt_x28literalx29
+	.word xt_x28loopx29
+	.word xt_x2c
+	.word xt_x2c
+	.word xt_exit
+	.bend
+; END loop
+
+; ( Pull the address of the DO and compile it for BRANCH )
+; BEGIN +loop
+w_x2bloop:
+	.byte $C5
+	.text '+loop'
+	.fill 11,0
+	.word w_loop
+xt_x2bloop:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 3
+	.word xt_x3fcontrol
+	.word xt_x28literalx29
+	.word xt_x28x2bloopx29
+	.word xt_x2c
+	.word xt_x2c
+	.word xt_exit
+	.bend
+; END +loop
+
+; ( Pull the address of the DO and compile it for BRANCH )
 ; ( f -- )
 ; BEGIN if
 w_if:
 	.byte $C2
 	.text 'if'
 	.fill 14,0
-	.word w_until
+	.word w_x2bloop
 xt_if:
 	.block
 	jmp xt_enter
@@ -6988,12 +7049,374 @@ xt_greeting:
 	.bend
 ; END greeting
 
+; BEGIN [char]
+w_x5bcharx5d:
+	.byte $C6
+	.text '[char]'
+	.fill 10,0
+	.word w_greeting
+xt_x5bcharx5d:
+	.block
+	jmp xt_enter
+	.word xt_bl
+	.word xt_word
+	.word xt_here
+	.word xt_1x2b
+	.word xt_cx40
+	.word xt_state
+	.word xt_x40
+	.word xt_x28branch0x29
+	.word l_317
+	.word xt_x28literalx29
+	.word xt_x28literalx29
+	.word xt_x2c
+	.word xt_x2c
+l_317:
+	.word xt_exit
+	.bend
+; END [char]
+
+; ( -- )
+; BEGIN initrandom
+w_initrandom:
+	.byte $0A
+	.text 'initrandom'
+	.fill 6,0
+	.word w_x5bcharx5d
+xt_initrandom:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 1
+	.word xt_x28literalx29
+	.word 54950
+	.word xt_cx21
+	.word xt_exit
+	.bend
+; END initrandom
+
+; ( initialize the random number generator )
+; ( Turn on the random number generator )
+; ( -- n )
+; BEGIN random
+w_random:
+	.byte $06
+	.text 'random'
+	.fill 10,0
+	.word w_initrandom
+xt_random:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 54948
+	.word xt_x40
+	.word xt_exit
+	.bend
+; END random
+
+; ( Return a random, 16-bit number )
+; BEGIN io-page
+w_iox2dpage:
+	.byte $07
+	.text 'io-page'
+	.fill 9,0
+	.word w_random
+xt_iox2dpage:
+	.block
+	jmp xt_x28constantx29
+	.word 0001
+	.bend
+; END io-page
+
+; ( The address of the mmu-io-page register )
+; ( -- )
+; BEGIN set-io-text
+w_setx2diox2dtext:
+	.byte $0B
+	.text 'set-io-text'
+	.fill 5,0
+	.word w_iox2dpage
+xt_setx2diox2dtext:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 2
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_exit
+	.bend
+; END set-io-text
+
+; ( Set the I/O page to the text matrix )
+; ( -- )
+; BEGIN set-io-color
+w_setx2diox2dcolor:
+	.byte $0C
+	.text 'set-io-color'
+	.fill 4,0
+	.word w_setx2diox2dtext
+xt_setx2diox2dcolor:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 3
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_exit
+	.bend
+; END set-io-color
+
+; ( Set the I/O page to the color matrix )
+; ( r g b n -- )
+; BEGIN def-text-fg-colo
+w_defx2dtextx2dfgx2dcolor:
+	.byte $10
+	.text 'def-text-fg-colo'
+	.fill 0,0
+	.word w_setx2diox2dcolor
+xt_defx2dtextx2dfgx2dcolor:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 15
+	.word xt_and
+	.word xt_iox2dpage
+	.word xt_cx40
+	.word xt_x3er
+	.word xt_x28literalx29
+	.word 0
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 4
+	.word xt_x2a
+	.word xt_x28literalx29
+	.word 55296
+	.word xt_x2b
+	.word xt_dup
+	.word xt_x28literalx29
+	.word 3
+	.word xt_x2b
+	.word xt_swap
+	.word xt_x28dox29
+l_318:
+	.word xt_i
+	.word xt_cx21
+	.word xt_x28loopx29
+	.word l_318
+l_319:
+	.word xt_rx3e
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_exit
+	.bend
+; END def-text-fg-color
+
+; ( Set the components of text foreground color n to <r, g, b> )
+; ( Make sure the color number is 0 - 15 )
+; ( Save the current I/O page )
+; ( Go to I/O page 0 )
+; ( Compute base address )
+; ( Set each color component )
+; ( Restore the current I/O page )
+; ( r g b n -- )
+; BEGIN def-text-bg-colo
+w_defx2dtextx2dbgx2dcolor:
+	.byte $10
+	.text 'def-text-bg-colo'
+	.fill 0,0
+	.word w_defx2dtextx2dfgx2dcolor
+xt_defx2dtextx2dbgx2dcolor:
+	.block
+	jmp xt_enter
+	.word xt_x28literalx29
+	.word 15
+	.word xt_and
+	.word xt_iox2dpage
+	.word xt_cx40
+	.word xt_x3er
+	.word xt_x28literalx29
+	.word 0
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 4
+	.word xt_x2a
+	.word xt_x28literalx29
+	.word 55360
+	.word xt_x2b
+	.word xt_dup
+	.word xt_x28literalx29
+	.word 3
+	.word xt_x2b
+	.word xt_swap
+	.word xt_x28dox29
+l_320:
+	.word xt_i
+	.word xt_cx21
+	.word xt_x28loopx29
+	.word l_320
+l_321:
+	.word xt_rx3e
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_exit
+	.bend
+; END def-text-bg-color
+
+; ( Set the components of text foreground color n to <r, g, b> )
+; ( Make sure the color number is 0 - 15 )
+; ( Save the current I/O page )
+; ( Go to I/O page 0 )
+; ( Compute base address )
+; ( Set each color component )
+; ( Restore the current I/O page )
+; ( r g b -- )
+; BEGIN set-border-color
+w_setx2dborderx2dcolor:
+	.byte $10
+	.text 'set-border-color'
+	.fill 0,0
+	.word w_defx2dtextx2dbgx2dcolor
+xt_setx2dborderx2dcolor:
+	.block
+	jmp xt_enter
+	.word xt_iox2dpage
+	.word xt_cx40
+	.word xt_x3er
+	.word xt_x28literalx29
+	.word 0
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 53253
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 53254
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 53255
+	.word xt_cx21
+	.word xt_rx3e
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_exit
+	.bend
+; END set-border-color
+
+; ( Set the color of the border )
+; ( Save the current I/O page )
+; ( Go to I/O page 0 )
+; ( Set the blue component )
+; ( Set the green component )
+; ( Set the red component )
+; ( Restore the current I/O page )
+; ( w h -- )
+; BEGIN set-border-size
+w_setx2dborderx2dsize:
+	.byte $0F
+	.text 'set-border-size'
+	.fill 1,0
+	.word w_setx2dborderx2dcolor
+xt_setx2dborderx2dsize:
+	.block
+	jmp xt_enter
+	.word xt_iox2dpage
+	.word xt_cx40
+	.word xt_x3er
+	.word xt_x28literalx29
+	.word 0
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_over
+	.word xt_over
+	.word xt_or
+	.word xt_x28branch0x29
+	.word l_322
+	.word xt_x28literalx29
+	.word 31
+	.word xt_and
+	.word xt_x28literalx29
+	.word 53257
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 31
+	.word xt_and
+	.word xt_x28literalx29
+	.word 53256
+	.word xt_cx21
+	.word xt_x28literalx29
+	.word 53252
+	.word xt_cx40
+	.word xt_x28literalx29
+	.word 1
+	.word xt_or
+	.word xt_x28literalx29
+	.word 53252
+	.word xt_cx21
+	.word xt_x28branchx29
+	.word l_323
+l_322:
+	.word xt_x28literalx29
+	.word 53252
+	.word xt_cx40
+	.word xt_x28literalx29
+	.word 254
+	.word xt_and
+	.word xt_x28literalx29
+	.word 53252
+	.word xt_cx21
+	.word xt_2drop
+l_323:
+	.word xt_rx3e
+	.word xt_iox2dpage
+	.word xt_cx21
+	.word xt_exit
+	.bend
+; END set-border-size
+
+; ( Set the color of the border )
+; ( Save the current I/O page )
+; ( Go to I/O page 0 )
+; ( Set the height )
+; ( Set the width )
+; ( Turn on the border )
+; ( Turn off the border )
+; ( Drop size from stack )
+; ( Restore the current I/O page )
+; BEGIN maze
+w_maze:
+	.byte $04
+	.text 'maze'
+	.fill 12,0
+	.word w_setx2dborderx2dsize
+xt_maze:
+	.block
+	jmp xt_enter
+	.word xt_initrandom
+l_324:
+	.word xt_random
+	.word xt_x28literalx29
+	.word 1
+	.word xt_and
+	.word xt_x28literalx29
+	.word 186
+	.word xt_x2b
+	.word xt_emit
+	.word xt_x28branchx29
+	.word l_324
+l_325:
+	.word xt_exit
+	.bend
+; END maze
+
+; ( Draw a random maze to fill the screen )
 ; BEGIN cold
 w_cold:
 	.byte $04
 	.text 'cold'
 	.fill 12,0
-	.word w_greeting
+	.word w_maze
 xt_cold:
 	.block
 	jmp xt_enter
