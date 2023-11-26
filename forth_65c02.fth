@@ -1051,6 +1051,8 @@ end-code
 { 10 5 - --> 5 }
 
 ( u1 u2 -- u3 )
+[defined] math_hw [if]
+( Unsigned multiply using the F56 integer math coprocessor )
 code u*
     stz MMU_IO_CTRL ; Go to I/O page #0
 
@@ -1074,6 +1076,50 @@ code u*
 
     jmp xt_next
 end-code
+[else]
+( Unsigned multiply using the generic 65C02 assembly )
+code u*
+	lda #16			; There are 16 bits in n2
+	sta counter
+
+	lda #0
+
+	stz tmp+3
+	stz tmp+2
+	stz tmp+1
+	stz tmp        
+l1:
+    lsr pstack+3,x  ; Get low bit of n2
+    ror pstack+2,x
+    bcc l2          ; 0 or 1?
+    tay             ; If 1, add n1 (hi byte of tmp is in A)
+    clc
+    lda pstack+4,x
+    adc tmp+2
+    sta tmp+2
+    tya
+    adc pstack+5,x
+l2:
+    ror a 
+    ror tmp+2
+    ror tmp+1
+    ror tmp
+    dec counter
+    bne l1
+    sta tmp+3
+
+    lda tmp         ; Save result to parameter stack
+    sta pstack+4,x
+    lda tmp+1
+    sta pstack+5,x
+
+    inx             ; Clean up parameter stack
+    inx
+
+    jmp xt_next
+end-code
+[then]
+{ 1 7 u* --> 7 }
 { 2 3 u* --> 6 }
 { 10 4 u* --> 40 }
 
@@ -1085,122 +1131,8 @@ end-code
 { 10 4 * --> 40 }
 { fffeh 3 * --> fffah }
 
-( u1 u2 -- u3 )
-code u*-soft
-    lda #0          ; Initialize RESULT to 0
-    sta tmp+2
-    ldx #16         ; There are 16 bits in n2
-l1:
-    lsr pstack+3,x  ; Get low bit of n2
-    ror pstack+2,x
-    bcc l2          ; 0 or 1?
-    tay             ; If 1, add n1 (hi byte of tmp is in A)
-    clc
-    lda pstack+4,x
-    adc tmp+2
-    sta tmp+2
-    tya
-    adc pstack+5,x
-l2:
-    ror A           
-    ror tmp+2
-    ror tmp+1
-    ror tmp
-    dec a
-    bne l1
-    sta tmp+3
-
-    lda tmp         ; Save result to parameter stack
-    sta pstack+4,x
-    lda tmp+1
-    sta pstack+5,x
-
-    inx             ; Clean up parameter stack
-    inx
-
-    jmp xt_next
-end-code
-
-( n1 n2 -- n3 )
-code *-soft
-    stz sign     
-    lda pstack+5,x  ; Check to see if n1 is negative
-    bpl chk_n2
-
-    lda #$80        ; Yes: record the sign
-    sta sign
-
-    sec             ; Negate n1
-    lda #0
-    sbc pstack+4,x
-    sta pstack+4,x
-    lda #0
-    sbc pstack+5,x
-    sta pstack+5,x
-
-chk_n2:
-    lda pstack+3,x  ; Check to see if n2 is negative
-    bpl init_tmp
-
-    lda sign        ; Flip the sign bit, if so
-    eor #$80        ; And set the bit for the remainder
-    sta sign
-
-    sec             ; Negate n2
-    lda #0
-    sbc pstack+2,x
-    sta pstack+2,x
-    lda #0
-    sbc pstack+3,x
-    sta pstack+3,x
-
-init_tmp:
-    lda #0          ; Initialize RESULT to 0
-    sta tmp+2
-    ldx #16         ; There are 16 bits in n2
-l1:
-    lsr pstack+3,x  ; Get low bit of n2
-    ror pstack+2,x
-    bcc l2          ; 0 or 1?
-    tay             ; If 1, add n1 (hi byte of tmp is in A)
-    clc
-    lda pstack+4,x
-    adc tmp+2
-    sta tmp+2
-    tya
-    adc pstack+5,x
-l2:
-    ror A           
-    ror tmp+2
-    ror tmp+1
-    ror tmp
-    dec a
-    bne l1
-    sta tmp+3
-
-    lda tmp         ; Save result to parameter stack
-    sta pstack+4,x
-    lda tmp+1
-    sta pstack+5,x
-
-    inx             ; Clean up parameter stack
-    inx
-
-    lda sign        ; Check the sign
-    bpl done
-
-    sec             ; If negative, negate result
-    lda #0
-    sbc pstack+2,x
-    sta pstack+2,x
-    lda #0
-    sbc pstack+3,x
-    sta pstack+3,x
-
-done:
-    jmp xt_next
-end-code
-
+[defined] math_hw [if]
+( Division with quotient and remainder, defined using the F256 integer hardware unit )
 ( n1 n2 -- n3 n4 )
 code /mod
 	stz MMU_IO_CTRL ; Go to I/O page #0
@@ -1227,6 +1159,13 @@ code /mod
 
     jmp xt_next
 end-code
+[else]
+( Division defined using um/mod using a software implementation )
+( n1 n2 -- n3 n4 )
+: /mod
+	0 rot rot um/mod
+;
+[then]
 
 ( ud1 n1 -- n2 n3 )
 code um/mod
