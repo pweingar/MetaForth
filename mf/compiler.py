@@ -302,7 +302,7 @@ class Compiler:
     def parse_number(self, token):
         """Attempt to parse the token as a number."""
         # Check to see if the number is in decimal
-        match = re.match(r'(\d+)', token)
+        match = re.match(r'(\-*\d+)', token)
         if match:
             # We matched a decimal: return the value
             return match.group(1)

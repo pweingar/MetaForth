@@ -58,8 +58,8 @@
         dup
     then
 ;
-{ 0 ?dup --> 0 }
-{ 1 ?dup --> 1 1 }
+t{ 0 ?dup -> 0 }t
+t{ 1 ?dup -> 1 1 }t
 
 ( x1 x2 x3 -- x2 x3 x1 )
 : rot
@@ -68,21 +68,21 @@
     r>
     swap
 ;
-{ 1 2 3 rot --> 2 3 1 }
+t{ 1 2 3 rot -> 2 3 1 }t
 
 ( x1 x2 -- x1 x2 x1 x2 )
 : 2dup
     over
     over
 ;
-{ 1 2 2dup --> 1 2 1 2 }
+t{ 1 2 2dup -> 1 2 1 2 }t
 
 ( x x -- )
 : 2drop
     drop
     drop
 ;
-{ 1 2 3 4 2drop --> 1 2 }
+t{ 1 2 3 4 2drop -> 1 2 }t
 
 \\
 \\ Comparison Words
@@ -92,29 +92,29 @@
 : <
     - 0<
 ;
-{ 1 2 < --> ffffh }
-{ 2 1 < --> 0000h }
-{ 0 ffffh < --> 0000h }
-{ ffffh 0 < --> ffffh }
+t{ 1 2 < -> ffffh }t
+t{ 2 1 < -> 0000h }t
+t{ 0 ffffh < -> 0000h }t
+t{ ffffh 0 < -> ffffh }t
 
 ( n1 n2 -- f )
 : >
     - 0>
 ;
-{ 1 2 > --> 0000h }
-{ 2 1 > --> ffffh }
-{ 0 ffffh > --> ffffh }
-{ ffffh 0 > --> 0000h }
+t{ 1 2 > -> 0000h }t
+t{ 2 1 > -> ffffh }t
+t{ 0 ffffh > -> ffffh }t
+t{ ffffh 0 > -> 0000h }t
 
 ( n1 n2 -- f )
 : =
     - 0=
 ;
-{ 1 0 = --> 0000h }
-{ 1 1 = --> ffffh }
-{ ffffh 0 = --> 0000h }
-{ ffffh ffffh = --> ffffh }
-{ 0 0 = --> ffffh }
+t{ 1 0 = -> 0000h }t
+t{ 1 1 = -> ffffh }t
+t{ ffffh 0 = -> 0000h }t
+t{ ffffh ffffh = -> ffffh }t
+t{ 0 0 = -> ffffh }t
 
 ( d1 d2 -- f )
 : d<
@@ -131,9 +131,9 @@
         0 swap -
     then
 ;
-{ 1 abs --> 1 }
-{ ffffh abs --> 1 }
-{ 0 abs --> 0 }
+t{ 1 abs -> 1 }t
+t{ ffffh abs -> 1 }t
+t{ 0 abs -> 0 }t
 
 ( d1 -- d2 )
 : dabs
@@ -141,23 +141,23 @@
         0 0 2swap d-        ( d2 := 0 - d1 )
     then
 ;
-{ 1 2 dabs --> 1 2 }
-{ ffffh ffffh dabs --> 0 1 }
-{ 0 0 dabs --> 0 0 }
+t{ 1 2 dabs -> 1 2 }t
+t{ ffffh ffffh dabs -> 0 1 }t
+t{ 0 0 dabs -> 0 0 }t
 
 ( n1 n2 -- n3 )
 : /
     /mod swap drop
 ;
-{ 6 3 / --> 2 }
-{ 10 3 / --> 3 }
+t{ 6 3 / -> 2 }t
+t{ 10 3 / -> 3 }t
 
 ( n1 n2 -- n3 )
 : mod
     /mod drop
 ;
-{ 6 3 mod --> 0 }
-{ 10 3 mod --> 1 }
+t{ 6 3 mod -> 0 }t
+t{ 10 3 mod -> 1 }t
 
 ( n1 n2 -- n1|n2 )
 : max
@@ -167,9 +167,9 @@
         drop
     then
 ;
-{ 1 2 max --> 2 }
-{ 3 0 max --> 3 }
-{ fffeh ffffh max --> ffffh }
+t{ 1 2 max -> 2 }t
+t{ 3 0 max -> 3 }t
+t{ fffeh ffffh max -> ffffh }t
 
 ( n1 n2 -- n1|n2 )
 : min
@@ -179,9 +179,9 @@
         drop
     then
 ;
-{ 1 2 min --> 1 }
-{ 3 0 min --> 0 }
-{ fffeh ffffh min --> fffeh }
+t{ 1 2 min -> 1 }t
+t{ 3 0 min -> 0 }t
+t{ fffeh ffffh min -> fffeh }t
 
 \\
 \\ Dictionary words

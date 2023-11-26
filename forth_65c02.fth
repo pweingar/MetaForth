@@ -446,9 +446,9 @@ code depth
     dex
     jmp xt_next
 end-code
-{ depth --> 0 }
-{ 0 depth --> 0 1 }
-{ 1 1 1 depth --> 1 1 1 3 }
+t{ depth -> 0 }t
+t{ -1 depth -> -1 1 }t
+t{ 1 1 1 depth -> 1 1 1 3 }t
 
 ( x -- )
 code drop
@@ -456,8 +456,8 @@ code drop
     inx
     jmp xt_next
 end-code
-{ 1 2 drop --> 1 }
-{ 1 2 3 drop --> 1 2 }
+t{ 1 2 drop -> 1 }t
+t{ 1 2 3 drop -> 1 2 }t
 
 ( x -- x x )
 code dup
@@ -469,8 +469,8 @@ code dup
     dex
     jmp xt_next
 end-code
-{ 1 dup --> 1 1 }
-{ 1 2 dup --> 1 2 2 }
+t{ 1 dup -> 1 1 }t
+t{ 1 2 dup -> 1 2 2 }t
 
 ( x1 x2 -- x2 x1 )
 code swap
@@ -484,7 +484,7 @@ code swap
     sta pstack+5,x
     jmp xt_next
 end-code
-{ 1 2 3 swap --> 1 3 2 }
+t{ 1 2 3 swap -> 1 3 2 }t
 
 ( d1 d2 -- d2 d1 )
 code 2swap
@@ -517,7 +517,7 @@ code 2swap
     
     jmp xt_next
 end-code
-{ 1 2 3 4 2swap --> 3 4 1 2 }
+t{ 1 2 3 4 2swap -> 3 4 1 2 }t
 
 ( x1 x2 -- x1 x2 x1 )
 code over
@@ -529,7 +529,7 @@ code over
     dex
     jmp xt_next
 end-code
-{ 1 2 over --> 1 2 1 }
+t{ 1 2 over -> 1 2 1 }t
 
 ( d1 d2 -- d1 d2 d1 )
 code 2over
@@ -549,7 +549,7 @@ code 2over
     
     jmp xt_next
 end-code
-{ 1 2 3 4 2over --> 1 2 3 4 1 2 }
+t{ 1 2 3 4 2over -> 1 2 3 4 1 2 }t
 
 ( x -- ) ( R: -- x )
 code >r
@@ -628,8 +628,8 @@ code @
 
     jmp xt_next
 end-code
-{ 5555h 0004h ! 0004h @ --> 5555h }
-{ aaaah 0004h ! 0004h @ --> aaaah }
+t{ 5555h 0004h ! 0004h @ -> 5555h }t
+t{ aaaah 0004h ! 0004h @ -> aaaah }t
 
 ( c a-addr -- )
 code c!
@@ -651,8 +651,8 @@ code c@
 
     jmp xt_next
 end-code
-{ 55h 0003h c! 0003h c@ --> 55h }
-{ aah 0003h c! 0003h c@ --> aah }
+t{ 55h 0003h c! 0003h c@ -> 55h }t
+t{ aah 0003h c! 0003h c@ -> aah }t
 
 ( c-addr u b -- )
 code fill 
@@ -972,10 +972,10 @@ code +
     inx
     jmp xt_next    
 end-code
-{ 1 0 + --> 1 }
-{ 1 1 + --> 2 }
-{ 3 10 + --> 13 }
-{ ffffh 5 + --> 4 }
+t{ 1 0 + -> 1 }t
+t{ 1 1 + -> 2 }t
+t{ 3 10 + -> 13 }t
+t{ ffffh 5 + -> 4 }t
 
 ( d1 d2 -- d3 )
 code d+
@@ -1003,8 +1003,8 @@ code d+
 
     jmp xt_next
 end-code
-{ 1234h 5678h 1111h 1111h d+ --> 2345h 6789h }
-{ 0000h 1111h 0000h eeefh d+ --> 0001h 0000h }
+t{ 1234h 5678h 1111h 1111h d+ -> 2345h 6789h }t
+t{ 0000h 1111h 0000h eeefh d+ -> 0001h 0000h }t
 
 ( d1 d2 -- d3 )
 code d-
@@ -1046,9 +1046,9 @@ code -
     inx
     jmp xt_next    
 end-code
-{ 4 3 - --> 1 }
-{ 3 4 - --> ffffh }
-{ 10 5 - --> 5 }
+t{ 4 3 - -> 1 }t
+t{ 3 4 - -> ffffh }t
+t{ 10 5 - -> 5 }t
 
 ( u1 u2 -- u3 )
 [defined] math_hw [if]
@@ -1119,17 +1119,17 @@ l2:
     jmp xt_next
 end-code
 [then]
-{ 1 7 u* --> 7 }
-{ 2 3 u* --> 6 }
-{ 10 4 u* --> 40 }
+t{ 1 7 u* -> 7 }t
+t{ 2 3 u* -> 6 }t
+t{ 10 4 u* -> 40 }t
 
 ( u1 u2 -- u3 )
 : *
 	u*
 ;
-{ 2 3 * --> 6 }
-{ 10 4 * --> 40 }
-{ fffeh 3 * --> fffah }
+t{ 2 3 * -> 6 }t
+t{ 10 4 * -> 40 }t
+t{ fffeh 3 * -> fffah }t
 
 [defined] math_hw [if]
 ( Division with quotient and remainder, defined using the F256 integer hardware unit )
@@ -1217,11 +1217,11 @@ done:
 
     jmp xt_next
 end-code
-{ 0 1 3 um/mod --> 1 0 }
-{ 0 2 3 um/mod --> 2 0 }
-{ 0 3 3 um/mod --> 0 1 }
-{ 0 4 3 um/mod --> 1 1 }
-{ 0 6 3 um/mod --> 0 2 }
+t{ 0 1 3 um/mod -> 1 0 }t
+t{ 0 2 3 um/mod -> 2 0 }t
+t{ 0 3 3 um/mod -> 0 1 }t
+t{ 0 4 3 um/mod -> 1 1 }t
+t{ 0 6 3 um/mod -> 0 2 }t
 
 ( n -- d )
 code s>d
@@ -1244,9 +1244,9 @@ is_neg:
     sta pstack+5,x
     jmp xt_next
 end-code
-{ 1234h s>d --> 0000h 1234h }
-{ ffffh s>d --> ffffh ffffh }
-{ fffeh s>d --> ffffh fffeh }
+t{ 1234h s>d -> 0000h 1234h }t
+t{ ffffh s>d -> ffffh ffffh }t
+t{ fffeh s>d -> ffffh fffeh }t
 
 ( n1 -- n2 )
 code 1+
@@ -1256,10 +1256,10 @@ code 1+
 skip:
     jmp xt_next
 end-code
-{ 1 1+ --> 2 }
-{ 0 1+ --> 1 }
-{ 20 1+ --> 21 }
-{ ffffh 1+ --> 0 }
+t{ 1 1+ -> 2 }t
+t{ 0 1+ -> 1 }t
+t{ 20 1+ -> 21 }t
+t{ ffffh 1+ -> 0 }t
 
 ( n1 -- n2 )
 code 2+
@@ -1272,10 +1272,10 @@ code 2+
     sta pstack+3,x
     jmp xt_next
 end-code
-{ 1 2+ --> 3 }
-{ 0 2+ --> 2 }
-{ 20 2+ --> 22 }
-{ fffeh 2+ --> 0 }
+t{ 1 2+ -> 3 }t
+t{ 0 2+ -> 2 }t
+t{ 20 2+ -> 22 }t
+t{ fffeh 2+ -> 0 }t
 
 ( n1 -- n2 )
 code 1-
@@ -1286,10 +1286,10 @@ l1:
     dec pstack+2,x
     jmp xt_next
 end-code
-{ 1 1- --> 0 }
-{ 0 1- --> ffffh }
-{ 20 1- --> 19 }
-{ ffffh 1- --> fffeh }
+t{ 1 1- -> 0 }t
+t{ 0 1- -> ffffh }t
+t{ 20 1- -> 19 }t
+t{ ffffh 1- -> fffeh }t
 
 ( n1 -- n2 )
 code 2-
@@ -1302,10 +1302,10 @@ code 2-
     sta pstack+3,x
     jmp xt_next
 end-code
-{ 1 2- --> ffffh }
-{ 0 2- --> fffeh }
-{ 20 2- --> 18 }
-{ ffffh 2- --> fffdh }
+t{ 1 2- -> ffffh }t
+t{ 0 2- -> fffeh }t
+t{ 20 2- -> 18 }t
+t{ ffffh 2- -> fffdh }t
 
 ( x1 x2 -- x3 )
 code and
@@ -1320,10 +1320,10 @@ code and
     inx
     jmp xt_next
 end-code
-{ 0000h 0000h and --> 0000h }
-{ 0000h ffffh and --> 0000h }
-{ ffffh 0000h and --> 0000h }
-{ ffffh ffffh and --> ffffh }
+t{ 0000h 0000h and -> 0000h }t
+t{ 0000h ffffh and -> 0000h }t
+t{ ffffh 0000h and -> 0000h }t
+t{ ffffh ffffh and -> ffffh }t
 
 ( x1 x2 -- x3 )
 code or
@@ -1338,10 +1338,10 @@ code or
     inx
     jmp xt_next
 end-code
-{ 0000h 0000h or --> 0000h }
-{ 0000h ffffh or --> ffffh }
-{ ffffh 0000h or --> ffffh }
-{ ffffh ffffh or --> ffffh }
+t{ 0000h 0000h or -> 0000h }t
+t{ 0000h ffffh or -> ffffh }t
+t{ ffffh 0000h or -> ffffh }t
+t{ ffffh ffffh or -> ffffh }t
 
 ( x1 x2 -- x3 )
 code xor
@@ -1356,10 +1356,10 @@ code xor
     inx
     jmp xt_next
 end-code
-{ 0000h 0000h xor --> 0000h }
-{ 0000h ffffh xor --> ffffh }
-{ ffffh 0000h xor --> ffffh }
-{ ffffh ffffh xor --> 0000h }
+t{ 0000h 0000h xor -> 0000h }t
+t{ 0000h ffffh xor -> ffffh }t
+t{ ffffh 0000h xor -> ffffh }t
+t{ ffffh ffffh xor -> 0000h }t
 
 ( x1 -- x2 )
 code not
@@ -1371,8 +1371,8 @@ code not
     sta pstack+3,x
     jmp xt_next
 end-code
-{ 0000h not --> ffffh }
-{ ffffh not --> 0000h }
+t{ 0000h not -> ffffh }t
+t{ ffffh not -> 0000h }t
 
 ( x -- f )
 code 0<
@@ -1388,9 +1388,9 @@ istrue:
     sta pstack+3,x
     jmp xt_next
 end-code
-{ 0 0< --> 0000h }
-{ 3 0< --> 0000h }
-{ ffffh 0< --> ffffh }
+t{ 0 0< -> 0000h }t
+t{ 3 0< -> 0000h }t
+t{ ffffh 0< -> ffffh }t
 
 ( x -- f )
 code 0=
@@ -1408,9 +1408,9 @@ isfalse:
     stz pstack+3,x
     jmp xt_next
 end-code
-{ 0 0= --> ffffh }
-{ 3 0= --> 0000h }
-{ ffffh 0= --> 0000h }
+t{ 0 0= -> ffffh }t
+t{ 3 0= -> 0000h }t
+t{ ffffh 0= -> 0000h }t
 
 ( x -- f )
 code 0>
@@ -1431,9 +1431,9 @@ isfalse:
     stz pstack+3,x
     jmp xt_next
 end-code
-{ 0 0> --> 0000h }
-{ 3 0> --> ffffh }
-{ ffffh 0> --> 0000h }
+t{ 0 0> -> 0000h }t
+t{ 3 0> -> ffffh }t
+t{ ffffh 0> -> 0000h }t
 
 \\
 \\ Variables, etc.
@@ -1472,7 +1472,7 @@ end-code
 
 ( -- n )
 2 constant cells
-{ cells 2 - 0= --> ffffh }
+t{ cells 2 - 0= -> ffffh }t
 
 ( -- a-addr )
 code (user)
@@ -1815,8 +1815,8 @@ code execute
 
     jmp (wp)            ; jmp xt
 end-code
-{ ' 1 execute --> 1 }
-{ 1 2 ' + execute --> 3 }
+t{ ' 1 execute -> 1 }t
+t{ 1 2 ' + execute -> 3 }t
 
 \\
 \\ Vocabulary and wordlist support
@@ -1985,15 +1985,15 @@ found:
 digits:
     .text "0123456789ABCDEF"
 end-code
-{ 30h 10 digit --> 0 ffffh }
-{ 31h 10 digit --> 1 ffffh }
-{ 39h 10 digit --> 9 ffffh }
-{ 41h 10 digit --> 0 }
-{ 61h 10 digit --> 0 }
-{ 41h 16 digit --> 10 ffffh }
-{ 61h 16 digit --> 10 ffffh }
-{ 46h 16 digit --> fh ffffh }
-{ 66h 16 digit --> fh ffffh }
+t{ 30h 10 digit -> 0 ffffh }t
+t{ 31h 10 digit -> 1 ffffh }t
+t{ 39h 10 digit -> 9 ffffh }t
+t{ 41h 10 digit -> 0 }t
+t{ 61h 10 digit -> 0 }t
+t{ 41h 16 digit -> 10 ffffh }t
+t{ 61h 16 digit -> 10 ffffh }t
+t{ 46h 16 digit -> fh ffffh }t
+t{ 66h 16 digit -> fh ffffh }t
 
 ( -- c )
 : jump-instruction

@@ -351,13 +351,13 @@ def exec_lbrace(c):
         token = c.next_token()
         if state == 0:
             name = name + token + " "
-            if token == "-->":
+            if token == "->":
                 state = 1
             else:
                 operations.append(token)
 
         elif state == 1:
-            if token == "}":
+            if token == "}t":
                 # Test is assembled, compile it
                 break
 
@@ -429,7 +429,7 @@ def register_all(c):
     c.register(compiler.CompilerWord(":", exec_colon, False))
     c.register(compiler.CompilerWord(";", exec_semi, True))
     c.register(compiler.CompilerWord("$cpu$", exec_cpu, False))
-    c.register(compiler.CompilerWord("{", exec_lbrace, False))
+    c.register(compiler.CompilerWord("t{", exec_lbrace, False))
     c.register(compiler.CompilerWord("if", exec_if, True))
     c.register(compiler.CompilerWord("else", exec_else, True))
     c.register(compiler.CompilerWord("then", exec_then, True))
