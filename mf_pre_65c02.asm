@@ -14,6 +14,8 @@ rstack = $0100          ; Location of the "bottom" of the return stack
 USERAREA = $1000        ; Area for user variables
 
 CHAR_TAB = 9
+CHAR_LF = 10
+CHAR_CR = 13
 
 .include "sections.asm" ; Define the memory map
 

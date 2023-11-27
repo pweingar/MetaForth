@@ -746,57 +746,83 @@ code enclose
     ldy #0
 loop1:
     lda (src_ptr),y         ; Get the character
-    bne chk_delim1          ; NUL? No:; check it against the delimiter
+    bne chk_delim1          ; Is it NUL? No: check it against the delimiter
 none:
-    jmp xt_next                ; Yes: we want to return 0s
+    jmp xt_next             ; Yes: we want to return all 0
 
 chk_delim1:
-    cmp tmp                 ; Is it the delimiter?
-    beq skip2               ; Yes: skip the character
-
-    lda tmp                 ; Check the delimiter
-    cmp #' '                ; Is it BL?
-    bne found               ; No: ok, we've found the first character;
-
-    lda (src_ptr),y         ; Get the character back
-    cmp #CHAR_TAB           ; Is it a TAB?
-    bne found               ; No: we found the first character
+	jsr is_delim			; Is it the delimiter?
+    bcc found1st 			; No: we found our first character
 
     iny                     ; Move to the next character
     beq none                ; If we've rolled over, we found nothing
     bra loop1               ; Otherwise: check the next character
 
-found:                      ; We found the first character
+found1st:                   ; We found the first character
     sty pstack+6,x          ; Save the offset to it in n1
 
-skip2:
+loop2:
     iny                     ; Go to the next character
     beq found_nul           ; If it rolls over, we've reached the end (NUL)
 
-loop2:
     lda (src_ptr),y         ; Get the character
     beq found_nul           ; If it is NUL, we've reached the end (NUL)
 
-    cmp tmp                 ; Check it against the delimiter
-    beq found_delim         ; If it's the delimiter, we've reached the end (with delimiter)
-    lda tmp                 ; Get the delimiter
-    cmp #' '                ; Is it space?
-    bne skip2               ; No: go to the next character
-
-    lda (src_ptr),y         ; Get the character again
-    cmp #CHAR_TAB           ; Is it a tab?
-    bne skip2               ; No: go to the next character
+	jsr is_delim			; Is it the a delimiter?
+	bcs found_delim			; Yes: return our results
+	bra loop2
 
 found_delim:                ; We found a delimiter
     sty pstack+4,x          ; Save the offset of the delimiter in n2
     iny
     sty pstack+2,x          ; And the offset +1 to n3
-    jmp xt_next                ; And we're done
+    jmp xt_next             ; And we're done
 
 found_nul:                  ; We did not find a delimiter... reached NUL or end of buffer
     sty pstack+4,x          ; Save the offset of the delimiter in n2
     sty pstack+2,x          ; And to n3
-    jmp xt_next                ; And we're done   
+    jmp xt_next             ; And we're done   
+
+;
+; Check to see if A is a delimiter, based on value in TMP
+;
+; If TMP is a space, any white space in A is a delimiter
+; Otherwise, A is a delimiter if it is equal to tmp
+;
+; Returns
+; carry set on true, clear on false
+;
+is_delim:
+	cmp tmp				; Is the current character an exact match?
+	beq delim_true		; Yes: return that we have a delimiter
+
+	sta tmp+2			; Save A for the moment
+	lda tmp				; Check the character to find
+	cmp #' '			; Is it a space?
+	bne delim_false		; No: we needed that exact match... return FALSE
+
+	lda tmp+2			; Get A back
+	cmp #' '			; Is it space?
+	beq delim_true		; Yes: return true
+
+	cmp #CHAR_TAB		; Is it a tab?
+	beq delim_true		; Yes: return true
+
+	cmp #CHAR_LF		; Is it a line-feed
+	beq delim_true		; Yes: return true
+
+	cmp #CHAR_CR		; Is it a carriage return?
+	beq delim_true		; Yes: return true
+
+	; Otherwise...
+
+delim_false:			; Return FALSE
+	clc
+	rts
+
+delim_true:				; Return TRUE
+	sec
+	rts
 end-code
 
 ( src-addr dst-addr u -- )
