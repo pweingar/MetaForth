@@ -8,6 +8,14 @@
 [then]
 
 \\
+\\ Version information
+\\
+
+0 constant ver.major
+1 constant ver.minor
+0001 constant ver.build
+
+\\
 \\ Common words
 \\
 
@@ -427,6 +435,13 @@ t{ fffeh ffffh min -> fffeh }t
         base @              ( d1 c n )
         digit               ( d1 n2 tf | d1 0)
     while
+		dpl @
+		dup -1 = if
+			drop
+		else
+			1+ dpl !
+		then
+
         >r                  ( d1 R: addr1 n2 )
         base @ u*           ( d2 R: addr1 n2 )
         r>                  ( d2 n2 R: addr1 )
@@ -896,6 +911,16 @@ t{ fffeh ffffh min -> fffeh }t
 	then
 ; immediate
 
+( build minor major -- )
+: emit.version
+	[char] v emit
+	s>d <# # # #> type
+	[char] . emit
+	s>d <# # # #> type
+	[char] . emit
+	s>d <# # # # # #> type
+;
+
 \\
 \\ Boot strapping word...
 \\
@@ -912,7 +937,10 @@ t{ fffeh ffffh min -> fffeh }t
     0800h dp !              ( Initialize the dictionary pointer )
     decimal
 
-    ." Welcome to MetaForth v00.00.00" cr
+    ." Welcome to MetaForth"
+	space
+	ver.build ver.minor ver.major emit.version
+	cr
 
  	unittest
     ." All unit tests PASSED!" cr
