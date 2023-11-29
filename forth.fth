@@ -92,29 +92,29 @@ t{ 1 2 3 4 2drop -> 1 2 }t
 : <
     - 0<
 ;
-t{ 1 2 < -> ffffh }t
+t{ 1 2 < -> 1 }t
 t{ 2 1 < -> 0000h }t
 t{ 0 ffffh < -> 0000h }t
-t{ ffffh 0 < -> ffffh }t
+t{ ffffh 0 < -> 1 }t
 
 ( n1 n2 -- f )
 : >
     - 0>
 ;
 t{ 1 2 > -> 0000h }t
-t{ 2 1 > -> ffffh }t
-t{ 0 ffffh > -> ffffh }t
-t{ ffffh 0 > -> 0000h }t
+t{ 2 1 > -> 1 }t
+t{ 0 ffffh > -> 1 }t
+t{ ffffh 0 > -> 0 }t
 
 ( n1 n2 -- f )
 : =
     - 0=
 ;
 t{ 1 0 = -> 0000h }t
-t{ 1 1 = -> ffffh }t
+t{ 1 1 = -> 1 }t
 t{ ffffh 0 = -> 0000h }t
-t{ ffffh ffffh = -> ffffh }t
-t{ 0 0 = -> ffffh }t
+t{ ffffh ffffh = -> 1 }t
+t{ 0 0 = -> 1 }t
 
 ( d1 d2 -- f )
 : d<
@@ -420,6 +420,7 @@ t{ fffeh ffffh min -> fffeh }t
 
 ( d1 addr1 -- d2 addr2 )
 : (number)
+	1+
     begin
         dup >r              ( d1 addr1 R: addr1 )
         c@                  ( d1 c )
@@ -440,13 +441,10 @@ t{ fffeh ffffh min -> fffeh }t
 ( addr -- d )
 : number
     0 0 rot                 ( d0 addr )
-    dup c@                  ( d0 addr c )
-    2dh = if                ( is it the minus sign? )
-        1 >r                ( save flag )
-    else
-        0 >r
-        1 +                 ( d0 addr+1 )
-    then
+    dup 1+ c@              	( d0 addr c )
+    [char] - =        		( is it the minus sign? )
+	dup >r					( Save the flag on the return stack )
+	+
 
     -1
     begin
@@ -456,12 +454,11 @@ t{ fffeh ffffh min -> fffeh }t
         bl -
     while
         dup c@              ( d2 addr2 c )
-        2eh
-         - if
-            fff3h ?error    ( -13 is undefined word error )
-        then
+        [char] . -
+        -13 ?error    		( -13 is undefined word error )
         0
     repeat
+
     drop                    ( d2 )
     r>                      ( d2 f )
     if

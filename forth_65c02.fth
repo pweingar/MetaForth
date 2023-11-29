@@ -1409,14 +1409,14 @@ code 0<
     jmp xt_next
 
 istrue:
-    lda #$ff
+    lda #$01
     sta pstack+2,x
-    sta pstack+3,x
+    stz pstack+3,x
     jmp xt_next
 end-code
 t{ 0 0< -> 0000h }t
 t{ 3 0< -> 0000h }t
-t{ ffffh 0< -> ffffh }t
+t{ ffffh 0< -> 1 }t
 
 ( x -- f )
 code 0=
@@ -1424,9 +1424,10 @@ code 0=
     bne isfalse
     lda pstack+3,x
     bne isfalse
-    lda #$ff
+
+    lda #$01
     sta pstack+2,x
-    sta pstack+3,x
+    stz pstack+3,x
     jmp xt_next
 
 isfalse:
@@ -1434,7 +1435,7 @@ isfalse:
     stz pstack+3,x
     jmp xt_next
 end-code
-t{ 0 0= -> ffffh }t
+t{ 0 0= -> 1 }t
 t{ 3 0= -> 0000h }t
 t{ ffffh 0= -> 0000h }t
 
@@ -1447,9 +1448,9 @@ code 0>
     beq isfalse
 
 istrue:
-    lda #$ff
+    lda #$01
     sta pstack+2,x
-    sta pstack+3,x
+    stz pstack+3,x
     jmp xt_next
 
 isfalse:
@@ -1458,7 +1459,7 @@ isfalse:
     jmp xt_next
 end-code
 t{ 0 0> -> 0000h }t
-t{ 3 0> -> ffffh }t
+t{ 3 0> -> 1 }t
 t{ ffffh 0> -> 0000h }t
 
 \\
@@ -1498,7 +1499,7 @@ end-code
 
 ( -- n )
 2 constant cells
-t{ cells 2 - 0= -> ffffh }t
+t{ cells 2 - 0= -> 1 }t
 
 ( -- a-addr )
 code (user)

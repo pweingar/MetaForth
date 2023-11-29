@@ -33,12 +33,12 @@ sign    .byte ?         ; A scratch byte to keep track of the sign of a number
 
 .section code
 
-		.byte $f2, $56							; F256 TinyKernel code signature
-		.byte (end_of_code - coldstart) / 8096	; Size in 8KB blocks
-		.byte 2									; Starting block $4000
-		.word coldstart							; Starting address
-		.fill 4									; Reserved
-		.null "forth"							; Name of the code
+		; .byte $f2, $56							; F256 TinyKernel code signature
+		; .byte (end_of_code - coldstart) / 8096	; Size in 8KB blocks
+		; .byte 2									; Starting block $4000
+		; .word coldstart							; Starting address
+		; .fill 4									; Reserved
+		; .null "forth"							; Name of the code
 
 coldstart:
         jsr ioinit
