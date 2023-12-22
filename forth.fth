@@ -933,6 +933,17 @@ t{ fffeh ffffh min -> fffeh }t
 	include" f256jr.fth"
 [then]
 
+: test-leave
+	10 1 do
+		i . cr
+		i 5 > if
+			." Leaving loop early..."
+			leave
+		then
+	loop
+	." done." cr
+;
+
 : cold
     forth definitions
     s0 @ sp!                ( Set the parameter stack pointer to the initial value )

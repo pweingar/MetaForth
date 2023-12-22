@@ -1617,6 +1617,23 @@ current     .word ?
 end-code
 
 ( -- )
+code (leave)
+	pla					; Remove the current value
+	pla
+	pla					; Remove the limit value
+	pla
+
+    ldy #1              ; ip := branch address
+    lda (ip)
+    sta tmp
+    lda (ip),y
+    sta ip+1
+    lda tmp
+    sta ip
+    jmp xt_next
+end-code
+
+( -- )
 code leave
     .virtual $0101,x
 limit       .word ?

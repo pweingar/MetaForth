@@ -96,7 +96,7 @@
 
 0 constant r/o
 1 constant w/o
-2 constnat r/w
+2 constant r/w
 
 ( mode drvnum c-addr n -- fd 1 | error 0 )
 code file.open

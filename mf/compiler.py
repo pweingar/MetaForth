@@ -274,6 +274,10 @@ class Compiler:
     def pop_label(self):
         """Pop a label from the label stack"""
         return self._label_stack.pop()
+    
+    def peek_label(self):
+        """Return the context label at the top of the stack."""
+        return self._label_stack[-1]
 
     def push_param(self, value):
         """Push a parameter onto the parameter stack."""

@@ -8,8 +8,9 @@ import comp_vm
 # These are the words that are actually executed by the compiler at compile time
 #
 
-LOOP_TYPE_BEGIN = 1
-LOOP_TYPE_DO = 2
+CONTEXT_TYPE_IF = 1
+CONTEXT_TYPE_BEGIN = 2
+CONTEXT_TYPE_DO = 3
 
 def exec_comp_string(c):
     """Process the [" word."""
@@ -139,7 +140,7 @@ def exec_do(c):
     exit_label = c.gen_label()
     c.push_label(exit_label)
     c.push_label(jump_label)
-    c.push_label(LOOP_TYPE_DO)
+    c.push_label(CONTEXT_TYPE_DO)
     current_word.compile(compiler.LabelReference("xt_(do)"))
     current_word.compile(compiler.LabelDeclaration(jump_label))
 
@@ -162,7 +163,38 @@ def exec_loop(c):
     current_word.compile(compiler.LabelReference("xt_(loop)"))
     current_word.compile(compiler.LabelReference(jump_label))
     current_word.compile(compiler.LabelDeclaration(exit_label))
+    
+def pop_context(c):
+    """Remove the current context from the label stack and return its type."""
+    context_type = c.pop_label()
+    if context_type == CONTEXT_TYPE_IF:
+        # Remove the exit label
+        c.pop_label()
+    elif context_type == CONTEXT_TYPE_DO:
+        # Remove the exit and loop labels
+        c.pop_label()
+        c.pop_label()
+    elif context_type == CONTEXT_TYPE_BEGIN:
+        # Remove the exit and loop labels
+        c.pop_label()
+        c.pop_label()
+        
+    return context_type
 
+def exec_leave(c):
+    """Compile the word LEAVE"""
+    context_label = c.peek_label()
+    while context_label != CONTEXT_TYPE_DO:
+        pop_context(c)
+        context_label = c.peek_label()
+    
+    current_word = c.get_current_word()
+    context_lebel = c.pop_label()
+    jump_label = c.pop_label()
+    exit_label = c.pop_label()    
+    current_word.compile(compiler.LabelReference("xt_(leave)"))
+    current_word.compile(compiler.LabelDeclaration(exit_label))
+    
 def exec_begin(c):
     """Compile the word BEGIN"""
     current_word = c.get_current_word()
@@ -170,7 +202,7 @@ def exec_begin(c):
     exit_label = c.gen_label()
     c.push_label(exit_label)
     c.push_label(jump_label)
-    c.push_label(LOOP_TYPE_BEGIN)
+    c.push_label(CONTEXT_TYPE_BEGIN)
     current_word.compile(compiler.LabelDeclaration(jump_label))
 
 def exec_exit(c):
@@ -184,7 +216,7 @@ def exec_exit(c):
     c.push_label(jump_label)
     c.push_label(loop_type)
 
-    if loop_type == LOOP_TYPE_DO:
+    if loop_type == CONTEXT_TYPE_DO:
         current_word.compile(compiler.LabelReference("xt_rdrop"))
         current_word.compile(compiler.LabelReference("xt_rdrop"))
 
@@ -277,6 +309,7 @@ def exec_if(c):
     current_word = c.get_current_word()
     false_case = c.gen_label()
     c.push_label(false_case)
+    c.push_label(CONTEXT_TYPE_IF)
     current_word.compile(compiler.LabelReference("xt_(branch0)"))
     current_word.compile(compiler.LabelReference(false_case))
 
@@ -285,9 +318,11 @@ def exec_else(c):
 
     # COMPILE: branch <label to end_if>
     #          <label to false_case>
+    context_type = c.pop_label()
     false_case = c.pop_label()
     end_if = c.gen_label()
     c.push_label(end_if)
+    c.push_label(context_type)
     current_word = c.get_current_word()
     current_word.compile(compiler.LabelReference("xt_(branch)"))
     current_word.compile(compiler.LabelReference(end_if))
@@ -298,6 +333,7 @@ def exec_then(c):
 
     # COMPILE: label for IF or ELSE to call
     current_word = c.get_current_word()
+    context_type = c.pop_label()
     end_if = c.pop_label()
     current_word.compile(compiler.LabelDeclaration(end_if))
 
