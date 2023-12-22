@@ -1497,9 +1497,9 @@ code (constant)
     jmp xt_next
 end-code 
 
-( -- n )
-2 constant cells
-t{ cells 2 - 0= -> 1 }t
+: cells ( n1 -- n2 )
+	2 *
+;
 
 ( -- a-addr )
 code (user)

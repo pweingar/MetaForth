@@ -429,6 +429,8 @@ class Compiler:
 
 if __name__ == "__main__":
     comp_vm.vm_set_value("target", "f256")
+    comp_vm.vm_set_value("target_f256", "1")
+    
     
     c = Compiler()
     comp_words.register_all(c)

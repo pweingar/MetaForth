@@ -2,7 +2,7 @@
 # Unit test code
 #
 
-_testing_enabled = True
+_testing_enabled = False
 
 def enable_tests(enable):
     """Set if tests are enabled"""

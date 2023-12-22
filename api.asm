@@ -49,14 +49,15 @@ Write       .fill   4   ; Write bytes to a file opened for create or append.
 Close       .fill   4   ; Close an open file.
 Rename      .fill   4   ; Rename a closed file.
 Delete      .fill   4   ; Delete a closed file.
+Seek        .fill   4   ; Seek to a specific position in a file.
             .endn
 
 Directory   .namespace
 Open        .fill   4   ; Open a directory for reading.
 Read        .fill   4   ; Read a directory entry; may also return VOLUME and FREE events.
 Close       .fill   4   ; Close a directory once finished reading.
-MkDir       .fill   4
-RmDir       .fill   4
+MkDir       .fill   4   ; Create a directory
+RmDir       .fill   4   ; Delete a directory
             .endn
             
             .fill   4   ; call gate
@@ -93,11 +94,11 @@ DrawRow     .fill   4   ; Draw text/color buffers left-to-right
 DrawColumn  .fill   4   ; Draw text/color buffers top-to-bottom
             .endn
 
-Config      .namespace
+Clock       .namespace
 GetTime     .fill   4
 SetTime     .fill   4
-GetSysInfo  .fill   4
-SetBPS      .fill   4   ; Set the serial BPS (should match the SLIP router's speed).
+            .fill   12  ; 65816 vectors
+SetTimer    .fill   4
             .endn
 
             .endv            
@@ -122,6 +123,8 @@ file        .dstruct    file_t
 directory   .dstruct    dir_t
 display     .dstruct    display_t
 net         .dstruct    net_t
+config      .dstruct    config_t
+timer       .dstruct    timer_t
             .endu
 
 ext         = $f8
@@ -168,6 +171,7 @@ file_t      .struct
 open        .dstruct    fs_open_t
 read        .dstruct    fs_read_t
 write       .dstruct    fs_write_t
+seek        .dstruct    fs_seek_t
 close       .dstruct    fs_close_t
 rename      .dstruct    fs_rename_t
 delete      .dstruct    fs_open_t
@@ -191,6 +195,10 @@ fs_write_t  .struct
 stream      .byte       ?
 buf         = args.buf
 buflen      = args.buflen
+            .ends
+fs_seek_t  .struct
+stream      .byte       ?
+position    .dword      ?
             .ends
 fs_close_t  .struct
 stream      .byte       ?
@@ -217,6 +225,8 @@ dir_t       .struct
 open        .dstruct    dir_open_t
 read        .dstruct    dir_read_t
 close       .dstruct    dir_close_t
+mkdir       .dstruct    dir_open_t
+rmdir       .dstruct    dir_open_t
             .endu
             .ends            
 dir_open_t  .struct
@@ -269,6 +279,31 @@ buflen      = args.extlen
             .endu
             .ends
 
+config_t    .struct
+            .union
+            .endu
+            .ends
+
+timer_t     .struct
+units       .byte       ?
+FRAMES      = 0
+SECONDS     = 1
+QUERY       = 128
+absolute    .byte       ?
+cookie      .byte       ?
+            .ends
+                                      
+time_t      .struct
+century     .byte       ?
+year        .byte       ?
+month       .byte       ?
+day         .byte       ?
+hours       .byte       ?
+minutes     .byte       ?
+seconds     .byte       ?
+centis      .byte       ?
+size        .ends
+
 ; Events
 ; The vast majority of kernel operations communicate with userland
 ; by sending events; the data contained in the various events are
@@ -320,6 +355,7 @@ CLOSED      .word   ?   ; The close request has completed.
 RENAMED     .word   ?   ; The rename request has completed.
 DELETED     .word   ?   ; The delete request has completed.
 ERROR       .word   ?   ; An error occured; close the file if opened.
+SEEK        .word   ?   ; The seek request has completed.
             .endn
 
 directory   .namespace
@@ -330,11 +366,21 @@ FREE        .word   ?   ; A file-system free-space record was found.
 EOF         .word   ?   ; All data has been read.
 CLOSED      .word   ?   ; The directory file has been closed.
 ERROR       .word   ?   ; An error occured; user should close.
+CREATED     .word   ?   ; The directory has been created.
+DELETED     .word   ?   ; The directory has been deleted.
             .endn
 
 net         .namespace            
 TCP         .word   ?
 UDP         .word   ?
+            .endn
+
+timer       .namespace
+EXPIRED     .word   ?
+            .endn
+
+clock       .namespace
+TICK        .word   ?
             .endn
 
             .endv
@@ -351,6 +397,7 @@ udp         .dstruct    kernel.event.udp_t
 tcp         .dstruct    kernel.event.tcp_t
 file        .dstruct    kernel.event.file_t
 directory   .dstruct    kernel.event.dir_t
+timer       .dstruct    kernel.event.timer_t
             .endu
             .ends
                  
@@ -437,6 +484,11 @@ token       .byte   ?   ; TODO: break out into fields
 
 tcp_t       .struct
 len         .byte   ?   ; Raw packet length.
+            .ends
+
+timer_t     .struct
+value       .byte   ?
+cookie      .byte   ?
             .ends
 
             .endn

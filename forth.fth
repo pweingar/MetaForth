@@ -92,6 +92,10 @@ t{ 1 2 2dup -> 1 2 1 2 }t
 ;
 t{ 1 2 3 4 2drop -> 1 2 }t
 
+: nip ( x1 x2 -- x2 ) 
+	swap drop
+;
+
 \\
 \\ Comparison Words
 \\
@@ -942,8 +946,8 @@ t{ fffeh ffffh min -> fffeh }t
 	ver.build ver.minor ver.major emit.version
 	cr
 
- 	unittest
-    ." All unit tests PASSED!" cr
+ 	\ unittest
+    \ ." All unit tests PASSED!" cr
 
     quit
 ;

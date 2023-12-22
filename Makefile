@@ -12,7 +12,7 @@ forth.asm: forth.fth
 	python mf/compiler.py
 
 %.hex: %.asm
-	$(AS) $(ASFLAGS) --intel-hex -o $@ $< --list=$*.lst
+	$(AS) $(ASFLAGS) --intel-hex -o $@ $< --list=$*.lst --error=$*.err
 
 clean:
 	del forth.asm
