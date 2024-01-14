@@ -301,6 +301,18 @@ def exec_constant(c):
     new_word.set_enter_label("xt_(constant)")
     new_word.set_exit_label("")
     new_word.compile(compiler.Literal(value))
+    
+def exec_variable(c):
+    """Compile a VARIABLE"""
+    name = c.next_token()
+    value = c.pop_param()
+
+    new_word = compiler.ForthWord(name)
+    c.add_word(new_word)
+    
+    new_word.set_enter_label("xt_(variable)")
+    new_word.set_exit_label("")
+    new_word.compile(compiler.Literal(value))
 
 def exec_if(c):
     """Compile an IF word"""
@@ -356,7 +368,7 @@ def exec_colon(c):
     new_word = compiler.ForthWord(name)
     c.add_word(new_word)
     c.set_state(compiler.Compiler.STATE_COMPILING)
-    # print("Defined {}".format(name))
+    print("Defined {}".format(name))
 
 def exec_semi(c):
     """Ends a definition and goes back to the running state"""
@@ -470,6 +482,7 @@ def register_all(c):
     c.register(compiler.CompilerWord("else", exec_else, True))
     c.register(compiler.CompilerWord("then", exec_then, True))
     c.register(compiler.CompilerWord("constant", exec_constant, False))
+    c.register(compiler.CompilerWord("variable", exec_variable, False))
     c.register(compiler.CompilerWord("user", exec_user, False))
     c.register(compiler.CompilerWord("c\"", exec_cstr, True))
     c.register(compiler.CompilerWord(".\"", exec_dstr, True))

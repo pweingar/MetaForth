@@ -305,11 +305,6 @@ class Compiler:
 
     def parse_number(self, token):
         """Attempt to parse the token as a number."""
-        # Check to see if the number is in decimal
-        match = re.match(r'(\-*\d+)', token)
-        if match:
-            # We matched a decimal: return the value
-            return match.group(1)
 
         # # Check to see if the number is in hexadecimal ($1S2)
         # match = re.match(r'\$(\x+)', token)
@@ -317,11 +312,17 @@ class Compiler:
         #     # We matched a hexadecimal number
         #     return int(match.group(0), 16)
 
-        # # Check to see if the number is in hexadecimal (1A2H)
-        # match = re.match(r'(\x+)[hH]', token)
-        # if match:
-        #     # We matched a hexadecimal number
-        #     return int(match.group(0), 16)
+        # Check to see if the number is in hexadecimal (1A2H)
+        match = re.match(r'^(\-?[0-9a-fA-F]+)[hH]$', token)
+        if match:
+            # We matched a hexadecimal number
+            return int("0x" + match.group(1), 16)
+
+        # Check to see if the number is in decimal
+        match = re.match(r'(\-*\d+)', token)
+        if match:
+            # We matched a decimal: return the value
+            return match.group(1)
 
         # Check to see if the number is in binary (%01110)
         match = re.match(r'\%([01]+)', token)
@@ -350,18 +351,18 @@ class Compiler:
                 self._compiler_words[token].execute(self)
 
             else:
+                match = re.match(r'^(\-?[0-9a-fA-F]+)[hH]$', token)
+                if match:
+                    # Matched a hex number
+                    word.compile(LabelReference("xt_(literal)"))
+                    word.compile(Literal(int("0x" + match.group(1), 16)))
+                    return
+    
                 match = re.match(r'^(\-?\d+)$', token)
                 if match:
                     # Matched a decimal number
                     word.compile(LabelReference("xt_(literal)"))
                     word.compile(Literal(int(match.group(1))))
-                    return
-
-                match = re.match(r'^(\-?[0-9a-fA-F]+)h$', token)
-                if match:
-                    # Matched a hex number
-                    word.compile(LabelReference("xt_(literal)"))
-                    word.compile(Literal(int(match.group(1), 16)))
                     return
 
                 # We assume that the word is defined... the assembler will warn of undefined words
@@ -434,7 +435,7 @@ class Compiler:
 if __name__ == "__main__":
     comp_vm.vm_set_value("target", "f256")
     comp_vm.vm_set_value("target_f256", "1")
-    
+    comp_vm.vm_set_value("math_hw", "1")
     
     c = Compiler()
     comp_words.register_all(c)

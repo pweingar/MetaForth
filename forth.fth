@@ -128,6 +128,22 @@ t{ ffffh 0 = -> 0000h }t
 t{ ffffh ffffh = -> 1 }t
 t{ 0 0 = -> 1 }t
 
+( n1 n2 -- f )
+: <>
+	= 0=
+;
+
+( n1 n2 -- f )
+: <=
+	> 0=
+;
+
+( n1 n2 -- f )
+: >=
+	< 0=
+;
+
+
 ( d1 d2 -- f )
 : d<
     d- drop 0<
@@ -930,19 +946,9 @@ t{ fffeh ffffh min -> fffeh }t
 \\
 
 [defined] target_f256 [if]
+
 	include" f256jr.fth"
 [then]
-
-: test-leave
-	10 1 do
-		i . cr
-		i 5 > if
-			." Leaving loop early..."
-			leave
-		then
-	loop
-	." done." cr
-;
 
 : cold
     forth definitions

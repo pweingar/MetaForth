@@ -26,6 +26,7 @@ up      .word ?         ; User pointer
 donep   .word ?         ; Pointer to the code to take over when the interpreter quits
 test    .word ?         ; Pointer to the current test name
 tmp     .fill 4
+fptr	.dword ?		; A pointer to the full address space
 savex   .byte ?
 counter .byte ?         ; A counter used for some code
 sign    .byte ?         ; A scratch byte to keep track of the sign of a number
@@ -82,6 +83,51 @@ user_hld = 24
 user_handler = 26
 
 ;;
+;; Far pointer management code
+;;
+
+;
+; Calculate the bank and offset of the far pointer in fptr
+;
+; Side effect:
+; Updates the MMU to point the MMU bank window to the correct memory
+;
+; Input:
+; fptr = 24-bit pointer to the desired memory
+;
+; Output:
+; tmp = 16-bit address of the byte in the banked memory
+;
+bank_offset:
+		lda 12			; Get the current value of the window
+		sta tmp+3		; Save it to tmp+3
+
+		lda fptr+2		; Get the upper 8-bits of the full address
+		sta tmp+1
+		lda fptr+1
+		sta tmp
+
+		asl tmp			; Shift to get the number of the 8KB bank
+		rol tmp+1
+		asl tmp
+		rol tmp+1
+		asl tmp
+		rol tmp+1
+
+		lda tmp+1		; Set the MMU window
+		sta 12
+
+		clc				; Add $8000 (address of window) to the offset
+		lda fptr+1
+		and #$1F
+		adc #$80
+		sta tmp+1
+		lda fptr
+		sta tmp			; And store the 16-bit address in tmp
+
+		rts
+
+;;
 ;; Bootstrapping code
 ;;
 
@@ -112,6 +158,8 @@ init_user_loop:
 
 vstart  .word xt_cold
         .word xt_halt
+
+
 
 ;;
 ;; Address interpreter

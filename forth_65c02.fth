@@ -1076,6 +1076,23 @@ t{ 4 3 - -> 1 }t
 t{ 3 4 - -> ffffh }t
 t{ 10 5 - -> 5 }t
 
+( n1 -- n2 )
+code negate
+	sec
+	lda #0
+	sbc pstack+2,x
+	sta pstack+2,x
+	lda #0
+	sbc pstack+3,x
+	sta pstack+3,x
+	jmp xt_next
+end-code
+t{  0 negate ->  0 }t
+t{  1 negate -> -1 }t
+t{ -1 negate ->  1 }t
+t{  2 negate -> -2 }t
+t{ -2 negate ->  2 }t
+
 ( u1 u2 -- u3 )
 [defined] math_hw [if]
 ( Unsigned multiply using the F56 integer math coprocessor )
@@ -1148,6 +1165,32 @@ end-code
 t{ 1 7 u* -> 7 }t
 t{ 2 3 u* -> 6 }t
 t{ 10 4 u* -> 40 }t
+
+( n1 n2 -- d )
+code m*
+    stz MMU_IO_CTRL ; Go to I/O page #0
+
+    lda pstack+5,x  ; Set coprocessor unsigned A argument
+    sta $de01
+    lda pstack+4,x
+    sta $de00
+
+    lda pstack+3,x  ; Set coprocessor unsigned B argument
+    sta $de03
+    lda pstack+2,x
+    sta $de02
+
+    lda $de13       ; Read the coprocessor multiplication result
+    sta pstack+5,x
+    lda $de12
+    sta pstack+4,x
+    lda $de11
+    sta pstack+3,x
+    lda $de10
+    sta pstack+2,x
+
+    jmp xt_next
+end-code
 
 ( u1 u2 -- u3 )
 : *
