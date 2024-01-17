@@ -81,20 +81,20 @@ code mmu.init
 	; Initialize the MMU for MetaForth
 	; Mainly, we want to turn on MLUT editing for the current MLUT
 
-	lda $0000		; Get the value of the main MMU register
-	and #$03		; Mask out everything but the currently active MLUT number
-	sta tmp			; Save it for later use
+	lda MMU_MEM_CTRL	; Get the value of the main MMU register
+	and #$03			; Mask out everything but the currently active MLUT number
+	sta tmp				; Save it for later use
 
-	asl a			; Shift the active MLUT to the edit MLUT position
+	asl a				; Shift the active MLUT to the edit MLUT position
 	asl a
 	asl a
 	asl a
 
-	ora tmp			; Merge back in the active MLUT number
+	ora tmp				; Merge back in the active MLUT number
 
-	ora #$80		; Turn on the EDIT bit
+	ora #$80			; Turn on the EDIT bit
 
-	sta $0000		; Set the value of the main MMU register
+	sta MMU_MEM_CTRL	; Set the value of the main MMU register
 
 	jmp xt_next
 end-code
@@ -220,6 +220,10 @@ df01h constant dma.datastat
 df04h constant dma.src
 df08h constant dma.dst
 df0ch constant dma.count
+df0ch constant dma.width
+df0eh constant dma.height
+df10h constant dma.sstride
+df12h constant dma.dstride
 
 ( c daddr dn -- )
 : dma.fill
@@ -227,6 +231,11 @@ df0ch constant dma.count
 	io-page c@ >r       ( Save the current I/O page )
 
 	0 io-page c!		( Switch to the I/O registers )
+
+	begin
+		( Wait for BUSY bit to go to 0 )
+		dma.datastat c@ 80h and 0=
+	until
 
 	05h dma.ctrl c!		( Set up the DMA engine for 1D fill )
 
@@ -240,12 +249,20 @@ df0ch constant dma.count
 
 	85h dma.ctrl c!		( Trigger the transfer )
 
-	begin
-		( Wait for BUSY bit to go to 0 )
-		dma.datastat c@ 80h and 0=
-	until
+	30h emit
+
+\	begin
+\		( Wait for BUSY bit to go to 0 )
+\		dma.datastat c@ 80h and 0=
+\	until
+
+	31h emit
+
+	\ 0 dma.ctrl c!		( Stop the transfer )
 
     r> io-page c!       ( Restore the current I/O page )
+
+	32h emit
 ;
 
 ( r g b n -- )
@@ -322,6 +339,54 @@ df0ch constant dma.count
 	
 	r> io-page c!
 ;
+
+( -- )
+code f256.bmclr
+	phy
+
+	lda MMU_WIND_REG			; Save the MMU window
+	pha
+
+	lda #$08					; Point the MMU window to the first bank of $010000
+	sta MMU_WIND_REG
+
+loop1:
+	lda #$20					; Set the counter so we clear 32 
+	sta counter
+
+	stz tmp
+	lda #$80
+	sta tmp+1
+
+	ldy #0
+	lda #0
+loop2:
+	sta (tmp),y					; Write zeros to the page
+	iny
+	bne loop2
+
+	dec counter					; Count down the number of pages
+	beq next_bank
+
+	inc tmp+1
+	bra loop2
+
+next_bank:
+	lda MMU_WIND_REG			; Yes: Move the MMU window to the next 8KB bank
+	inc a
+	sta MMU_WIND_REG
+
+	cmp #$12					; Have we cleared the last bank?
+	bne loop1					; No: keep clearing
+
+done:
+	pla							; Restore the MMU window
+	sta MMU_WIND_REG
+
+	ply
+
+	jmp xt_next
+end-code
 
 : f256.text
 	( Switch to text mode )
@@ -422,6 +487,51 @@ ffh variable f256.pen				\ Variable for the current graphics pen color
 	drop
 ;
 
+( x0 y0 width height -- )
+: f256.fillrect
+	( Use the DMA engine to fill the dn bytes of memory at the 24-bit address daddr with the byte c )
+	io-page c@ >r       ( Save the current I/O page )
+
+	0 io-page c!		( Switch to the I/O registers )
+
+	begin
+		( Wait for BUSY bit to go to 0 )
+		dma.datastat c@ 80h and 0=
+	until
+
+	07h dma.ctrl c!		( Set up the DMA engine for 2D fill )
+
+	320 dma.dstride !	( Set the stride for the bitmap )
+
+	dma.height !		( Set the height of the rectangle to fill )
+
+	dma.width !			( Set the height of the rectangle to fill )
+
+	y0 !				( Save the coordinates )
+	x0 !
+
+	y0 @ 320 m*			( Compute the starting address )
+	0 x0 @ d+
+	01 0000h d+
+
+	dma.dst !			( Set the destination address )
+	dma.dst 2 + c!
+
+	f256.pen @			( Set the color )
+	dma.datastat c!		
+
+	87h dma.ctrl c!		( Trigger the transfer )
+
+	begin
+		( Wait for BUSY bit to go to 0 )
+		dma.datastat c@ 80h and 0=
+	until
+
+	0 dma.ctrl c!		( Stop the transfer )
+
+    r> io-page c!       ( Restore the current I/O page )
+;
+
 ( -- n )
 : rand320
 	( Return a random number from 0 to 319 )
@@ -446,10 +556,28 @@ ffh variable f256.pen				\ Variable for the current graphics pen color
 	mmu.init
 	initrandom						( Set up the randome number generator )
 	f256.bitmap						( Turn on the bitmap )
-	0 01h 0000h 01h 2c00h dma.fill	( Clear the bitmap )
+	f256.bmclr						( Clear the bitmap )
+	\ 0 01h 0000h 01h 2c00h dma.fill	( Clear the bitmap )
+	33h emit
 	100 0 do
 		random 255 and f256.pen !
 		rand320 rand240 rand320 rand240 f256.line
+		34h emit
+	loop
+;
+
+: randrects
+	mmu.init
+	initrandom						( Set up the randome number generator )
+	f256.bitmap						( Turn on the bitmap )
+	0 01h 0000h 01h 2c00h dma.fill	( Clear the bitmap )
+	100 0 do
+		random 255 and f256.pen !	( Set a random pen color )
+
+		20 i + dup
+		150 i 2 * - dup
+
+		f256.fillrect
 	loop
 ;
 

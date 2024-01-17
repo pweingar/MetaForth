@@ -12,6 +12,9 @@ MMU_IO_PAGE_1 = $01
 MMU_IO_PAGE_TEXT = $02
 MMU_IO_PAGE_COLOR = $03
 
+MMU_WIND_REG = $8 + 4
+MMU_WINDOW = $8000
+
 ;
 ; TinyVicky Master Control Registers
 ;
